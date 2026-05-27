@@ -19,10 +19,10 @@ trait LongestIncreasingSubsequenceApp {
 
   val tests = Seq(
     /** https://en.wikipedia.org/wiki/Longest_increasing_subsequence */
-    new TestExample("lis1", new LiteralArray(Array(0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15)), new LiteralInt(6), new UnitExpression),
+    new TestExample("lis1", LiteralArray(Array(0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15)), LiteralInt(6), new UnitExpression),
 
     /** https://www.geeksforgeeks.org/dsa/longest-increasing-subsequence-dp-3/ */
-    new TestExample("lis2", new LiteralArray(Array(3, 10, 2, 1, 20)), new LiteralInt(3), new UnitExpression)
+    new TestExample("lis2", LiteralArray(Array(3, 10, 2, 1, 20)), LiteralInt(3), new UnitExpression)
   )
   
   val model: EnhancedModel = new LongestIncreasingSubsequence().model
@@ -30,7 +30,7 @@ trait LongestIncreasingSubsequenceApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class LongestIncreasingSubsequenceMainJava extends EnhancedDPMainJava with LongestIncreasingSubsequenceApp {
-  override def constructApp(): EnhancedDPMainJava =  new LongestIncreasingSubsequenceMainJava()
+  override def constructApp(): EnhancedDPMainJava = new LongestIncreasingSubsequenceMainJava()
 }
 class LongestIncreasingSubsequenceMainScala extends EnhancedDPMainScala with LongestIncreasingSubsequenceApp {
   override def constructApp(): EnhancedDPMainScala = new LongestIncreasingSubsequenceMainScala()

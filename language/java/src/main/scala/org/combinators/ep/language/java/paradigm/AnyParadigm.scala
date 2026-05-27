@@ -229,7 +229,7 @@ trait AnyParadigm extends AP {
             context: MethodBodyCtxt,
             command: SetReturnType[Type]
           ): (MethodBodyCtxt, Unit) = {
-            val updatedMethod =  {
+            val updatedMethod = {
               val oldMethod = context.method
               val tpe = command.tpe
               val newMethod = oldMethod.clone()

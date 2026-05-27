@@ -39,8 +39,8 @@ trait UnenhancedUncrossedLinesProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("ucl0", LiteralArrayPair(Array(1, 4, 2), Array(1, 2, 4)), new LiteralInt(2), new UnitExpression), // https://leetcode.com/problems/uncrossed-lines/
-      new TestExample("ucl1", LiteralArrayPair(Array(2, 5, 1, 2, 5), Array(10, 5, 2, 1, 5, 2)), new LiteralInt(3), new UnitExpression), // https://leetcode.com/problems/uncrossed-lines/
+      new TestExample("ucl0", LiteralArrayPair(Array(1, 4, 2), Array(1, 2, 4)), LiteralInt(2), new UnitExpression), // https://leetcode.com/problems/uncrossed-lines/
+      new TestExample("ucl1", LiteralArrayPair(Array(2, 5, 1, 2, 5), Array(10, 5, 2, 1, 5, 2)), LiteralInt(3), new UnitExpression), // https://leetcode.com/problems/uncrossed-lines/
     )
 
     for {

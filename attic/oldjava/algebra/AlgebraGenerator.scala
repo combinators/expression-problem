@@ -393,7 +393,7 @@ trait AlgebraGenerator extends DomainIndependentJavaGenerator { // FIX ME FIX ME
 //      })
 //     val cons:Seq[Statement] = exp.attributes.flatMap(att => Java(s"  this.${att.instance} = ${att.instance};").statements())
 //
-//      val constructor =  s"""|public ${exp.concept} (${params.mkString(",")}) {
+//      val constructor = s"""|public ${exp.concept} (${params.mkString(",")}) {
 //                             |   ${cons.mkString("\n")}
 //                             |}""".stripMargin
 //      val unit = Java(s"""|package algebra.oo;

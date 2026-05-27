@@ -3,7 +3,7 @@ package org.combinators.archive.cogen.bottomUp.twoSequences.longestCommonSubsequ
 /**
  * One of the earliest implementations to generate bottom-up implementation of Longest Common Subsequence
  *
- * val targetDirectory =  Paths.get("target", "pascalBU")
+ * val targetDirectory = Paths.get("target", "pascalBU")
  */
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration

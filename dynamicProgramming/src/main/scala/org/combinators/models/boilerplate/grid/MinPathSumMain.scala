@@ -12,8 +12,8 @@ import java.nio.file.{Path, Paths}
 trait MinPathSumApp {
 
   val tests = Seq(
-    new TestExample("mps1", new LiteralArray(Array(1,3,1, 1,5,1, 4,2,1), Seq(3,3)), new LiteralInt(7), new UnitExpression),
-    new TestExample("mps2", new LiteralArray(Array(1,2,3, 4,5,6), Seq(2,3)), new LiteralInt(12), new UnitExpression),
+    new TestExample("mps1", LiteralArray(Array(1,3,1, 1,5,1, 4,2,1), Seq(3,3)), LiteralInt(7), new UnitExpression),
+    new TestExample("mps2", LiteralArray(Array(1,2,3, 4,5,6), Seq(2,3)), LiteralInt(12), new UnitExpression),
   )
 
   val model: EnhancedModel = new MinPathSum().model
@@ -21,7 +21,7 @@ trait MinPathSumApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class MinPathSumMainJava extends EnhancedDPMainJava with MinPathSumApp {
-  override def constructApp(): EnhancedDPMainJava =  new MinPathSumMainJava()
+  override def constructApp(): EnhancedDPMainJava = new MinPathSumMainJava()
 }
 class MinPathSumMainScala extends EnhancedDPMainScala with MinPathSumApp {
   override def constructApp(): EnhancedDPMainScala = new MinPathSumMainScala()

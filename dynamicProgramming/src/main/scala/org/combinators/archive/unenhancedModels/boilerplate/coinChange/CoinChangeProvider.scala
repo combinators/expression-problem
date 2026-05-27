@@ -45,7 +45,7 @@ trait CoinChangeProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("test1", new LiteralArray(Array(1,2,5)), new LiteralInt(3), LiteralString("test"))  // HACK: amount (11) is not here!
+      new TestExample("test1", LiteralArray(Array(1,2,5)), LiteralInt(3), LiteralString("test"))  // HACK: amount (11) is not here!
     )
 
     for {

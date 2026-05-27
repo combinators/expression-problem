@@ -176,7 +176,7 @@ trait LongestCommonSubsequenceObjectOrientedProvider extends TwoSequencesUtility
     // https://en.wikipedia.org/wiki/Maximum_subarray_problem
     val wiki_test = new TestExample("wiki",
       LiteralStringPair("GAC", "AGCAT"),
-      new LiteralInt(2),
+      LiteralInt(2),
       LiteralString("GA")
     )
 

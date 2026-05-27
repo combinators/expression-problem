@@ -6,7 +6,7 @@ package org.combinators.archive.cogen.bottomUp.grid.pascalBU
  * The logic is faulty and doesn't work. This is an example of the difficulty in trying to manually
  * write nested loop logic using straight cogen
  *
- * val targetDirectory =  Paths.get("target", "pascalBU")
+ * val targetDirectory = Paths.get("target", "pascalBU")
  */
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.TypeRep
@@ -180,9 +180,9 @@ trait PascalObjectOrientedProvider extends Utility {
     import paradigm.methodBodyCapabilities._
 
     val tests = Seq(
-      new TestExample("pasc11", new LiteralPair(1,1), new LiteralInt(1), new UnitExpression),
-      new TestExample("pasc32", new LiteralPair(3,2), new LiteralInt(3), new UnitExpression),
-      new TestExample("pasc63", new LiteralPair(6,3), new LiteralInt(20), new UnitExpression),
+      new TestExample("pasc11", LiteralPair(1,1), LiteralInt(1), new UnitExpression),
+      new TestExample("pasc32", LiteralPair(3,2), LiteralInt(3), new UnitExpression),
+      new TestExample("pasc63", LiteralPair(6,3), LiteralInt(20), new UnitExpression),
     )
 
     for {

@@ -17,17 +17,17 @@ import org.combinators.models.enhancedModels.integer.PerfectSquares
  */
 trait PerfectSquaresApp {
   val tests = Seq(
-    new TestExample("ps1", new LiteralInt(13), new LiteralInt(2), new UnitExpression), // 9 + 4
-    new TestExample("ps2", new LiteralInt(14), new LiteralInt(3), new UnitExpression), // 9 + 4 + 1
-    new TestExample("ps3", new LiteralInt(15), new LiteralInt(4), new UnitExpression), // 9 + 4 + 1 + 1
-    new TestExample("ps4", new LiteralInt(16), new LiteralInt(1), new UnitExpression), // 16
+    new TestExample("ps1", LiteralInt(13), LiteralInt(2), new UnitExpression), // 9 + 4
+    new TestExample("ps2", LiteralInt(14), LiteralInt(3), new UnitExpression), // 9 + 4 + 1
+    new TestExample("ps3", LiteralInt(15), LiteralInt(4), new UnitExpression), // 9 + 4 + 1 + 1
+    new TestExample("ps4", LiteralInt(16), LiteralInt(1), new UnitExpression), // 16
   )
   val model: EnhancedModel = new PerfectSquares().model
 }
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class PerfectSquaresMainJava extends EnhancedDPMainJava with PerfectSquaresApp {
-  override def constructApp(): EnhancedDPMainJava =  new PerfectSquaresMainJava()
+  override def constructApp(): EnhancedDPMainJava = new PerfectSquaresMainJava()
 }
 class PerfectSquaresMainScala extends EnhancedDPMainScala with PerfectSquaresApp {
   override def constructApp(): EnhancedDPMainScala = new PerfectSquaresMainScala()

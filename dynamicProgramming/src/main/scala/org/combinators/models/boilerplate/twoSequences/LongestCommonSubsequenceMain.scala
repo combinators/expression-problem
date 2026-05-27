@@ -8,7 +8,7 @@ import org.combinators.models.enhancedModels.twoSequences.LongestCommonSubsequen
 
 trait LongestCommonSubsequenceApp {
   val tests = Seq(
-    new TestExample("lcs1", LiteralStringPair("abc", "ace"), new LiteralInt(2), new UnitExpression),
+    new TestExample("lcs1", LiteralStringPair("abc", "ace"), LiteralInt(2), new UnitExpression),
   )
 
   val model: EnhancedModel = new LongestCommonSubsequence().model
@@ -16,7 +16,7 @@ trait LongestCommonSubsequenceApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class LongestCommonSubsequenceMainJava extends EnhancedDPMainJava with LongestCommonSubsequenceApp {
-  override def constructApp(): EnhancedDPMainJava =  new LongestCommonSubsequenceMainJava()
+  override def constructApp(): EnhancedDPMainJava = new LongestCommonSubsequenceMainJava()
 }
 class LongestCommonSubsequenceMainScala extends EnhancedDPMainScala with LongestCommonSubsequenceApp {
   override def constructApp(): EnhancedDPMainScala = new LongestCommonSubsequenceMainScala()

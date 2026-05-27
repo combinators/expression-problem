@@ -139,12 +139,12 @@ trait TribonacciTopDownProvider extends Utility {
     //
     // 0  1  2  3  4  5  6   7
     val tests = Seq(
-      new TestExample("trib0", new LiteralInt(0), new LiteralInt(0), new UnitExpression), // for now, leave solution as None
-      new TestExample("trib1", new LiteralInt(1), new LiteralInt(1), new UnitExpression),
-      new TestExample("trib2", new LiteralInt(2), new LiteralInt(1), new UnitExpression),
-      new TestExample("trib7", new LiteralInt(3), new LiteralInt(2), new UnitExpression),
-      new TestExample("trib20", new LiteralInt(4), new LiteralInt(4), new UnitExpression),
-      new TestExample("trib40", new LiteralInt(5), new LiteralInt(7), new UnitExpression)
+      new TestExample("trib0", LiteralInt(0), LiteralInt(0), new UnitExpression), // for now, leave solution as None
+      new TestExample("trib1", LiteralInt(1), LiteralInt(1), new UnitExpression),
+      new TestExample("trib2", LiteralInt(2), LiteralInt(1), new UnitExpression),
+      new TestExample("trib7", LiteralInt(3), LiteralInt(2), new UnitExpression),
+      new TestExample("trib20", LiteralInt(4), LiteralInt(4), new UnitExpression),
+      new TestExample("trib40", LiteralInt(5), LiteralInt(7), new UnitExpression)
     )
 
     for {

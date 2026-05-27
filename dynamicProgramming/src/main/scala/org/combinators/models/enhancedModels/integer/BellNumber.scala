@@ -14,8 +14,8 @@ import org.combinators.models._
 class BellNumber {
   def model:EnhancedModel = {
     // Needed for conditions and fib(n-1) and fib(n-2)
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
 
     val n = ArgExpression(0, "n", IntegerType(), "i")
     val bound = List(n)

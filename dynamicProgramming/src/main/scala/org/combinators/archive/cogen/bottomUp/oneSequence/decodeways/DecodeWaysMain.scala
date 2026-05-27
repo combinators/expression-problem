@@ -132,13 +132,13 @@ object DPDirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
     val ascii_zero:LiteralChar = LiteralChar('0')
-    val two: LiteralInt = new LiteralInt(2)
+    val two: LiteralInt = LiteralInt(2)
 
     // what was passed into constructor of the original class
-    val input:InputExpression = new InputExpression("s")   // might also need to pass in "type"
+    val input:InputExpression = InputExpression("s")   // might also need to pass in "type"
 
     val bound = List(ArgExpression(0, "text1", StringType(), "r"), ArgExpression(1, "text2", StringType(), "c"))
 

@@ -15,7 +15,7 @@ import java.nio.file.{Path, Paths}
  *
  * Code generates doesn't work, since the "make_solution" doesn't accurately generate nested loops properly.
  *
- * val targetDirectory =  Paths.get("target", "lcs")
+ * val targetDirectory = Paths.get("target", "lcs")
  */
 class LongestCommonSubsequenceMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))

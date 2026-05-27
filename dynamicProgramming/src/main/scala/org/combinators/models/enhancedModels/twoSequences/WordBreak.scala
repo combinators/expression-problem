@@ -15,8 +15,8 @@ import org.combinators.models._
 class WordBreak {
 
   def model: EnhancedModel = {
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
     val falseLit = LiteralBoolean(false)
 
     val s = ArgExpression(0, "s", StringType(), "i")

@@ -1220,6 +1220,8 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
               value.asInstanceOf[Seq[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Seq(", ", ", ")")
             case t: TypeRep.Array[_] =>
               value.asInstanceOf[Array[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Array(", ", ", ")")
+            case t: TypeRep.Char.type => s"""'$value'"""
+
             case _ =>
               value.toString
           }

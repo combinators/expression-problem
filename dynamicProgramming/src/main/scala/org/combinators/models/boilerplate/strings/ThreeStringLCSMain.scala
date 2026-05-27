@@ -17,9 +17,9 @@ import org.combinators.models.enhancedModels.strings.ThreeStringLCS
 trait ThreeStringsLCSApp {
 
   val tests = Seq(
-    new TestExample("ts1", LiteralStringTriple("AGGT12", "12TXAYB", "12XBA"), new LiteralInt(2), new UnitExpression),
-    new TestExample("ts2", LiteralStringTriple("geeks", "geeksfor", "geeksforgeeks"), new LiteralInt(5), new UnitExpression),
-    new TestExample("ts3", LiteralStringTriple("abcd1e2", "bc12ea", "bd1ea"), new LiteralInt(3), new UnitExpression),
+    new TestExample("ts1", LiteralStringTriple("AGGT12", "12TXAYB", "12XBA"), LiteralInt(2), new UnitExpression),
+    new TestExample("ts2", LiteralStringTriple("geeks", "geeksfor", "geeksforgeeks"), LiteralInt(5), new UnitExpression),
+    new TestExample("ts3", LiteralStringTriple("abcd1e2", "bc12ea", "bd1ea"), LiteralInt(3), new UnitExpression),
   )
 
   val model: EnhancedModel = new ThreeStringLCS().model
@@ -27,7 +27,7 @@ trait ThreeStringsLCSApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class ThreeStringsLCSMainJava extends EnhancedDPMainJava with ThreeStringsLCSApp {
-  override def constructApp(): EnhancedDPMainJava =  new ThreeStringsLCSMainJava()
+  override def constructApp(): EnhancedDPMainJava = new ThreeStringsLCSMainJava()
 }
 class ThreeStringsLCSMainScala extends EnhancedDPMainScala with ThreeStringsLCSApp {
   override def constructApp(): EnhancedDPMainScala = new ThreeStringsLCSMainScala()

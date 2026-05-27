@@ -17,9 +17,9 @@ import org.combinators.models.enhancedModels.oneSequence.MatrixChainMultiplicati
 trait MatrixChainMultiplicationMainTopDownApp {
 
   val tests = Seq(
-    new TestExample("mm1", new LiteralArray(Array(40, 20, 30, 10, 30)), new LiteralInt(26000), new UnitExpression), //
-    new TestExample("mm2", new LiteralArray(Array(2, 1, 3, 4)), new LiteralInt(20), new UnitExpression),            // https://www.geeksforgeeks.org/problems/matrix-chain-multiplication0303/1
-    new TestExample("mm3", new LiteralArray(Array(10, 30, 5, 60)), new LiteralInt(4500), new UnitExpression),       // ttps://en.wikipedia.org/wiki/Matrix_chain_multiplication
+    new TestExample("mm1", LiteralArray(Array(40, 20, 30, 10, 30)), LiteralInt(26000), new UnitExpression), //
+    new TestExample("mm2", LiteralArray(Array(2, 1, 3, 4)), LiteralInt(20), new UnitExpression),            // https://www.geeksforgeeks.org/problems/matrix-chain-multiplication0303/1
+    new TestExample("mm3", LiteralArray(Array(10, 30, 5, 60)), LiteralInt(4500), new UnitExpression),       // ttps://en.wikipedia.org/wiki/Matrix_chain_multiplication
   )
   
   val model: EnhancedModel = new MatrixChainMultiplicationTD().model
@@ -27,7 +27,7 @@ trait MatrixChainMultiplicationMainTopDownApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class MatrixChainMultiplicationTopDownMainJava extends EnhancedDPMainJava with MatrixChainMultiplicationMainTopDownApp {
-  override def constructApp(): EnhancedDPMainJava =  new MatrixChainMultiplicationTopDownMainJava()
+  override def constructApp(): EnhancedDPMainJava = new MatrixChainMultiplicationTopDownMainJava()
 }
 class MatrixChainMultiplicationTopDownMainScala extends EnhancedDPMainScala with MatrixChainMultiplicationMainTopDownApp {
   override def constructApp(): EnhancedDPMainScala = new MatrixChainMultiplicationTopDownMainScala()

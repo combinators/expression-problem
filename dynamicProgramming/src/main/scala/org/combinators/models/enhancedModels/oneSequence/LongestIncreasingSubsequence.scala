@@ -5,9 +5,9 @@ import org.combinators.models._
 class LongestIncreasingSubsequence {
   def model:EnhancedModel = {
     // Needed for conditions and fib(n-1) and fib(n-2)
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
-    val two: LiteralInt = new LiteralInt(2)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
+    val two: LiteralInt = LiteralInt(2)
 
     val arr = ArgExpression(0, "arr", IntegerArrayType(), "i")
     val bound = List(arr)

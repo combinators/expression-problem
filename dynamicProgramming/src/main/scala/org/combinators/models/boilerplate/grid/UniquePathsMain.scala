@@ -11,8 +11,8 @@ import java.nio.file.{Path, Paths}
 
 trait UniquePathsApp {
   val tests = Seq(
-    new TestExample("up1", new LiteralPair(3, 7), new LiteralInt(28), new UnitExpression),
-    new TestExample("up2", new LiteralPair(3, 2), new LiteralInt(3), new UnitExpression),
+    new TestExample("up1", LiteralPair(3, 7), LiteralInt(28), new UnitExpression),
+    new TestExample("up2", LiteralPair(3, 2), LiteralInt(3), new UnitExpression),
   )
 
   val model: EnhancedModel = new UniquePaths().model
@@ -20,7 +20,7 @@ trait UniquePathsApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class UniquePathsMainJava extends EnhancedDPMainJava with UniquePathsApp {
-  override def constructApp(): EnhancedDPMainJava =  new UniquePathsMainJava()
+  override def constructApp(): EnhancedDPMainJava = new UniquePathsMainJava()
 }
 class UniquePathsMainScala extends EnhancedDPMainScala with UniquePathsApp {
   override def constructApp(): EnhancedDPMainScala = new UniquePathsMainScala()

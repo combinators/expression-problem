@@ -149,23 +149,23 @@ trait MaxSubarrayObjectOrientedProvider extends Utility {
 
     // https://en.wikipedia.org/wiki/Maximum_subarray_problem
     val wiki_test = new TestExample("wiki",
-        new LiteralArray(Array(-2, 1, -3, 4, -1, 2, 1, -5, 4)),
-      new LiteralInt(6),
-      new LiteralArray(Array(4, -1, 2, 1))
+        LiteralArray(Array(-2, 1, -3, 4, -1, 2, 1, -5, 4)),
+      LiteralInt(6),
+      LiteralArray(Array(4, -1, 2, 1))
     )
 
     // https://www.geeksforgeeks.org/dsa/largest-sum-contiguous-subarray/
     val geeks_for_geeks_test = new TestExample("geeks_for_geeks",
-      new LiteralArray(Array(2, 3, -8, 7, -1, 2, 3)),
-      new LiteralInt(11),
-      new LiteralArray(Array(7, -1, 2, 3))
+      LiteralArray(Array(2, 3, -8, 7, -1, 2, 3)),
+      LiteralInt(11),
+      LiteralArray(Array(7, -1, 2, 3))
     )
 
     // https://leetcode.com/problems/maximum-subarray/description/
     val leetcode_test = new TestExample("leetcode",
-      new LiteralArray(Array(5, 4, -1, 7, 8)),
-      new LiteralInt(23),
-      new LiteralArray(Array(5, 4, -1, 7, 8))
+      LiteralArray(Array(5, 4, -1, 7, 8)),
+      LiteralInt(23),
+      LiteralArray(Array(5, 4, -1, 7, 8))
     )
 
     for {

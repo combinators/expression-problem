@@ -24,8 +24,8 @@ import org.combinators.models._
  */
 class MinimumAsciiDelete {
   def model: EnhancedModel = {
-    val zero = new LiteralInt(0)
-    val one = new LiteralInt(1)
+    val zero = LiteralInt(0)
+    val one = LiteralInt(1)
 
     val s1 = ArgExpression(0, "s1", StringType(), "r")
     val s2 = ArgExpression(1, "s2", StringType(), "c")

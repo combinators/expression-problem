@@ -3,7 +3,7 @@ package org.combinators.helloworld
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.cogen.paradigm.control.Imperative
-import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality}
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, Maps}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, Understands}
 
@@ -21,6 +21,8 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
   val array: Arrays.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val maps: Maps.WithBase[paradigm.MethodBodyContext, paradigm.type]
+
   import paradigm._
   import syntax._
   import ooParadigm._
@@ -110,6 +112,8 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
     import paradigm.methodBodyCapabilities._
     import impParadigm.imperativeCapabilities._
 
+
+
     for {
       _ <- makeStaticSignature()
       worldType <- findClass(names.mangle("World"))
@@ -151,6 +155,22 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
       setInst2 <- array.arrayCapabilities.set(A, Seq(len1Sub1, len2Sub1), two) // A[A.length-1][A[0].length-1] = 2
       setStmt2 <- impParadigm.imperativeCapabilities.liftExpression(setInst2)
       _ <- addBlockDefinitions(Seq(setStmt1, setStmt2))
+
+      // showcase maps
+      stringType <- toTargetLanguageType(TypeRep.String)
+      initialMap <- maps.mapCapabilities.create(stringType, intType)
+      mapType <- toTargetLanguageType(TypeRep.Map(TypeRep.String, TypeRep.Int))
+        mapVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("myMap"), mapType, Some(initialMap))
+
+      expr1 <- paradigm.methodBodyCapabilities.reify(TypeRep.Map(TypeRep.String,TypeRep.Int), Map[String,Int]("hello" -> 42) )
+      mapVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("myMap2"), mapType, Some(expr1))
+
+      // put something
+      newKey <- paradigm.methodBodyCapabilities.reify(TypeRep.String, "there")
+      newValue <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 88)
+
+      expr2 <- maps.mapCapabilities.put(mapVar, newKey, newValue)
+      mapVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("myMap3"), mapType, Some(expr2))
 
     } yield None // Some(res)
   }
@@ -225,7 +245,8 @@ object HelloWorldObjectOrientedProvider {
    con: Console.WithBase[base.MethodBodyContext, base.type],
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
    assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
-   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type]
+   eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
+   mapsIn: Maps.WithBase[base.MethodBodyContext, base.type]
   )
   : HelloWorldObjectOrientedProvider.WithParadigm[base.type] =
     new HelloWorldObjectOrientedProvider {
@@ -239,5 +260,6 @@ object HelloWorldObjectOrientedProvider {
       override val array: Arrays.WithBase[base.MethodBodyContext, paradigm.type] = arr
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn
       override val eqls: Equality.WithBase[base.MethodBodyContext, paradigm.type] = eqlsIn
+      override val maps: Maps.WithBase[base.MethodBodyContext, paradigm.type] = mapsIn
     }
 }

@@ -56,7 +56,7 @@ trait e6 extends Evolution with HaskellGenerator with HUnitTestGenerator with M0
       case Equals =>
         exp match {
           case Lit  =>
-            val value2 =  Haskell(expression(exp, litValue).getCode + "2")
+            val value2 = Haskell(expression(exp, litValue).getCode + "2")
             result(Haskell(s" ${expression(exp, litValue)} == $value2 "))
 
           case u:Unary  =>

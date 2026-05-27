@@ -20,7 +20,7 @@ trait WildcardPatternMatchingApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class WildcardPatternMatchingMainJava extends EnhancedDPMainJava with WildcardPatternMatchingApp {
-  override def constructApp(): EnhancedDPMainJava =  new WildcardPatternMatchingMainJava()
+  override def constructApp(): EnhancedDPMainJava = new WildcardPatternMatchingMainJava()
 }
 class WildcardPatternMatchingMainScala extends EnhancedDPMainScala with WildcardPatternMatchingApp {
   override def constructApp(): EnhancedDPMainScala = new WildcardPatternMatchingMainScala()

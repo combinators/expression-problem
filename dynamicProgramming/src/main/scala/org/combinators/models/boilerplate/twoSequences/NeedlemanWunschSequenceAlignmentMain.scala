@@ -22,8 +22,8 @@ trait NeedlemanWunschSequenceAlignmentApp {
   def tests = Seq(
     // https://rna.informatik.uni-freiburg.de/Teaching/index.jsp?toolName=Needleman-Wunsch has really nice example
     // from google search via AI so cannot trace,
-    new TestExample("nws1", new NeedlemanWunschSequenceInput("abc", "ace", +2, -1, -2), new LiteralInt(0), new UnitExpression),
-    new TestExample("nws2", new NeedlemanWunschSequenceInput("CTCGCAGC", "CATTCAC", +10, -2, -5), new LiteralInt(33), new UnitExpression),
+    new TestExample("nws1", new NeedlemanWunschSequenceInput("abc", "ace", +2, -1, -2), LiteralInt(0), new UnitExpression),
+    new TestExample("nws2", new NeedlemanWunschSequenceInput("CTCGCAGC", "CATTCAC", +10, -2, -5), LiteralInt(33), new UnitExpression),
     // https://medium.com/@nandiniumbarkar/needleman-wunsch-algorithm-7bba68b510db
   )
 
@@ -32,7 +32,7 @@ trait NeedlemanWunschSequenceAlignmentApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class NeedlemanWunschSequenceAlignmentMainJava extends EnhancedDPMainJava with NeedlemanWunschSequenceAlignmentApp {
-  override def constructApp(): EnhancedDPMainJava =  new NeedlemanWunschSequenceAlignmentMainJava()
+  override def constructApp(): EnhancedDPMainJava = new NeedlemanWunschSequenceAlignmentMainJava()
 }
 class NeedlemanWunschSequenceAlignmentMainScala extends EnhancedDPMainScala with NeedlemanWunschSequenceAlignmentApp {
   override def constructApp(): EnhancedDPMainScala = new NeedlemanWunschSequenceAlignmentMainScala()

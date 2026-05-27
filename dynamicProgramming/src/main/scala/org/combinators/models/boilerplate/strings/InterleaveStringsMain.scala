@@ -27,7 +27,7 @@ trait InterleaveStringsApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class InterleaveStringsMainJava extends EnhancedDPMainJava with InterleaveStringsApp {
-  override def constructApp(): EnhancedDPMainJava =  new InterleaveStringsMainJava()
+  override def constructApp(): EnhancedDPMainJava = new InterleaveStringsMainJava()
 }
 class InterleaveStringsMainScala extends EnhancedDPMainScala with InterleaveStringsApp {
   override def constructApp(): EnhancedDPMainScala = new InterleaveStringsMainScala()

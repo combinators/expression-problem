@@ -4,8 +4,8 @@ import org.combinators.models._
 
 class LongestCommonSubsequence {
   def model:EnhancedModel = {
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
 
     val s1 = ArgExpression(0, "s1", StringType(), "r")
     val s2 = ArgExpression(1, "s2", StringType(), "c")

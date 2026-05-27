@@ -9,7 +9,9 @@ trait Expression {
 
   def <(other: Expression): Expression & BooleanExpression = LessThanExpression(this, other)
   def <=(other: Expression): Expression & BooleanExpression = LessThanOrEqualExpression(this, other)
-
+  def >(other: Expression) : Expression & BooleanExpression = LessThanExpression(other, this)                // opposite
+  def >=(other: Expression) : Expression & BooleanExpression = LessThanOrEqualExpression(other, this)        // opposite
+  
   // When using ==, must assume it is IntegerType: Dangerous?? todo: allow for other types(?)
   def ==(other: Expression): Expression & BooleanExpression = EqualExpression(this, other, IntegerType())
   def ||(other: Expression): Expression & BooleanExpression = OrExpression(this, other)
@@ -106,7 +108,7 @@ case class FunctionExpression(name:String, args: Seq[Expression]) extends Expres
   def tpe:ArgumentType = IntegerType()
 }
 
-class LiteralInt(val literal: Int) extends LiteralExpression {
+case class LiteralInt(literal: Int) extends LiteralExpression {
   def tpe:ArgumentType = IntegerType()
 }
 case class IteratorExpression(iteratorNumber: Int, variable:String) extends Expression {
@@ -127,15 +129,17 @@ case class HelperExpression(variable:String,
 
 // when input problem has two integers, not easily translated as (row, column)
 case class LiteralPairType() extends ArgumentType
-class LiteralPair(val val1:Int, val val2:Int) extends LiteralExpression {
+case class LiteralPair(val1:Int, val2:Int) extends LiteralExpression {
   def tpe:ArgumentType = LiteralPairType()
 }
 case class LiteralTripleType() extends ArgumentType
-class LiteralTriple(val val1:Int, val val2:Int, val val3:Int) extends LiteralExpression {
+case class LiteralTriple(val1:Int, val2:Int, val3:Int) extends LiteralExpression {
   def tpe: ArgumentType = LiteralTripleType()
 }
 
 case class PackedArrayType(elementType:ArgumentType) extends ArgumentType
+
+/** This remains a class (not case class) because of the auxiliary constructor (to play nice with IntelliJ editor) */
 class LiteralArray(val literal:Array[Int], val dimensions:Seq[Int]) extends LiteralExpression {
 
   // Auxiliary constructor to handle situation where dimensions is not provided: Just defaults to a one-dimension array of given length.
@@ -151,7 +155,7 @@ case class LiteralStringPair(string1:String, string2:String) extends LiteralExpr
   def tpe:ArgumentType = StringPairType()
 }
 case class StringTripleType() extends ArgumentType
-case  class LiteralStringTriple(string1:String, string2:String, string3:String) extends LiteralExpression {
+case class LiteralStringTriple(string1:String, string2:String, string3:String) extends LiteralExpression {
   def tpe:ArgumentType = StringTripleType()
 }
 
@@ -191,7 +195,7 @@ case class CharAtExpression(string: Expression, index: Expression) extends Expre
 
 // Access field access for the primary class
 // TODO: OLD and deal with later
-class InputExpression(val variableName:String) extends Expression {
+case class InputExpression(variableName:String) extends Expression {
   def tpe:ArgumentType = ???
 }
 

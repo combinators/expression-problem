@@ -19,8 +19,8 @@ class NeedlemanWunschSequenceAlignmentModel {
     val r: IteratorExpression = IteratorExpression(0, "r")
     val c: IteratorExpression = IteratorExpression(1, "c")
 
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
 
     val score = TernaryExpression(
       CharAtExpression(s1, r - one) == CharAtExpression(s2, c - one),

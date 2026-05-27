@@ -14,9 +14,9 @@ import org.combinators.models.enhancedModels.integer.BellNumber
 
 trait BellNumberApp {
   val tests = Seq(
-    new TestExample("bn1", new LiteralInt(3), new LiteralInt(5), new UnitExpression), // https://en.wikipedia.org/wiki/Bell_number
-    new TestExample("bn2", new LiteralInt(2), new LiteralInt(2), new UnitExpression),
-    new TestExample("bn3", new LiteralInt(5), new LiteralInt(52), new UnitExpression),
+    new TestExample("bn1", LiteralInt(3), LiteralInt(5), new UnitExpression), // https://en.wikipedia.org/wiki/Bell_number
+    new TestExample("bn2", LiteralInt(2), LiteralInt(2), new UnitExpression),
+    new TestExample("bn3", LiteralInt(5), LiteralInt(52), new UnitExpression),
   )
 
   val model: EnhancedModel = new BellNumber().model
@@ -24,7 +24,7 @@ trait BellNumberApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class BellNumberMainJava extends EnhancedDPMainJava with BellNumberApp {
-  override def constructApp(): EnhancedDPMainJava =  new BellNumberMainJava()
+  override def constructApp(): EnhancedDPMainJava = new BellNumberMainJava()
 }
 class BellNumberMainScala extends EnhancedDPMainScala with BellNumberApp {
   override def constructApp(): EnhancedDPMainScala = new BellNumberMainScala()

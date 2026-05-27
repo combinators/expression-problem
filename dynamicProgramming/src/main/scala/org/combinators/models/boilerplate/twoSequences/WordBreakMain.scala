@@ -31,7 +31,7 @@ trait WordBreakApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class WordBreakMainJava extends EnhancedDPMainJava with WordBreakApp {
-  override def constructApp(): EnhancedDPMainJava =  new WordBreakMainJava()
+  override def constructApp(): EnhancedDPMainJava = new WordBreakMainJava()
 }
 class WordBreakMainScala extends EnhancedDPMainScala with WordBreakApp {
   override def constructApp(): EnhancedDPMainScala = new WordBreakMainScala()

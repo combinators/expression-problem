@@ -6,7 +6,7 @@ package org.combinators.archive.cogen.bottomUp.grid.pascalBU
  * The logic is faulty and doesn't work. This is an example of the difficulty in trying to manually
  * write nested loop logic using straight cogen
  *
- * val targetDirectory =  Paths.get("target", "pascalBU")
+ * val targetDirectory = Paths.get("target", "pascalBU")
  */
 import cats.effect.{ExitCode, IO, IOApp}
 import com.github.javaparser.ast.PackageDeclaration

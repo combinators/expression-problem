@@ -9,8 +9,8 @@ class UniquePathsModel {
     val n = ArgExpression(1, "n", IntegerType(), "c")
     val bounds = List(m, n)
 
-    val zero = new LiteralInt(0)
-    val one = new LiteralInt(1)
+    val zero = LiteralInt(0)
+    val one = LiteralInt(1)
 
     val UP: Model = new Model(
       "Unique Paths",

@@ -15,8 +15,8 @@ class DiceThrow {
    */
 
   def model: EnhancedModel = {
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
 
     val m = ArgExpression(2, "m", IntegerType(), "m")    // m never changes and is not part of helper
     val n = ArgExpression(0, "n", IntegerType(), "i")    // not sure if 'i' is used

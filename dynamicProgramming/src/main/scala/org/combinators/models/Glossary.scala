@@ -120,7 +120,7 @@ object GlossaryToDiskMain extends IOApp {
     val mcm_bot = (new MatrixChainMultiplicationBottomUpMainJava(), Seq(bottomUp))
     val just_bot = Seq(mcm_bot)
 
-    val others =  (just_bot ++ known_enhanced_solutions).filter(pair
+    val others = (just_bot ++ known_enhanced_solutions).filter(pair
       => pair._2.contains(BottomUp()))
       .flatMap(pair => pair._1.filesToGenerate(BottomUp()))
     others
@@ -128,7 +128,7 @@ object GlossaryToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     val choice = if (args.isEmpty) {
-      bottomUp                    // <------ CHANGE this manually when you run, to generate topDown or topDownWithMemo -- BOTTOMUP NOT YET WORKING
+      topDownWithMemo                    // <------ CHANGE this manually when you run, to generate topDown or topDownWithMemo -- BOTTOMUP NOT YET WORKING
     } else {
       args(0).toLowerCase match {
         case "topdown" => topDown

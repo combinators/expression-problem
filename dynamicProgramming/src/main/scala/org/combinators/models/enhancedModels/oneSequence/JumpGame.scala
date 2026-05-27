@@ -6,8 +6,8 @@ class JumpGame {
 
   def model: EnhancedModel = {
 
-    val zero = new LiteralInt(0)
-    val one  = new LiteralInt(1)
+    val zero = LiteralInt(0)
+    val one  = LiteralInt(1)
 
     val arr = ArgExpression(0, "arr", IntegerArrayType(), "j")  // j is the iterator
     //val index = ArgExpression(1, "i", IntegerType(), "i")

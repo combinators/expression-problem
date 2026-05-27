@@ -85,7 +85,7 @@ trait WadlerGenerator extends GJGenerator  {
 
     // base will be assumed to have at least one datatype exp and one e
     val baseMethods = model.types.map(exp => {
-      val params:String =  exp.attributes.map(att => GJ(s"${typeConverter(att.tpe)} ${att.instance}")).mkString(",")
+      val params:String = exp.attributes.map(att => GJ(s"${typeConverter(att.tpe)} ${att.instance}")).mkString(",")
       GJ(s"public R for${exp.concept}($params);")
     })
 
@@ -116,7 +116,7 @@ trait WadlerGenerator extends GJGenerator  {
   def generateBase(base:Model): Seq[GJWithPath] = {
     // base will be assumed to have at least one datatype exp and one e
     val baseMethods = base.types.map(exp => {
-      val params:String =  exp.attributes.map(att => GJ(s"${typeConverter(att.tpe)} ${att.instance}")).mkString(",")
+      val params:String = exp.attributes.map(att => GJ(s"${typeConverter(att.tpe)} ${att.instance}")).mkString(",")
       GJ(s"public R for${exp.concept}($params);")
     })
 

@@ -4,9 +4,9 @@ import org.combinators.models._
 
 class MinCostClimbingStair {
   def model:EnhancedModel = {
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
-    val two: LiteralInt = new LiteralInt(2)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
+    val two: LiteralInt = LiteralInt(2)
 
     val costs  = ArgExpression(0, "costs", IntegerArrayType(), "i")
     val bounds = List(costs)

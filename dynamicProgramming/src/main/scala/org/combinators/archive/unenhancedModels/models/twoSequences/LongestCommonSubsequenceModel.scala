@@ -15,8 +15,8 @@ class LongestCommonSubsequenceModel {
     val r: IteratorExpression = IteratorExpression(0, "r")
     val c: IteratorExpression = IteratorExpression(1, "c")
 
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
 
     val LCS: Model = new Model("PrototypeLCS",   // cannot have space in the name since this becomes a file
       bounds = bounds,

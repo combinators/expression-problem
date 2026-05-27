@@ -6,8 +6,8 @@ import org.combinators.models.original.Model
 class KnapsackModel {
   def instantiate(): Model = {
 
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
 
     //the array should be 2d
     val arrayArg = ArgExpression(0, "arr", IntegerArray2DType(), "i")

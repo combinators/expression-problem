@@ -19,8 +19,8 @@ trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: Ba
 
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): operatorExpressions.TernaryExpression =
           copy(
-            left  =  left.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
-            mid   =   mid.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
+            left  = left.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
+            mid   = mid.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
             right = right.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames)
           )
       }

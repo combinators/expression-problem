@@ -11,9 +11,9 @@ It is best to explain this with a simple model that captures the Fibonacci domai
 # Fibonacci
 
 ```
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
-    val two: LiteralInt = new LiteralInt(2)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
+    val two: LiteralInt = LiteralInt(2)
 
     val bound = List(ArgExpression(0, "n", IntegerType(), "i"))
 

@@ -15,8 +15,8 @@ class ThreeStringLCSModel {
     val j: IteratorExpression = IteratorExpression(1, "j")
     val k: IteratorExpression = IteratorExpression(2, "k")
 
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
 
     val TSLCS: Model = new Model(
       "ThreeStringLCS",

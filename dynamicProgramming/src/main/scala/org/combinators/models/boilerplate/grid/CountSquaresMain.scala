@@ -8,14 +8,14 @@ import org.combinators.models.enhancedModels.grid.CountSquares
 
 trait CountSquaresApp {
   def tests = Seq(
-    new TestExample("cs1", new LiteralArray(Array(0,1,1,1, 1,1,1,1, 0,1,1,1), Seq(3,4)), new LiteralInt(15), new UnitExpression)
+    new TestExample("cs1", LiteralArray(Array(0,1,1,1, 1,1,1,1, 0,1,1,1), Seq(3,4)), LiteralInt(15), new UnitExpression)
   )
   val model: EnhancedModel = new CountSquares().model
 }
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class CountSquaresMainJava extends EnhancedDPMainJava with CountSquaresApp {
-  override def constructApp(): EnhancedDPMainJava =  new CountSquaresMainJava()
+  override def constructApp(): EnhancedDPMainJava = new CountSquaresMainJava()
 }
 class CountSquaresMainScala extends EnhancedDPMainScala with CountSquaresApp {
   override def constructApp(): EnhancedDPMainScala = new CountSquaresMainScala()

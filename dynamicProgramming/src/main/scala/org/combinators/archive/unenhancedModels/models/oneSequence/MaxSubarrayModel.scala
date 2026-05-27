@@ -6,8 +6,8 @@ import org.combinators.models.original.Model
 class MaxSubarrayModel {
   def instantiate(): Model = {
 
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
 
     val bounds = List(ArrayLengthExpression(ArgExpression(0, "nums", IntegerType(), "i") ), 2)
     val fakeBound = List(ArgExpression(0, "nums", IntegerType(), "m"))    // not sure if these are right.

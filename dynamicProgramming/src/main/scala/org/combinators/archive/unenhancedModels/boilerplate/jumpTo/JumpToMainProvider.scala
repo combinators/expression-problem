@@ -43,7 +43,7 @@ trait JumpToMainProvider extends DPObjectOrientedProvider {
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
      // not sure what to write here, yet...
-      new TestExample("replaceme", new LiteralInt(0), new LiteralInt(0), new UnitExpression), // for now, leave solution as None
+      new TestExample("replaceme", LiteralInt(0), LiteralInt(0), new UnitExpression), // for now, leave solution as None
     )
 
     for {

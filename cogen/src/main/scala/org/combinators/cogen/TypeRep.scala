@@ -51,7 +51,12 @@ object TypeRep {
 
   /** Represents the type `Array[T]` */
   case class Array[T](elemTpe: TypeRep.OfHostType[T]) extends TypeRep {
-    type HostType = Array[T]
+    type HostType = scala.Array[T]
+  }
+
+  /** Represents the type `Map[K,V]` */
+  case class Map[K,V](keyTpe: TypeRep.OfHostType[K], elemTpe: TypeRep.OfHostType[V]) extends TypeRep {
+    type HostType = scala.collection.immutable.Map[K,V]
   }
 
   /** Represents the type A => B */

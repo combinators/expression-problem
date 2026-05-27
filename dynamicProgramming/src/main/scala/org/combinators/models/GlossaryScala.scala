@@ -120,7 +120,7 @@ object GlossaryScalaToDiskMain extends IOApp {
     val mcm_bot = (new MatrixChainMultiplicationBottomUpMainScala(), Seq(bottomUp))
     val just_bot = Seq(mcm_bot)
 
-    val others =  (just_bot ++ known_enhanced_solutions).filter(pair
+    val others = (just_bot ++ known_enhanced_solutions).filter(pair
       => pair._2.contains(BottomUp())).
       flatMap(pair => pair._1.filesToGenerate(BottomUp()))
 

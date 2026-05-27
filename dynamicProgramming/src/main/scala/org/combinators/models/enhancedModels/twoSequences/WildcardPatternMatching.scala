@@ -21,8 +21,8 @@ import org.combinators.models._
 // todo: identify root cause of test case error
 class WildcardPatternMatching {
   def model: EnhancedModel = {
-    val zero = new LiteralInt(0)
-    val one = new LiteralInt(1)
+    val zero = LiteralInt(0)
+    val one = LiteralInt(1)
     val star = LiteralChar('*')
     val quest = LiteralChar('?')
 

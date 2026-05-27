@@ -43,7 +43,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
     )
 
   def toStream(exp: Expression): Expression =
-    new MethodCallExpr(exp,"stream")
+    new MethodCallExpr(exp, "stream")
 
   def listCreation[Ctxt](canAddImport: Understands[Ctxt, AddImport[Import]]): Understands[Ctxt, Apply[Create[Type], Expression, Expression]] =
     new Understands[Ctxt, Apply[Create[Type], Expression, Expression]] {

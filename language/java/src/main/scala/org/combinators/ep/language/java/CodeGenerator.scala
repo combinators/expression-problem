@@ -130,6 +130,18 @@ class CodeGenerator(config: Config) { cc =>
       ooParadigm.constructorCapabilities.canAddImportInConstructor
     )(generics)
 
+  val mapsInMethod =
+    Maps[MethodBodyCtxt, paradigm.type, Generics](
+      paradigm,
+      paradigm.methodBodyCapabilities.canAddImportInMethodBody
+    )(generics)
+
+  val mapsInConstructor =
+    Maps[CtorCtxt, paradigm.type, Generics](
+      paradigm,
+      ooParadigm.constructorCapabilities.canAddImportInConstructor
+    )(generics)
+
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)
   val exceptionsInMethod = new Exceptions[paradigm.type](paradigm)
 }

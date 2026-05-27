@@ -8,11 +8,11 @@ import org.combinators.models.enhancedModels.twoSequences.ShortestCommonSuperseq
 
 trait ShortestCommonSupersequenceApp {
   val tests = Seq(
-    new TestExample("scs1", LiteralStringPair("abac", "cab"), new LiteralInt(5), new UnitExpression),
-    new TestExample("scs2", LiteralStringPair("abc", "ac"), new LiteralInt(4), new UnitExpression),
-    new TestExample("scs3", LiteralStringPair("abc", "abc"), new LiteralInt(3), new UnitExpression),
-    new TestExample("scs4", LiteralStringPair("", "abc"), new LiteralInt(3), new UnitExpression),
-    new TestExample("scs5", LiteralStringPair("abc", ""), new LiteralInt(3), new UnitExpression),
+    new TestExample("scs1", LiteralStringPair("abac", "cab"), LiteralInt(5), new UnitExpression),
+    new TestExample("scs2", LiteralStringPair("abc", "ac"), LiteralInt(4), new UnitExpression),
+    new TestExample("scs3", LiteralStringPair("abc", "abc"), LiteralInt(3), new UnitExpression),
+    new TestExample("scs4", LiteralStringPair("", "abc"), LiteralInt(3), new UnitExpression),
+    new TestExample("scs5", LiteralStringPair("abc", ""), LiteralInt(3), new UnitExpression),
   )
 
   val model: EnhancedModel = new ShortestCommonSupersequence().model
@@ -20,7 +20,7 @@ trait ShortestCommonSupersequenceApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class ShortestCommonSupersequenceMainJava extends EnhancedDPMainJava with ShortestCommonSupersequenceApp {
-  override def constructApp(): EnhancedDPMainJava =  new ShortestCommonSupersequenceMainJava()
+  override def constructApp(): EnhancedDPMainJava = new ShortestCommonSupersequenceMainJava()
 }
 class ShortestCommonSupersequenceMainScala extends EnhancedDPMainScala with ShortestCommonSupersequenceApp {
   override def constructApp(): EnhancedDPMainScala = new ShortestCommonSupersequenceMainScala()

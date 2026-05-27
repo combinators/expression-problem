@@ -44,9 +44,9 @@ trait KnapsackProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-     new TestExample("test1", new KnapsackTestCase(Array(4, 1, 5, 2, 1, 3 ), 3, 4), new LiteralInt(3), LiteralString("answer")),
-     new TestExample("test1", new KnapsackTestCase(Array(10, 16, 8, 8, 9, 4, 4, 2 ), 4, 33), new LiteralInt(30), LiteralString("answer")),
-     new TestExample("test1", new KnapsackTestCase(Array(2, 300, 1, 200, 5,400, 3,500 ), 4, 10), new LiteralInt(1100), LiteralString("answer"))
+     new TestExample("test1", new KnapsackTestCase(Array(4, 1, 5, 2, 1, 3 ), 3, 4), LiteralInt(3), LiteralString("answer")),
+     new TestExample("test1", new KnapsackTestCase(Array(10, 16, 8, 8, 9, 4, 4, 2 ), 4, 33), LiteralInt(30), LiteralString("answer")),
+     new TestExample("test1", new KnapsackTestCase(Array(2, 300, 1, 200, 5,400, 3,500 ), 4, 10), LiteralInt(1100), LiteralString("answer"))
     )
 
     for {

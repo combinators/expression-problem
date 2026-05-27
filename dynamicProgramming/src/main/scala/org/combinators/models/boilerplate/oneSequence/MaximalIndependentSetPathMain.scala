@@ -19,15 +19,15 @@ trait MaximalIndependentSetPathApp {
 
   val tests = Seq(
     // https://canvas.wpi.edu/courses/79353
-    new TestExample("sp1", new LiteralArray(Array(12,11,13,15)), new LiteralInt(27), new UnitExpression),
-    new TestExample("sp2", new LiteralArray(Array(2,1000,3,1)), new LiteralInt(1001), new UnitExpression),
+    new TestExample("sp1", LiteralArray(Array(12,11,13,15)), LiteralInt(27), new UnitExpression),
+    new TestExample("sp2", LiteralArray(Array(2,1000,3,1)), LiteralInt(1001), new UnitExpression),
   )
   val model: EnhancedModel = new MaximalIndependentSetPath().model
 }
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class MaximalIndependentSetPathMainJava extends EnhancedDPMainJava with MaximalIndependentSetPathApp {
-  override def constructApp(): EnhancedDPMainJava =  new MaximalIndependentSetPathMainJava()
+  override def constructApp(): EnhancedDPMainJava = new MaximalIndependentSetPathMainJava()
 }
 class MaximalIndependentSetPathMainScala extends EnhancedDPMainScala with MaximalIndependentSetPathApp {
   override def constructApp(): EnhancedDPMainScala = new MaximalIndependentSetPathMainScala()

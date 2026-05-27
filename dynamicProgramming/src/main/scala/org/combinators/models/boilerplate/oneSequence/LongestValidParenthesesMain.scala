@@ -19,10 +19,10 @@ trait LongestValidParenthesesApp {
 
   val tests = Seq(
     /** https://leetcode.com/problems/longest-valid-parentheses */
-    new TestExample("lvp1", LiteralString(")()())"), new LiteralInt(4), new UnitExpression),
+    new TestExample("lvp1", LiteralString(")()())"), LiteralInt(4), new UnitExpression),
 
     /** https://leetcode.com/problems/longest-valid-parentheses/solutions/14133/my-dp-on-solution-without-using-stack-by-nsyp/ */
-    new TestExample("lvp2", LiteralString("()(())"), new LiteralInt(6), new UnitExpression),
+    new TestExample("lvp2", LiteralString("()(())"), LiteralInt(6), new UnitExpression),
   )
   
   val model: EnhancedModel = new LongestValidParentheses().model
@@ -30,7 +30,7 @@ trait LongestValidParenthesesApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class LongestValidParenthesesMainJava extends EnhancedDPMainJava with LongestValidParenthesesApp {
-  override def constructApp(): EnhancedDPMainJava =  new LongestValidParenthesesMainJava()
+  override def constructApp(): EnhancedDPMainJava = new LongestValidParenthesesMainJava()
 }
 class LongestValidParenthesesMainScala extends EnhancedDPMainScala with LongestValidParenthesesApp {
   override def constructApp(): EnhancedDPMainScala = new LongestValidParenthesesMainScala()

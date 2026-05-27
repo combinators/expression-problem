@@ -5,8 +5,8 @@ import org.combinators.models._
 class InterleaveStrings {
   def model:EnhancedModel = {
     // Needed for conditions and fib(n-1) and fib(n-2)
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
 
     // Interleaving strings really explores space over (s1,s2) and uses s3 as a target so it isn't part of the search space.
     val s1 = ArgExpression(0, "s1", StringType(), "i1")

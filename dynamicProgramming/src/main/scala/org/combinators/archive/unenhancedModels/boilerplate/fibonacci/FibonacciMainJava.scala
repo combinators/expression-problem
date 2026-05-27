@@ -94,9 +94,9 @@ object FibonacciMainDirectToDiskMain extends IOApp {
     }
 
     // Needed for conditions and fib(n-1) and fib(n-2)
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
-    val two: LiteralInt = new LiteralInt(2)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
+    val two: LiteralInt = LiteralInt(2)
 
     // Fibonacci has a single integer argument
     val bound = List(ArgExpression(0, "n", IntegerType(), "i"))

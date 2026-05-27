@@ -5,8 +5,8 @@ import org.combinators.models._
 class PerfectSquares {
   def model: EnhancedModel = {
     // Needed for conditions and fib(n-1) and fib(n-2)
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
 
     /* Perfect Square. */
     val n = ArgExpression(0, "n", IntegerType(), "i")    // not sure if 'i' is used
@@ -20,7 +20,7 @@ class PerfectSquares {
 
     val ps_subprobExpr = SubproblemExpression(Seq(i - k * k)) + one
     val def_ps = MinRangeDefinition("k", one, k * k <= i, ps_subprobExpr, k + one)
-    val ps_inner_definition =  IfThenElseDefinition(i == one, ExpressionStatement(one), def_ps)
+    val ps_inner_definition = IfThenElseDefinition(i == one, ExpressionStatement(one), def_ps)
     val ps_definition = IfThenElseDefinition(i == zero, ExpressionStatement(zero), ps_inner_definition)
 
     val PerfectSquare = new EnhancedModel("PerfectSquare",

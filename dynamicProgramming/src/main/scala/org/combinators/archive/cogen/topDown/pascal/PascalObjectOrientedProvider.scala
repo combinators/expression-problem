@@ -151,10 +151,10 @@ trait PascalObjectOrientedProvider extends Utility {
     import paradigm.methodBodyCapabilities._
 
     val tests = Seq(
-      new TestExample("pasc11", new LiteralPair(1,1), new LiteralInt(1), new UnitExpression),
-      new TestExample("pasc32", new LiteralPair(3,2), new LiteralInt(3), new UnitExpression),
-      new TestExample("pasc63", new LiteralPair(6,3), new LiteralInt(20), new UnitExpression),
-      new TestExample("pasc2013", new LiteralPair(20,13), new LiteralInt(77520), new UnitExpression),
+      new TestExample("pasc11", LiteralPair(1,1), LiteralInt(1), new UnitExpression),
+      new TestExample("pasc32", LiteralPair(3,2), LiteralInt(3), new UnitExpression),
+      new TestExample("pasc63", LiteralPair(6,3), LiteralInt(20), new UnitExpression),
+      new TestExample("pasc2013", LiteralPair(20,13), LiteralInt(77520), new UnitExpression),
     )
 
     for {

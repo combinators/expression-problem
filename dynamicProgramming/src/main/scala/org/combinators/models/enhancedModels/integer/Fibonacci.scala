@@ -5,9 +5,9 @@ import org.combinators.models._
 class Fibonacci {
   def model:EnhancedModel = {
     // Needed for conditions and fib(n-1) and fib(n-2)
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
-    val two: LiteralInt = new LiteralInt(2)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
+    val two: LiteralInt = LiteralInt(2)
 
     // MatrixChainMultiplication has an array of N+1 integers,representing N 2D Matrices
     val n = ArgExpression(0, "n", IntegerType(), "i")

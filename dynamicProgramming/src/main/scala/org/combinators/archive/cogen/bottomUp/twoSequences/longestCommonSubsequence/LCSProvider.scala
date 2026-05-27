@@ -39,7 +39,7 @@ trait LCSProvider extends DPObjectOrientedProvider {
 
     // NOTE: these tests are in the wrong place, since we defer test gen to later
     val tests = Seq(
-      new TestExample("fib0", LiteralStringPair("ACTG", "CGATC"), new LiteralInt(2), LiteralString("AC")) // for now, leave solution as None
+      new TestExample("fib0", LiteralStringPair("ACTG", "CGATC"), LiteralInt(2), LiteralString("AC")) // for now, leave solution as None
     )
 
     for {

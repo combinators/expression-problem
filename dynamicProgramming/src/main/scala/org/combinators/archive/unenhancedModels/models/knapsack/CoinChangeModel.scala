@@ -6,8 +6,8 @@ import org.combinators.models.original.Model
 class CoinChangeModel {
   def instantiate(): Model = {
 
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
 
     val arrayArg = ArgExpression(0, "coins", IntegerArrayType(), "c")
     val amount = ArgExpression(1, "amount", IntegerType(), "a")
@@ -22,7 +22,7 @@ class CoinChangeModel {
       List(arrayArg,amount),
       cases = List(
         (Some(a == zero), zero),
-        (Some(c == zero),new LiteralInt(1073741823)),
+        (Some(c == zero), LiteralInt(1073741823)),
         (Some(amount < coinscm1),
           SubproblemExpression(Seq(c-one))
         ),

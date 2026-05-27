@@ -17,14 +17,14 @@ import org.combinators.models.enhancedModels.integer.DiceThrow
  */
 trait DiceThrowApp {
   val tests = Seq(
-    new TestExample("dt1", new LiteralTriple(6, 3, 12), new LiteralInt(25), new UnitExpression) //  https://www.geeksforgeeks.org/dsa/dice-throw-dp-30/
+    new TestExample("dt1", LiteralTriple(6, 3, 12), LiteralInt(25), new UnitExpression) //  https://www.geeksforgeeks.org/dsa/dice-throw-dp-30/
   )
   val model: EnhancedModel = new DiceThrow().model
 }
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class DiceThrowMainJava extends EnhancedDPMainJava with DiceThrowApp {
-  override def constructApp(): EnhancedDPMainJava =  new DiceThrowMainJava()
+  override def constructApp(): EnhancedDPMainJava = new DiceThrowMainJava()
 }
 class DiceThrowMainScala extends EnhancedDPMainScala with DiceThrowApp {
   override def constructApp(): EnhancedDPMainScala = new DiceThrowMainScala()

@@ -5,8 +5,8 @@ import org.combinators.models._
 class ThreeStringLCS {
   def model:EnhancedModel = {
     // Needed for conditions and fib(n-1) and fib(n-2)
-    val zero: LiteralInt = new LiteralInt(0)
-    val one: LiteralInt = new LiteralInt(1)
+    val zero: LiteralInt = LiteralInt(0)
+    val one: LiteralInt = LiteralInt(1)
 
     val s1  = ArgExpression(0, "s1", StringType(), "i")
     val s2  = ArgExpression(1, "s2", StringType(), "j")

@@ -8,7 +8,7 @@ import org.combinators.models.enhancedModels.twoSequences.UncrossedLines
 
 trait UncrossedLinesApp {
   val tests = Seq(
-    new TestExample("ul1", LiteralArrayPair(Array(1, 4, 2), Array(1, 2, 4)), new LiteralInt(2), new UnitExpression)
+    new TestExample("ul1", LiteralArrayPair(Array(1, 4, 2), Array(1, 2, 4)), LiteralInt(2), new UnitExpression)
   )
 
   val model: EnhancedModel = new UncrossedLines().model
@@ -16,7 +16,7 @@ trait UncrossedLinesApp {
 
 // Need these two classes to extend appropriate *MainJava or *MainScala
 class UncrossedLinesMainJava extends EnhancedDPMainJava with UncrossedLinesApp {
-  override def constructApp(): EnhancedDPMainJava =  new UncrossedLinesMainJava()
+  override def constructApp(): EnhancedDPMainJava = new UncrossedLinesMainJava()
 }
 class UncrossedLinesMainScala extends EnhancedDPMainScala with UncrossedLinesApp {
   override def constructApp(): EnhancedDPMainScala = new UncrossedLinesMainScala()

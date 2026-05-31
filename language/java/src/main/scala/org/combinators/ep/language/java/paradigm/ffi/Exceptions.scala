@@ -14,8 +14,8 @@ import org.combinators.ep.language.java.{MethodBodyCtxt, ProjectCtxt}
 
 class Exceptions[AP <: AnyParadigm](val base: AP) extends Excptns[MethodBodyCtxt] {
 
-  val exceptionCapabilities: ExceptionCapabilities =
-    new ExceptionCapabilities {
+  val exceptionsCapabilities: ExceptionsCapabilities =
+    new ExceptionsCapabilities {
       override implicit val canRaise: Understands[MethodBodyCtxt, ffi.Exception[Expression, Statement]] = {
         new Understands[MethodBodyCtxt, ffi.Exception[Expression, Statement]] {
           def perform(

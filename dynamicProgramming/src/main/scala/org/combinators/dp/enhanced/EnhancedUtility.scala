@@ -25,6 +25,16 @@ trait EnhancedUtility {
   import syntax._
   import ooParadigm._
 
+  def constructedArrayType(level:Int, baseType:TypeRep): TypeRep = {
+    level match {
+      case 0 =>  baseType
+      case value: Int =>
+        val inner:TypeRep = constructedArrayType(value-1, baseType)
+        TypeRep.Array(inner)
+
+    }
+  }
+
   def return_type_based_on_model(model:EnhancedModel) : Generator[MethodBodyContext, Type] = {
     import paradigm.methodBodyCapabilities._
 

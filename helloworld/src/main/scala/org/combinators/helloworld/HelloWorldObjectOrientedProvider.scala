@@ -160,7 +160,7 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
       stringType <- toTargetLanguageType(TypeRep.String)
       initialMap <- maps.mapCapabilities.create(stringType, intType)
       mapType <- toTargetLanguageType(TypeRep.Map(TypeRep.String, TypeRep.Int))
-        mapVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("myMap"), mapType, Some(initialMap))
+      mapVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("myMap"), mapType, Some(initialMap))
 
       expr1 <- paradigm.methodBodyCapabilities.reify(TypeRep.Map(TypeRep.String,TypeRep.Int), Map[String,Int]("hello" -> 42) )
       mapVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("myMap2"), mapType, Some(expr1))

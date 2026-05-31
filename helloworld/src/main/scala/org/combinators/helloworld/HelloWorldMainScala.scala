@@ -29,16 +29,18 @@ class HelloWorldMainScala {
     with FinalAssertionsAST
     with FinalBooleanAST
     with FinalConsoleAST
+    with FinalExceptionsAST
     with FinalEqualsAST
     with FinalListsAST
+    with FinalMapsAST
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
     with FinalStringAST {
-    val reificationExtensions = List.empty
+    val reificationExtensions = List(scalaMapsOps.mapReificationExtensions)
   }
   val generator: CodeGenerator[_ast.type] = CodeGenerator("dp", _ast, Set.empty)
 
-  val helloWorldApproach = HelloWorldObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods, generator.ooParadigm, generator.ints.arithmeticInMethods, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods, ???)
+  val helloWorldApproach = HelloWorldObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods, generator.ooParadigm, generator.ints.arithmeticInMethods, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods, generator.maps.mapsInMethods)
 
   val persistable: Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
 
@@ -55,6 +57,7 @@ class HelloWorldMainScala {
           _ <- generator.arrays.arraysInMethods.enable()
           _ <- generator.equality.equalsInMethods.enable()
           _ <- generator.assertions.assertionsInMethods.enable()
+          _ <- generator.maps.mapsInMethods.enable()
           
           _ <- helloWorldApproach.implement()
         } yield ()

@@ -31,7 +31,6 @@ trait ArraysAST extends InbetweenArraysAST {
       
       trait CreateArrayFromExpression extends arraysOps.CreateArrayFromExpression with CreateArray {
         import factory._
-        import arraysOpsFactory._
         override def toScala: String =
           expression.toScala
 
@@ -69,8 +68,6 @@ trait ArraysAST extends InbetweenArraysAST {
         with scalaOperatorExpressions.operatorExpressionsOverrides.Operator
         with scalaOperatorExpressions.PostfixOperator
         with scalaBase.anyOverrides.Expression {
-// LengthArrayOp extends arraysOps.LengthArrayOp with scalaOperatorExpressions.operatorExpressionsOverrides.Operator with scalaOperatorExpressions.PostfixOperator {
-        //
         import factory._
         import arraysOpsFactory.convert
 
@@ -104,26 +101,6 @@ trait ArraysAST extends InbetweenArraysAST {
           )
       }
 
-//      trait GetArrayOp extends arraysOps.GetArrayOp with scalaOperatorExpressions.operatorExpressionsOverrides.Operator with scalaOperatorExpressions.PostfixOperator {
-//        def operator: String = ".apply"
-//
-//        import factory._
-//
-//        override def toScala(operands: any.Expression*): String = {
-//          s"${operands(0).toScala}(${operands(1).toScala})"
-//        }
-//      }
-//
-//      trait SetArrayOp extends arraysOps.SetArrayOp with scalaOperatorExpressions.operatorExpressionsOverrides.Operator with scalaOperatorExpressions.PostfixOperator {
-//        def operator: String = ".apply"
-//
-//        import factory._
-//
-//        override def toScala(operands: any.Expression*): String = {
-//          s"${operands(0).toScala}(${operands(1).toScala}) = ${operands(2).toScala}"
-//        }
-//      }
-//
       trait LengthArrayExpression extends arraysOps.LengthArrayExpression
             with scalaOperatorExpressions.operatorExpressionsOverrides.Operator
             with scalaOperatorExpressions.PostfixOperator
@@ -211,16 +188,6 @@ trait FinalArraysAST extends ArraysAST { self: FinalOperatorExpressionsAST & Fin
         }
         CreateArrayFromValues(values)
       }
-//
-//      def getArrayOp(base: any.Expression, indices: Seq[any.Expression]): arraysOps.GetArrayOp = {
-//        case class GetArrayOp(base: any.Expression, indices: Seq[any.Expression]) extends scalaArraysOps.arraysOpsOverride.GetArrayOp with finalOperatorExpressions.operatorExpressionsOverrides.Operator
-//        GetArrayOp(base, indices)
-//      }
-//
-//      def setArrayOp(base: any.Expression, indices: Seq[any.Expression], value: any.Expression): arraysOps.SetArrayOp = {
-//        case class SetArrayOp(base: any.Expression, indices: Seq[any.Expression], value: any.Expression) extends scalaArraysOps.arraysOpsOverride.SetArrayOp with finalOperatorExpressions.operatorExpressionsOverrides.Operator
-//        SetArrayOp(base, indices, value)
-//      }
 
       def lengthArrayExpression(base: any.Expression, indices: Seq[any.Expression]): scalaArraysOps.arraysOpsOverride.LengthArrayExpression = {
         case class LengthArrayExpression(base: any.Expression, indices: Seq[any.Expression])

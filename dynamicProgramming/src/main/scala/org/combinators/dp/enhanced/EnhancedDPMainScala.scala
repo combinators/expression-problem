@@ -26,8 +26,10 @@ abstract class EnhancedDPMainScala extends IOApp with EnhancedMainInterface {
     with FinalAssertionsAST
     with FinalBooleanAST
     with FinalConsoleAST
+    with FinalExceptionsAST
     with FinalEqualsAST
     with FinalListsAST
+    with FinalMapsAST
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
     with FinalStringAST {
@@ -35,7 +37,7 @@ abstract class EnhancedDPMainScala extends IOApp with EnhancedMainInterface {
   }
   val generator: CodeGenerator[_ast.type] = CodeGenerator("dp", _ast, Set.empty)
 
-  val dpApproach = EnhancedDPObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods, generator.doubles.arithmeticInMethods, generator.realDoubles.realArithmeticInMethods, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.assertions.assertionsInMethods, generator.strings.stringsInMethods, generator.equality.equalsInMethods, generator.ooParadigm, generator.parametricPolymorphism, generator.booleans.booleansInMethodsInMethods)(generator.generics)
+  val dpApproach = EnhancedDPObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods, generator.doubles.arithmeticInMethods, generator.realDoubles.realArithmeticInMethods, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.maps.mapsInMethods, generator.assertions.assertionsInMethods, generator.strings.stringsInMethods, generator.equality.equalsInMethods, generator.ooParadigm, generator.parametricPolymorphism, generator.booleans.booleansInMethodsInMethods)(generator.generics)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 

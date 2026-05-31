@@ -11,14 +11,14 @@ case class Exception[Expression,Stmt](exp:Expression) extends Command {
 trait Exceptions[Context] extends FFI {
   import base.syntax._
 
-  trait ExceptionCapabilities {
+  trait ExceptionsCapabilities {
     implicit val canRaise: Understands[Context, Exception[Expression, Statement]]
 
     def raise(exp: Expression): Generator[Context, Statement] =
       AnyParadigm.capability(Exception[Expression, Statement](exp))
   }
   
-  val exceptionCapabilities: ExceptionCapabilities
+  val exceptionsCapabilities: ExceptionsCapabilities
 }
 
 object Exceptions {

@@ -1,0 +1,31 @@
+package org.combinators.ep.language.inbetween.ffi
+
+import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphismAST
+
+trait MapsAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST {
+  object mapsOps {
+    trait CreateMap extends any.Type
+
+    trait GetOp extends operatorExpressions.Operator
+
+    trait PutOp extends operatorExpressions.Operator
+
+    trait Factory {
+      def createMap(): CreateMap
+
+      def createMap(tpe: any.Type, elems: Seq[any.Expression]): any.ApplyExpression =
+        factory.applyExpression(polymorphismFactory.typeReferenceExpression(polymorphismFactory.typeApplication(createMap(), Seq(tpe))),
+          elems)
+
+      def getOp(): GetOp
+      def putOp(): PutOp
+
+      def get(key: any.Expression, map: any.Expression): operatorExpressions.BinaryExpression =
+        operatorExpressionsFactory.binaryExpression(getOp(), key, map)
+      def put(key: any.Expression, map: any.Expression, value: any.Expression): operatorExpressions.TernaryExpression =
+        operatorExpressionsFactory.ternaryExpression(putOp(), key, map, value)
+
+    }
+  }
+  val mapsOpsFactory: mapsOps.Factory
+}

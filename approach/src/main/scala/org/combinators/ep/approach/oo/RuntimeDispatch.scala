@@ -125,7 +125,7 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     */
   def makeDispatchingOperation(model: GenericModel, op: Operation): Generator[ClassContext, Unit] = {
     def ifStmt(): Generator[MethodBodyContext, Option[Expression]] = {
-      import exceptions.exceptionCapabilities._
+      import exceptions.exceptisonCapabilities._
       import impParadigm.imperativeCapabilities._
       import ooParadigm.methodBodyCapabilities._
       import paradigm.methodBodyCapabilities._

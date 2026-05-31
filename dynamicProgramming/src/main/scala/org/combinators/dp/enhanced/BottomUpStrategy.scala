@@ -47,29 +47,9 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
 
     // was model.input.length
     model.subproblemType match {
-      case _:IntegerType =>
-        params.length match {
-          case 1 => TypeRep.Array(TypeRep.Int)
-          case 2 => TypeRep.Array(TypeRep.Array(TypeRep.Int))
-          case 3 => TypeRep.Array(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
-          case _ =>  ???
-        }
-
-      case _:CharType =>
-        params.length match {
-          case 1 => TypeRep.Array(TypeRep.Char)
-          case 2 => TypeRep.Array(TypeRep.Array(TypeRep.Char))
-          case 3 => TypeRep.Array(TypeRep.Array(TypeRep.Array(TypeRep.Char)))
-          case _ =>  ???
-        }
-
-      case _:BooleanType =>
-        params.length match {
-          case 1 => TypeRep.Array(TypeRep.Boolean)
-          case 2 => TypeRep.Array(TypeRep.Array(TypeRep.Boolean))
-          case 3 => TypeRep.Array(TypeRep.Array(TypeRep.Array(TypeRep.Boolean)))
-          case _ =>  ???
-        }
+      case _:IntegerType => constructedArrayType(params.length, TypeRep.Int)
+      case _:CharType => constructedArrayType(params.length, TypeRep.Char)
+      case _:BooleanType =>  constructedArrayType(params.length, TypeRep.Boolean)
 
       case _ => ???
     }
@@ -432,7 +412,6 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
         case _ => model.solution.order
       }
 
-      println("Make Bottom Up Fix Array Type!")
       for {
         arrayType <- toTargetLanguageType(arTypes(model))
 
@@ -459,5 +438,4 @@ trait BottomUpStrategy extends Utility with EnhancedUtility {
 
     addClassToProject(makeClass, names.mangle(model.problem))
   }
-
 }

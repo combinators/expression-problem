@@ -27,8 +27,10 @@ type FullAST = BaseAST
   & AssertionsAST
   & BooleanAST
   & ConsoleAST
+  & ExceptionsAST
   & EqualsAST
   & ListsAST
+  & MapsAST
   & OperatorExpressionOpsAST
   & RealArithmeticAST
   & StringAST
@@ -183,10 +185,8 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
       )(functional.typeCapabilities.canTranslateTypeInType,
         parametricPolymorphismInADTContexts.algebraicDataTypeCapabilities.canApplyTypeInADT)
 
-
     val (generatedProject, _) = Command.runGenerator(generator, projectWithLookups)
     val withPrefix = ast.factory.convert(generatedProject).prefixRootPackage(Seq(nameProvider.mangle(domainName)), prefixExcludedTypes)
-
 
     def toFileWithPath(cu: ast.any.CompilationUnit, basePath: Path): FileWithPath = {
       FileWithPath(ast.factory.convert(cu).toScala, {
@@ -263,7 +263,8 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     */
 
   val lists: Lists.WithBase[ast.type, paradigm.type] = Lists[ast.type, paradigm.type](paradigm)
-
+  val maps: Maps.WithBase[ast.type, paradigm.type] = Maps[ast.type, paradigm.type](paradigm)
+  
   /*val listsInConstructor =
     Lists[CtorCtxt, paradigm.type, generics.type](
       paradigm,
@@ -285,7 +286,8 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
   val exceptionsInMethod = new Exceptions[paradigm.type](paradigm)*/
 
   val assertions = Assertions[ast.type, paradigm.type](paradigm)
-  
+  val exceptions: Exceptions.WithBase[ast.type, paradigm.type] = Exceptions[ast.type, paradigm.type](paradigm)
+
 }
 
 object CodeGenerator {

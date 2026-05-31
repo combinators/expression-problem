@@ -28,6 +28,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val maps: Maps.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import ooParadigm._
@@ -170,6 +171,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
           helperType <- helper_method_type_in_constructor(model)
           tpe <- make_memo_type(intType, helperType)         // Key is key() result, and Value is DP-int solution
           obj <- instantiateObject(tpe, Seq.empty)
+          /// obj <- maps.mapCapabilities.create(intType, intType)  TODO: CANNOT do this until we have mapsInConstructors
           _ <- initializeField(memoName, obj)
         } yield None
       } else {
@@ -532,7 +534,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
         } yield (argName, argExpr)
       }
 
-    } yield (helperargs.toMap ++ mapperargs.toMap)
+    } yield helperargs.toMap ++ mapperargs.toMap
   }
 
   /**

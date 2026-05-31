@@ -4,7 +4,7 @@ package org.combinators.ep.language.java.paradigm.ffi
 
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.InitializerDeclaration
-import com.github.javaparser.ast.expr.{IntegerLiteralExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr}
+import com.github.javaparser.ast.expr.{MethodCallExpr, ObjectCreationExpr, ThisExpr, TypeExpr}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, InstanceRep, TypeRep, Understands}

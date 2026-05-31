@@ -44,8 +44,10 @@ class FibonacciRecursiveVariableMainScala {
     with FinalAssertionsAST
     with FinalBooleanAST
     with FinalConsoleAST
+    with FinalExceptionsAST
     with FinalEqualsAST
     with FinalListsAST
+    with FinalMapsAST
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
     with FinalStringAST {

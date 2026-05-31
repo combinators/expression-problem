@@ -302,9 +302,10 @@ trait Utility {
       } yield e
 
       case eq: EqualExpression => for {
+        eq_tpe <- map_type_in_method(eq.argType)   // was just .tpe before
         left <- explore(eq.left, memoize, symbolTable, bottomUp)
         right <- explore(eq.right, memoize, symbolTable, bottomUp)
-        eq_tpe <- map_type_in_method(eq.tpe)
+
         e <- eqls.equalityCapabilities.areEqual(eq_tpe, left, right)
       } yield e
 

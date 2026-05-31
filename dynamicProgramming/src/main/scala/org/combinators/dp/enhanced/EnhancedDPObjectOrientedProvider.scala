@@ -4,7 +4,7 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.control.Imperative
-import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, Maps, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
 import org.combinators.dp.TestExample
@@ -19,11 +19,12 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
   val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
 
   val names: NameProvider[paradigm.syntax.Name]
-  val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
+  val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val arithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
   val realArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
-  val console: Console.WithBase[paradigm.MethodBodyContext,paradigm.type]
-  val array: Arrays.WithBase[paradigm.MethodBodyContext,paradigm.type]
+  val console: Console.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val array: Arrays.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val maps: Maps.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
@@ -110,12 +111,7 @@ trait EnhancedDPObjectOrientedProvider extends EnhancedDPProvider with EnhancedU
               case _ => Seq.empty
             }
 
-            val type_rep = dimensions.length match {
-              case 1 => TypeRep.Array(TypeRep.Int)
-              case 2 => TypeRep.Array(TypeRep.Array(TypeRep.Int))
-              case 3 => TypeRep.Array(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
-              case _ =>  ???
-            }
+            val type_rep = constructedArrayType(dimensions.length, TypeRep.Int)
 
             if (vals.length == 1) {
               for {
@@ -235,6 +231,7 @@ object EnhancedDPObjectOrientedProvider {
    ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
    con: Console.WithBase[base.MethodBodyContext, base.type],
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
+   maps: Maps.WithBase[base.MethodBodyContext, base.type],
    assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
    stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
    eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
@@ -254,6 +251,7 @@ object EnhancedDPObjectOrientedProvider {
       override val genericsParadigm: generics.type = generics
       override val console: Console.WithBase[base.MethodBodyContext, paradigm.type] = con
       override val array: Arrays.WithBase[base.MethodBodyContext, paradigm.type] = arr
+      override val maps: Maps.WithBase[base.MethodBodyContext, paradigm.type] = maps
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn
       override val strings: Strings.WithBase[base.MethodBodyContext, paradigm.type] = stringsIn
       override val eqls: Equality.WithBase[base.MethodBodyContext, paradigm.type] = eqlsIn

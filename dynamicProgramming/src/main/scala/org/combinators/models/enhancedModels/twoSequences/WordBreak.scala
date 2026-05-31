@@ -8,10 +8,9 @@ import org.combinators.models._
  * Given a string s and y a dictionary of n words dictionary, check if
  * s can be segmented into a sequence of valid words from the dictionary, separated by spaces.
  *
- * BottomUp returns dp[n] while top-down starts with helper(0) suggesting that these will be
- * two different Bu and TD.
+ * BROKEN. Will only work when you can support validating that a raw array contains a specific value
  */
-
+@deprecated(message = "BROKEN. Will only work when possible to add code to confirm a string is a member of an array")
 class WordBreak {
 
   def model: EnhancedModel = {
@@ -38,8 +37,9 @@ class WordBreak {
 //      , SelfExpression("w") + one)
 //    val start = i - StringLengthExpression(ArrayElementExpression(dict, SelfExpression("w")))
 
-    // THIS IS NOT CORRECT. TRYING SOMETHING TO ENSURE substring works.
-    val dt_definition = IfThenElseDefinition(i == zero, ExpressionStatement(falseLit), ExpressionDefinition(s == SubStringExpression(s, i - one, i))
+    // TO DO: THIS IS NOT CORRECT. You need to confirm substring exists within dict
+    val dt_definition = IfThenElseDefinition(i == zero, ExpressionStatement(falseLit),
+      ExpressionDefinition(EqualExpression(s, SubStringExpression(s, i - one, i), StringType()))
 
     )
 

@@ -13,13 +13,13 @@ import org.combinators.archive.unenhancedModels.boilerplate.uncrossedLines.Unenh
 import org.combinators.archive.unenhancedModels.models.twoSequences.{LongestCommonSubsequenceModel, UncrossedLinesModel}
 import org.combinators.dp.enhanced.EnhancedMainInterface
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
-import FileWithPathPersistable._
+import FileWithPathPersistable.*
+import org.combinators.boilerplate.grid.{CountSquaresMainJava, MinPathSumMainJava, UniquePathsMainJava}
+import org.combinators.boilerplate.integer.{BellNumberMainJava, DiceThrowMainJava, FibonacciMainJava, PerfectSquaresMainJava, TribonacciMainJava}
+import org.combinators.boilerplate.oneSequence.{MatrixChainMultiplicationBottomUpMainJava, MatrixChainMultiplicationTopDownMainJava, MinCostClimbingStairMainJava}
+import org.combinators.boilerplate.strings.{InterleaveStringsMainJava, ThreeStringsLCSMainJava}
+import org.combinators.boilerplate.twoSequences.{LongestCommonSubsequenceMainJava, UncrossedLinesMainJava}
 import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
-import org.combinators.models.boilerplate.grid._
-import org.combinators.models.boilerplate.integer._
-import org.combinators.models.boilerplate.oneSequence._
-import org.combinators.models.boilerplate.strings._
-import org.combinators.models.boilerplate.twoSequences._
 
 import java.nio.file.{Path, Paths}
 import scala.collection.Seq

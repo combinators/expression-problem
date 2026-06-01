@@ -8,7 +8,7 @@ import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Boole
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
 import org.combinators.dp.original.DPObjectOrientedProvider
-import org.combinators.models.{LiteralArray, LiteralInt, LiteralString, LiteralStringPair, UnitExpression}
+import org.combinators.models.{LiteralArray, LiteralInt, LiteralString, UnitExpression}
 
 /** 
  * Partially working implementation of CoinChangeProvider.

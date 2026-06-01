@@ -50,6 +50,7 @@ abstract class EnhancedDPMainJava extends IOApp with EnhancedMainInterface {
         _ <- generator.equalityInMethod.enable()
         _ <- generator.assertionsInMethod.enable()
         _ <- generator.booleansInMethod.enable()
+        _ <- generator.mapsInMethod.enable()
 
         // HERE you can finally specify the method to use for testing and the test cases
         _ <- dpApproach.implement(model, tests, option)
@@ -91,6 +92,7 @@ abstract class EnhancedDPMainJava extends IOApp with EnhancedMainInterface {
       args(0).toLowerCase() match {
         case "topdown" => topDown
         case "topdownwithmemo" => topDownWithMemo
+        case "topdownmemo" => topDownWithMemo
         case "bottomup" => bottomUp
         case _ => ???
       }

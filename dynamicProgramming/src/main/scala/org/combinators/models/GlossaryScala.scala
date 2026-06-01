@@ -8,9 +8,6 @@ package org.combinators.models
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.archive.cogen.bottomUp.twoSequences.longestCommonSubsequence.LCSMainJava
-import org.combinators.archive.unenhancedModels.boilerplate.uncrossedLines.UnenhancedUncrossedLinesMainJava
-import org.combinators.archive.unenhancedModels.models.twoSequences.{LongestCommonSubsequenceModel, UncrossedLinesModel}
 import org.combinators.dp.enhanced.EnhancedMainInterface
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import FileWithPathPersistable.*

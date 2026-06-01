@@ -8,11 +8,11 @@ import org.combinators.models.enhancedModels.twoSequences.WildcardPatternMatchin
 
 trait WildcardPatternMatchingApp {
   val tests = Seq(
-    new TestExample("wpm1", LiteralStringPair("a*b*c", "afhuirbfhwnkc"), LiteralBoolean(true), new UnitExpression),
-    new TestExample("wpm2", LiteralStringPair("a?b?c", "a"), LiteralBoolean(false), new UnitExpression),
-    new TestExample("wpm4", LiteralStringPair("adceb", "*a*b"), LiteralBoolean(true), new UnitExpression),
-    new TestExample("wpm5", LiteralStringPair("", "*"), LiteralBoolean(true), new UnitExpression),
-    new TestExample("wpm6", LiteralStringPair("", ""), LiteralBoolean(true), new UnitExpression),
+    new TestExample("wpm1", LiteralTuple(LiteralString("a*b*c"), LiteralString("afhuirbfhwnkc")), LiteralBoolean(true), new UnitExpression),
+    new TestExample("wpm2", LiteralTuple(LiteralString("a?b?c"), LiteralString("a")), LiteralBoolean(false), new UnitExpression),
+    new TestExample("wpm4", LiteralTuple(LiteralString("adceb"), LiteralString("*a*b")), LiteralBoolean(true), new UnitExpression),
+    new TestExample("wpm5", LiteralTuple(LiteralString(""), LiteralString("*")), LiteralBoolean(true), new UnitExpression),
+    new TestExample("wpm6", LiteralTuple(LiteralString(""), LiteralString("")), LiteralBoolean(true), new UnitExpression),
   )
 
   val model: EnhancedModel = new WildcardPatternMatching().model

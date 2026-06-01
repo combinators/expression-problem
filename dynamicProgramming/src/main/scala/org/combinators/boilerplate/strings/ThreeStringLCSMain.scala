@@ -17,9 +17,9 @@ import org.combinators.models.enhancedModels.strings.ThreeStringLCS
 trait ThreeStringsLCSApp {
 
   val tests = Seq(
-    new TestExample("ts1", LiteralStringTriple("AGGT12", "12TXAYB", "12XBA"), LiteralInt(2), new UnitExpression),
-    new TestExample("ts2", LiteralStringTriple("geeks", "geeksfor", "geeksforgeeks"), LiteralInt(5), new UnitExpression),
-    new TestExample("ts3", LiteralStringTriple("abcd1e2", "bc12ea", "bd1ea"), LiteralInt(3), new UnitExpression),
+    new TestExample("ts1", LiteralTuple(LiteralString("AGGT12"), LiteralString("12TXAYB"), LiteralString("12XBA")), LiteralInt(2), new UnitExpression),
+    new TestExample("ts2", LiteralTuple(LiteralString("geeks"), LiteralString("geeksfor"), LiteralString("geeksforgeeks")), LiteralInt(5), new UnitExpression),
+    new TestExample("ts3", LiteralTuple(LiteralString("abcd1e2"), LiteralString("bc12ea"), LiteralString("bd1ea")), LiteralInt(3), new UnitExpression),
   )
 
   val model: EnhancedModel = new ThreeStringLCS().model

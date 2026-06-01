@@ -26,8 +26,11 @@ trait BooleanExpression {
   def tpe:ArgumentType = BooleanType()
 }
 
-// necessary for defining literals that form the input or possible output
-trait LiteralExpression extends Expression
+/**
+ * Necessary for defining what will be either Input or Output of a test case
+ * 
+ */
+trait LiteralExpression
 
 class UnitExpression extends LiteralExpression {
   def tpe: ArgumentType = UnitType()
@@ -108,7 +111,7 @@ case class FunctionExpression(name:String, args: Seq[Expression]) extends Expres
   def tpe:ArgumentType = IntegerType()
 }
 
-case class LiteralInt(literal: Int) extends LiteralExpression {
+case class LiteralInt(literal: Int) extends LiteralExpression with Expression {
   def tpe:ArgumentType = IntegerType()
 }
 case class IteratorExpression(iteratorNumber: Int, variable:String) extends Expression {
@@ -127,16 +130,6 @@ case class HelperExpression(variable:String,
   def tpe:ArgumentType = IntegerType()
 }
 
-// when input problem has two integers, not easily translated as (row, column)
-case class LiteralPairType() extends ArgumentType
-case class LiteralPair(val1:Int, val2:Int) extends LiteralExpression {
-  def tpe:ArgumentType = LiteralPairType()
-}
-case class LiteralTripleType() extends ArgumentType
-case class LiteralTriple(val1:Int, val2:Int, val3:Int) extends LiteralExpression {
-  def tpe: ArgumentType = LiteralTripleType()
-}
-
 case class PackedArrayType(elementType:ArgumentType) extends ArgumentType
 
 /** This remains a class (not case class) because of the auxiliary constructor (to play nice with IntelliJ editor) */
@@ -148,20 +141,6 @@ class LiteralArray(val literal:Array[Int], val dimensions:Seq[Int]) extends Lite
   }
 
   def tpe:ArgumentType = PackedArrayType(IntegerType())
-}
-
-case class StringPairType() extends ArgumentType
-case class LiteralStringPair(string1:String, string2:String) extends LiteralExpression {
-  def tpe:ArgumentType = StringPairType()
-}
-case class StringTripleType() extends ArgumentType
-case class LiteralStringTriple(string1:String, string2:String, string3:String) extends LiteralExpression {
-  def tpe:ArgumentType = StringTripleType()
-}
-
-case class IntegerArrayPair() extends ArgumentType
-case class LiteralArrayPair(ar1:Array[Int], ar2:Array[Int]) extends LiteralExpression {
-  def tpe:ArgumentType = IntegerArrayPair()
 }
 
 // For when a HelpExpression needs to refer to self
@@ -186,7 +165,7 @@ case class LiteralString(literal: String) extends LiteralExpression {
 }
 
 //Character
-case class LiteralChar(literal:Char) extends LiteralExpression {
+case class LiteralChar(literal:Char) extends LiteralExpression with Expression {
   def tpe:ArgumentType = CharType()
 }
 case class CharAtExpression(string: Expression, index: Expression) extends Expression {
@@ -213,7 +192,7 @@ case class TernaryExpression(condition: Expression & BooleanExpression, trueBran
   }
 }
 
-case class LiteralBoolean(literal:Boolean) extends LiteralExpression with BooleanExpression
+case class LiteralBoolean(literal:Boolean) extends LiteralExpression with Expression with BooleanExpression
 
 // Now includes the name of the int variable to iterate over
 case class ArgExpression(whichArg: Int, name:String, argType:ArgumentType, itArgName:String) extends Expression {

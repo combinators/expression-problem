@@ -1,5 +1,6 @@
 package org.combinators.archive.cogen.bottomUp.twoSequences.longestCommonSubsequence
 
+import org.combinators.archive.unenhancedModels.models.LiteralStringPair
 import org.combinators.dp.TestExample
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
@@ -8,7 +9,7 @@ import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Boole
 import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
 import org.combinators.dp.original.DPObjectOrientedProvider
-import org.combinators.models.{LiteralInt, LiteralString, LiteralStringPair}
+import org.combinators.models.{LiteralInt, LiteralString}
 
 /** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
  * in a variety of contexts. This trait provides that capability

@@ -2,7 +2,7 @@ package org.combinators.ep.language.scala.ast.ffi
 
 import org.combinators.ep.language.inbetween.ffi.MapsAST as InbetweenMapsAST
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
-import org.combinators.cogen.{FileWithPath, TypeRep}
+import org.combinators.cogen.TypeRep
 
 trait MapsAST extends InbetweenMapsAST { self: OperatorExpressionsAST & BaseAST =>
   object scalaMapsOps {
@@ -16,12 +16,38 @@ trait MapsAST extends InbetweenMapsAST { self: OperatorExpressionsAST & BaseAST 
         def toImport: Seq[any.Import] = Seq.empty
       }
 
+      trait ContainsKeyOp extends mapsOps.ContainsKeyOp with scalaOperatorExpressions.operatorExpressionsOverrides.Operator with scalaOperatorExpressions.InfixOperator {
+        def operator: String = ".containsKey"
+
+        override def toScala(operands: any.Expression*): String = {
+          val base = operands(0).getSelfExpression.toScala
+          val key = operands(1).getSelfExpression.toScala
+
+          s"$base.containsKey($key)"
+        }
+      }
+
       trait GetOp extends mapsOps.GetOp with scalaOperatorExpressions.operatorExpressionsOverrides.Operator with scalaOperatorExpressions.InfixOperator {
         def operator: String = ".get"
+
+        override def toScala(operands: any.Expression*): String = {
+          val base = operands(0).getSelfExpression.toScala
+          val key = operands(1).getSelfExpression.toScala
+
+          s"$base.get($key)"
+        }
       }
 
       trait PutOp extends mapsOps.PutOp with scalaOperatorExpressions.operatorExpressionsOverrides.Operator with scalaOperatorExpressions.PostfixOperator {
         def operator: String = ".put"
+
+        override def toScala(operands: any.Expression*): String = {
+          val base = operands(0).getSelfExpression.toScala
+          val key = operands(1).getSelfExpression.toScala
+          val value = operands(2).getSelfExpression.toScala
+
+          s"$base.updated($key, $value)"
+        }
       }
 
       trait Factory extends mapsOps.Factory {}
@@ -31,7 +57,7 @@ trait MapsAST extends InbetweenMapsAST { self: OperatorExpressionsAST & BaseAST 
       tpe match {
         case t: TypeRep.Map.type =>
           value match {
-            case m:Map[tpe.HostType, tpe.HostType] => Some(s"org.combinators.ep.util.Node(id, Seq(2,3)})")
+            case m:Map[tpe.HostType, tpe.HostType] => Some(s"org.combinators.ep.util.Node(id, Seq(2,3)})")  // TODO: FIX ME!!!!
             case _ => ???
           }
         case _ => None
@@ -52,6 +78,12 @@ trait FinalMapsAST extends MapsAST { self: FinalOperatorExpressionsAST & FinalBa
         }
         CreateMap()
       }
+
+      def containsKeyOp(): mapsOps.ContainsKeyOp = {
+        case class ContainsKeyOp() extends scalaMapsOps.mapsOpsOverride.ContainsKeyOp with finalOperatorExpressions.operatorExpressionsOverrides.Operator
+        ContainsKeyOp()
+      }
+
       def getOp(): mapsOps.GetOp = {
         case class GetOp() extends scalaMapsOps.mapsOpsOverride.GetOp with finalOperatorExpressions.operatorExpressionsOverrides.Operator
         GetOp()

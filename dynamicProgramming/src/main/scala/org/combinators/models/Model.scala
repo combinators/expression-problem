@@ -1,8 +1,6 @@
 package org.combinators.models
 
-trait ArgumentType {
-  
-}
+trait ArgumentType { }
 
 // problem instance types go here
 case class BooleanType() extends ArgumentType
@@ -12,6 +10,14 @@ case class DoubleType() extends ArgumentType
 case class StringType() extends ArgumentType
 case class UnitType() extends ArgumentType 
 
+// helper for when the PD problem has multiple argument types (like an Array and an integer).
+// can contain a variable number of literalExpressions, each of which is independently 
+case class TupleType() extends ArgumentType
+case class LiteralTuple(values:LiteralExpression*) extends LiteralExpression {
+  def length : Int = values.length
+  
+  def tpe:ArgumentType = TupleType()
+}
 // possibly choose to make this Generic but that seems like overkill
 trait ArrayType(val elementType:ArgumentType) extends ArgumentType
 
@@ -66,6 +72,9 @@ abstract class Definition
 
 abstract class DefinitionStatement
 case class ExpressionStatement(expr:Expression) extends DefinitionStatement
+
+// TODO: I think we need this for when multiple are needed (i.e., NumberPathsWithKCoins
+case class DefinitionSequence(stmts:DefinitionStatement*) extends DefinitionStatement
 
 case class IfThenElseDefinition(condition: Expression, result: DefinitionStatement, elseExpression: Definition) extends Definition
 case class IfThenNoElseDefinition(condition: Expression, result: Expression, elseIfs: Seq[(Expression, Expression)]) extends Definition

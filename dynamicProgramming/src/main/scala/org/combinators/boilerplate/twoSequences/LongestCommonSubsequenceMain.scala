@@ -8,7 +8,7 @@ import org.combinators.models.enhancedModels.twoSequences.LongestCommonSubsequen
 
 trait LongestCommonSubsequenceApp {
   val tests = Seq(
-    new TestExample("lcs1", LiteralStringPair("abc", "ace"), LiteralInt(2), new UnitExpression),
+    new TestExample("lcs1", LiteralTuple(LiteralString("abc"), LiteralString("ace")), LiteralInt(2), new UnitExpression),
   )
 
   val model: EnhancedModel = new LongestCommonSubsequence().model

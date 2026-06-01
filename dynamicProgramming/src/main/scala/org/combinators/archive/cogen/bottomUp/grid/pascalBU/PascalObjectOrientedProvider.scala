@@ -17,8 +17,8 @@ import org.combinators.cogen.{AbstractSyntax, NameProvider}
 import org.combinators.dp.TestExample
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.dp.original.Utility
-import org.combinators.models.{LiteralInt, LiteralPair, UnitExpression}
-
+import org.combinators.models.{LiteralInt, UnitExpression}
+import org.combinators.archive.unenhancedModels.models.LiteralPair
 
 trait PascalObjectOrientedProvider extends Utility {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]

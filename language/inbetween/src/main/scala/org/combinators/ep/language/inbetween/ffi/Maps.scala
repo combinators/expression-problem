@@ -3,7 +3,7 @@ package org.combinators.ep.language.inbetween.ffi
 /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.Apply
-import org.combinators.cogen.paradigm.ffi.{CreateMap, GetOrElse, Put, Maps as Mps}
+import org.combinators.cogen.paradigm.ffi.{ContainsKey, CreateMap, GetOrElse, Put, Maps as Mps}
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.{any, polymorphism}
@@ -24,6 +24,12 @@ trait Maps[AST <: MapsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
             (context, mapsOpsFactory.createMap(command.functional.keyType, command.arguments.flatMap(pair => Seq(pair._1, pair._2))))
           }
         }
+      override implicit val canContainsKey: Understands[any.Method, Apply[ContainsKey, any.Expression, any.Expression]] =
+          new Understands[any.Method, Apply[ContainsKey, any.Expression, any.Expression]] {
+            override def perform(context: any.Method, command: Apply[ContainsKey, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+              (context, mapsOpsFactory.containsKey(command.arguments(0), command.arguments(1)))
+            }
+          }
       override implicit val canGet: Understands[any.Method, Apply[GetOrElse, any.Expression, any.Expression]] =
         new Understands[any.Method, Apply[GetOrElse, any.Expression, any.Expression]] {
           override def perform(context: any.Method, command: Apply[GetOrElse, any.Expression, any.Expression]): (any.Method, any.Expression) = {

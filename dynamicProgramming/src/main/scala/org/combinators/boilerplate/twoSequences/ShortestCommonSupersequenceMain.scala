@@ -8,11 +8,11 @@ import org.combinators.models.enhancedModels.twoSequences.ShortestCommonSuperseq
 
 trait ShortestCommonSupersequenceApp {
   val tests = Seq(
-    new TestExample("scs1", LiteralStringPair("abac", "cab"), LiteralInt(5), new UnitExpression),
-    new TestExample("scs2", LiteralStringPair("abc", "ac"), LiteralInt(4), new UnitExpression),
-    new TestExample("scs3", LiteralStringPair("abc", "abc"), LiteralInt(3), new UnitExpression),
-    new TestExample("scs4", LiteralStringPair("", "abc"), LiteralInt(3), new UnitExpression),
-    new TestExample("scs5", LiteralStringPair("abc", ""), LiteralInt(3), new UnitExpression),
+    new TestExample("scs1", LiteralTuple(LiteralString("abac"), LiteralString("cab")), LiteralInt(5), new UnitExpression),
+    new TestExample("scs2", LiteralTuple(LiteralString("abc"), LiteralString("ac")), LiteralInt(4), new UnitExpression),
+    new TestExample("scs3", LiteralTuple(LiteralString("abc"), LiteralString("abc")), LiteralInt(3), new UnitExpression),
+    new TestExample("scs4", LiteralTuple(LiteralString(""), LiteralString("abc")), LiteralInt(3), new UnitExpression),
+    new TestExample("scs5", LiteralTuple(LiteralString("abc"), LiteralString("")), LiteralInt(3), new UnitExpression),
   )
 
   val model: EnhancedModel = new ShortestCommonSupersequence().model

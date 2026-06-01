@@ -14,7 +14,7 @@ import org.combinators.ep.language.java.paradigm.{AnyParadigm, Generics, ObjectO
 import org.combinators.ep.language.java.Syntax.default.*
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.*
 import com.github.javaparser.ast.{ImportDeclaration, NodeList}
-import org.combinators.cogen.paradigm.ffi.{CreateMap, GetOrElse, Put, Maps as Mps}
+import org.combinators.cogen.paradigm.ffi.{CreateMap, ContainsKey, GetOrElse, Put, Maps as Mps}
 import org.combinators.cogen.paradigm.{AddImport, Apply}
 
 trait Maps[Ctxt, AP <: AnyParadigm] extends Mps[Ctxt] {
@@ -91,6 +91,16 @@ trait Maps[Ctxt, AP <: AnyParadigm] extends Mps[Ctxt] {
 
       implicit val canCreate: Understands[Ctxt, Apply[CreateMap[Type], (Expression,Expression), Expression]] = createMap(canAddImport)
 
+      implicit val canContainsKey: Understands[Ctxt, Apply[ContainsKey, Expression, Expression]] =
+        new Understands[Ctxt, Apply[ContainsKey, Expression, Expression]] {
+          def perform(
+                       context: Ctxt,
+                       command: Apply[ContainsKey, Expression, Expression]
+                     ): (Ctxt, Expression) = {
+            (context, new MethodCallExpr(command.arguments(0), "containsKey", new NodeList[Expression](command.arguments(1))))
+          }
+        }
+
       implicit val canGet: Understands[Ctxt, Apply[GetOrElse, Expression, Expression]] =
         new Understands[Ctxt, Apply[GetOrElse, Expression, Expression]] {
           def perform(
@@ -159,7 +169,6 @@ trait Maps[Ctxt, AP <: AnyParadigm] extends Mps[Ctxt] {
               }
 
             def addExtraImport(
-              //importDeclaration : Import,
               importResolution: ContextSpecificResolver => Type => Option[Import]
             ): ContextSpecificResolver => Type => Option[Import] = k => {
               case tpe

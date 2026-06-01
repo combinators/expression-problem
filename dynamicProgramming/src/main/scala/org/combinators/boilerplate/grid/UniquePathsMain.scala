@@ -11,8 +11,8 @@ import java.nio.file.{Path, Paths}
 
 trait UniquePathsApp {
   val tests = Seq(
-    new TestExample("up1", LiteralPair(3, 7), LiteralInt(28), new UnitExpression),
-    new TestExample("up2", LiteralPair(3, 2), LiteralInt(3), new UnitExpression),
+    new TestExample("up1", LiteralTuple(LiteralInt(3), LiteralInt(7)), LiteralInt(28), new UnitExpression),
+    new TestExample("up2", LiteralTuple(LiteralInt(3), LiteralInt(2)), LiteralInt(3), new UnitExpression),
   )
 
   val model: EnhancedModel = new UniquePaths().model

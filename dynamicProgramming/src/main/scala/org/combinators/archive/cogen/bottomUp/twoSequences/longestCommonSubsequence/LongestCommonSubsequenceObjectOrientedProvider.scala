@@ -1,13 +1,14 @@
 package org.combinators.archive.cogen.bottomUp.twoSequences.longestCommonSubsequence
 
 import org.combinators.archive.cogen.bottomUp.twoSequences.TwoSequencesUtility
+import org.combinators.archive.unenhancedModels.models.LiteralStringPair
 import org.combinators.dp.TestExample
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
 import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, TypeRep}
-import org.combinators.models._
+import org.combinators.models.*
 
 /**
  * One of the earliest attempts to generate bottom-up implementation of Longest Common Subsequence

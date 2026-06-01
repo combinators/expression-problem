@@ -6,6 +6,7 @@ import Command.Generator
 
 case class CreateMap[Type](keyType:Type, elementType: Type)
 case class GetOrElse()
+case class ContainsKey()
 case class Put()
 
 trait Maps[Context] extends FFI {
@@ -16,6 +17,10 @@ trait Maps[Context] extends FFI {
     implicit val canCreate: Understands[Context, Apply[CreateMap[Type], (Expression,Expression), Expression]]
     def create(keyTpe: Type, elemTpe: Type, values:(Expression,Expression)*): Generator[Context, Expression] =
       AnyParadigm.capability(Apply(CreateMap(keyTpe, elemTpe), values))
+
+    implicit val canContainsKey: Understands[Context, Apply[ContainsKey, Expression, Expression]]
+    def contains(map: Expression, key: Expression): Generator[Context, Expression] =
+      AnyParadigm.capability(Apply[ContainsKey, Expression, Expression](ContainsKey(), Seq(map, key)))
 
     implicit val canGet: Understands[Context, Apply[GetOrElse, Expression, Expression]]
     def getOrElse(map: Expression, key: Expression, defaultVal: Expression): Generator[Context, Expression] =

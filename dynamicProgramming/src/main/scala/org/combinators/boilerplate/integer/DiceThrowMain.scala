@@ -17,7 +17,7 @@ import org.combinators.models.enhancedModels.integer.DiceThrow
  */
 trait DiceThrowApp {
   val tests = Seq(
-    new TestExample("dt1", LiteralTriple(6, 3, 12), LiteralInt(25), new UnitExpression) //  https://www.geeksforgeeks.org/dsa/dice-throw-dp-30/
+    new TestExample("dt1", LiteralTuple(LiteralInt(6), LiteralInt(3), LiteralInt(12)), LiteralInt(25), new UnitExpression) //  https://www.geeksforgeeks.org/dsa/dice-throw-dp-30/
   )
   val model: EnhancedModel = new DiceThrow().model
 }

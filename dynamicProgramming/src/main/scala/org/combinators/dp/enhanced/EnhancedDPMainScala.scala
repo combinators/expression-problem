@@ -62,6 +62,7 @@ abstract class EnhancedDPMainScala extends IOApp with EnhancedMainInterface {
         _ <- generator.equality.equalsInMethods.enable()
         _ <- generator.assertions.assertionsInMethods.enable()
         _ <- generator.booleans.booleansInMethodsInMethods.enable()
+        _ <- generator.maps.mapsInMethods.enable()
 
         // HERE you can finally specify the method to use for testing and the test cases
         _ <- dpApproach.implement(model, tests, option)
@@ -103,6 +104,7 @@ abstract class EnhancedDPMainScala extends IOApp with EnhancedMainInterface {
       args(0).toLowerCase() match {
         case "topdown" => topDown
         case "topdownwithmemo" => topDownWithMemo
+        case "topdownmemo" => topDownWithMemo
         case "bottomup" => bottomUp
         case _ => ???
       }

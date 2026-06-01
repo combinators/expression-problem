@@ -95,12 +95,16 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
         } yield expanded)
       }
 
-      memo_ck <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("containsKey"))
+      //memo_ck <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("containsKey"))
+      //memo_cond_expr <- paradigm.methodBodyCapabilities.apply(memo_ck, Seq(key_var))
+      memo_cond_expr <- maps.mapCapabilities.contains(memo_field, key_var)
 
-      memo_cond_expr <- paradigm.methodBodyCapabilities.apply(memo_ck, Seq(key_var))
       check_if <- impParadigm.imperativeCapabilities.ifThenElse(memo_cond_expr, for {
-        get_method <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("get"))
-        get_call <- paradigm.methodBodyCapabilities.apply(get_method, Seq(key_var))
+//        get_method <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("get"))
+//        get_call <- paradigm.methodBodyCapabilities.apply(get_method, Seq(key_var))
+        zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+        get_call <- maps.mapCapabilities.getOrElse(memo_field, key_var, zero)
+        _ <- report_td(get_call.toString)
         stmt1 <- impParadigm.imperativeCapabilities.returnStmt(get_call)
         _ <- addBlockDefinitions(Seq(stmt1))
       } yield None, Seq.empty)
@@ -113,10 +117,12 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
 
       self <- ooParadigm.methodBodyCapabilities.selfReference()
       memo_field <- ooParadigm.methodBodyCapabilities.getMember(self, memoName)
-      put_method <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("put"))
-
-      func_call <- paradigm.methodBodyCapabilities.apply(put_method, Seq(key_var, result_var))
-      stmt1 <- impParadigm.imperativeCapabilities.liftExpression(func_call)
+//      put_method <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("put"))
+//      func_call <- paradigm.methodBodyCapabilities.apply(put_method, Seq(key_var, result_var))
+//
+      func_call <- maps.mapCapabilities.put(memo_field, key_var, result_var)
+      stmt1 <- impParadigm.imperativeCapabilities.assignVar(memo_field, func_call)
+      //stmt1 <- impParadigm.imperativeCapabilities.liftExpression(func_call)
       _ <- addBlockDefinitions(Seq(stmt1))
 
     } yield Some(result_var)

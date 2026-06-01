@@ -8,7 +8,8 @@ import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Boole
 import org.combinators.cogen.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep, Understands}
 import org.combinators.dp.original.Utility
-import org.combinators.models.{LiteralInt, LiteralPair, UnitExpression}
+import org.combinators.models.{LiteralInt, UnitExpression}
+import org.combinators.archive.unenhancedModels.models.LiteralPair
 
 /**
  * One of the earliest implementations to generate a successful top-down implementation of Pascal's Triangle WITH test cases.

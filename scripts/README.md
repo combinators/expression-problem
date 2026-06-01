@@ -29,6 +29,10 @@ For simplicity, all instructions using the 'sbt' command line.
    * ep-java-third-alternate (GenerateAllThirdAlternate)
       * Approaches: oo visitor visitorSideEffect extensibleVisitor interpreter coco trivially dispatch algebra
       * Evolutions: M0 X1 X2 X3 X2X3 X4
+   
+   * ep-java-quick (QuickValidation) -- Note that you cannot validate this generation (so skip step 2 below)
+      * Approaches: trivially oo visitor extensibleVisitor interpreter coco algebra
+      * Evolutions: A3 D3 I2M3I1N1 J8 M9 O1OA O2 OD3 OO3 V1
 
 For Scala-generated code, the above are replaced with `ep-scala-XXX` and approaches and
 evolutions remain the same.
@@ -127,6 +131,8 @@ or
 4. Generate statistics regarding the results of generating the source code, compiling the
    source code, executing the test cases and code coverage statistics. This script also detects
    errors in these three phases.
+
+   Make sure `scipy` is installed
 
    In the respective ep-java-XXX directories, execute the following Python script:
 

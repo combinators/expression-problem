@@ -99,7 +99,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
         _ <- addTypeParameter(visitTyParam, Command.skip)
 
         // this returns mangled visitTypeParameter name and gets list of all type parameters, for which there is only one, so we get head
-        args <- getTypeArguments()
+        args <- getTypeArguments
         _ <- setReturnType(args.head)
 
         // identify Visitor<R>
@@ -428,7 +428,7 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
         vType = visitorInterfaceName(model) // convert Name to a class
 
         visitorClassType <- findClass(vType *)
-        tpeParam <- getTypeArguments()
+        tpeParam <- getTypeArguments
         instVisitClassType <- applyType(visitorClassType, tpeParam)
         castV <- castObject(instVisitClassType, v)
         // invoke visit method on 'v' with 'this' as argument

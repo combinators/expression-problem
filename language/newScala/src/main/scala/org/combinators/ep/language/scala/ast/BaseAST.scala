@@ -287,7 +287,8 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             underlyingClass.addParent(classReferenceType(
               Seq("org", "scalatest", "funsuite", "AnyFunSuite").map(n => nameProvider.mangle(n)) *
             ))
-          val methodsAsTests = withFunSuiteExtension.methods.zip(this.testMarkers).filter { case (m, isTest) => isTest }.map { case (m, _) => {
+            
+          val methodsAsTests = withFunSuiteExtension.methods.zip(this.testMarkers).filter { case (m, isTest) => isTest }.map { case (m, _) => 
             liftExpression(applyExpression(
               applyExpression(
                 memberAccessExpression(selfReferenceExpression, nameProvider.mangle("test")),
@@ -295,7 +296,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
               ),
               Seq(blockExpression(m.statements))
             ))
-          }
+          
           }
           val withPrimaryClsConstructor = if (underlyingClass.constructors.isEmpty) {
             withFunSuiteExtension.addConstructor(constructor(statements = methodsAsTests))

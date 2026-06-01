@@ -149,12 +149,14 @@ trait AnyParadigm[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax.Abstract
         // underlying methods to exceed their maximum size.
         val groups = result.sliding(25,25)
 
+        var lastFresh:Name = command.name
         val blocks = groups.map(g => {
           val emptyMethod = factory.method(
             name = sample.getFreshName(command.name),
             typeLookupMap = context.methodTypeLookupMap
           )
-          sample.addTestExpressions(g)
+          lastFresh = sample.getFreshName(lastFresh)   // prepare for next time
+          emptyMethod.addTestExpressions(g)
         })
         (context.copy(tests = context.tests ++ blocks), ())
       }

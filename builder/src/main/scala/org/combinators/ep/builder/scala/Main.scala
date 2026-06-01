@@ -69,10 +69,14 @@ class Main(choice:String, select:String) {
   val ast: FullAST & TreesAST = new FinalBaseAST
     with FinalNameProviderAST
     with FinalArithmeticAST
+    with FinalArraysAST
     with FinalAssertionsAST
     with FinalBooleanAST
+    with FinalConsoleAST
     with FinalEqualsAST
+    with FinalExceptionsAST
     with FinalListsAST
+    with FinalMapsAST 
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
     with FinalStringAST

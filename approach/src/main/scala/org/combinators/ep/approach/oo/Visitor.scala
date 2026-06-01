@@ -238,7 +238,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
         _ <- addTypeParameter(visitTyParam, Command.skip)
 
         // this returns mangled visitTypeParameter name and gets list of all type parameters, for which there is only one, so we get head
-        args <- getTypeArguments()
+        args <- getTypeArguments
         _ <- setReturnType(args.head)
 
         // identify Visitor<R>

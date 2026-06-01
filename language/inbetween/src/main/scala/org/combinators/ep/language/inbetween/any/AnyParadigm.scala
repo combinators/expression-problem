@@ -154,8 +154,7 @@ trait AnyParadigm[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax.Abstract
             name = sample.getFreshName(command.name),
             typeLookupMap = context.methodTypeLookupMap
           )
-          val (generatedMethod, _) = Command.runGenerator(command.code, emptyMethod)
-          generatedMethod.addTestExpressions(g)
+          sample.addTestExpressions(g)
         })
         (context.copy(tests = context.tests ++ blocks), ())
       }

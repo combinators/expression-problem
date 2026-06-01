@@ -8,7 +8,8 @@ import org.combinators.models.enhancedModels.grid.CountSquares
 
 trait CountSquaresApp {
   def tests = Seq(
-    new TestExample("cs1", LiteralArray(Array(0,1,1,1, 1,1,1,1, 0,1,1,1), Seq(3,4)), LiteralInt(15), new UnitExpression)
+    new TestExample("cs1", LiteralArray(Array(0,1,1,1, 1,1,1,1, 0,1,1,1), Seq(3,4)), LiteralInt(15), new UnitExpression),
+    new TestExample("cs2", LiteralArray(Array(0,0,0,0, 0,0,0,0, 0,0,0,0), Seq(3,4)), LiteralInt(0), new UnitExpression)
   )
   val model: EnhancedModel = new CountSquares().model
 }

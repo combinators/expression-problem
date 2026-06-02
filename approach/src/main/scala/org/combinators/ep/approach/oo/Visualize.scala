@@ -1,6 +1,4 @@
-package org.combinators.ep.approach.oo
-
-/*DI:LI:AD*/
+package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
 import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.domain.{GenericModel, GraphViz}

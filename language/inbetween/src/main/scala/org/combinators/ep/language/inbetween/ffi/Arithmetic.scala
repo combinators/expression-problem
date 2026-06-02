@@ -1,12 +1,9 @@
-package org.combinators.ep.language.inbetween.ffi
-
-/*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{Add, Div, LE, LT, Mod, Mult, Sub, Arithmetic as Arith}
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
-import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 

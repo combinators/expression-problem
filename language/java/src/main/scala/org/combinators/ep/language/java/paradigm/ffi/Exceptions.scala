@@ -5,7 +5,7 @@ import com.github.javaparser.ast.expr.ObjectCreationExpr
 import com.github.javaparser.ast.stmt.ThrowStmt
 import org.combinators.cogen.paradigm.ffi
 import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.paradigm.ffi.{Assert, Exceptions as Excptns}
+import org.combinators.cogen.paradigm.ffi.Exceptions as Excptns
 import org.combinators.cogen.Understands
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.Syntax.default._

@@ -1,6 +1,4 @@
-package org.combinators.ep.language.inbetween.ffi
-
-/*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{CreateArray, Get, Length, Set, Arrays as Arys}

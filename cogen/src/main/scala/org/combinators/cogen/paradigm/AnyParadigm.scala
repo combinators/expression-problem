@@ -1,4 +1,4 @@
-package org.combinators.cogen.paradigm
+package org.combinators.cogen.paradigm     /*DI:LI:AI*/
 
 import org.combinators.cogen.{AbstractSyntax, Command, FileWithPath, Understands, TypeRep}
 import Command._

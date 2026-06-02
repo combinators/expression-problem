@@ -5,12 +5,12 @@ import java.util.UUID
 import com.github.javaparser.ast.{ImportDeclaration, Modifier, Node, NodeList}
 import com.github.javaparser.ast.`type`.VoidType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{MethodCallExpr, NameExpr, NullLiteralExpr, Name as JName}
+import com.github.javaparser.ast.expr.{MethodCallExpr, NameExpr, NullLiteralExpr}
 import com.github.javaparser.ast.nodeTypes.{NodeWithScope, NodeWithSimpleName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt}
 import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.TypeRep
-import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddCustomFile, AddImplementedTestCase, AddImport, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP, ObjectOriented as _}
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddCustomFile, AddImplementedTestCase, AddImport, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP, ObjectOriented as _}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, Understands}
 import org.combinators.ep.language.java.Syntax.MangledName

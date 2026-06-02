@@ -1,9 +1,8 @@
 package org.combinators.ep.domain.extensions    /*DI:LI:AI*/
 
-import org.combinators.cogen.{InstanceRep, NameProvider, TypeRep}
+import org.combinators.cogen.{NameProvider, TypeRep}
 import org.combinators.ep.domain.GenericModel
 import org.combinators.ep.domain.abstractions._
-import org.combinators.ep.domain.instances.DataTypeInstance
 
 /**
  * EpCoGen extension of NameProvider from CoGen provides the ability to generate (capital) Names for many different concepts

@@ -1,6 +1,4 @@
-package org.combinators.ep.approach.oo
-
-/*DI:LI:AD*/
+package org.combinators.ep.approach.oo   /*DI:LI:AD*/
 import org.combinators.cogen.{TestCase, TypeRep, Command, NameProvider, AbstractSyntax, Understands}
 import Command.Generator
 import org.combinators.cogen.paradigm.{AddImport, AnyParadigm, FindClass, Generics, ObjectOriented, ParametricPolymorphism, ResolveImport}

@@ -1,9 +1,7 @@
-package org.combinators.ep.language.inbetween.any
-
-/*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.any    /*DI:LI:AI*/
 
 import org.combinators.cogen.TypeRep
-import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddCustomFile, AddImport, AddMethod, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP}
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddCustomFile, AddImport, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, Understands}
 

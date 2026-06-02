@@ -1,4 +1,4 @@
-package org.combinators.cogen
+package org.combinators.cogen     /*DI:LI:AI*/
 
 import cats._
 import cats.data.State

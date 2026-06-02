@@ -1,6 +1,6 @@
 package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
-import com.github.javaparser.ast.expr.{AssignExpr, ConditionalExpr, NameExpr, VariableDeclarationExpr}
+import com.github.javaparser.ast.expr.{AssignExpr, NameExpr, VariableDeclarationExpr}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt, IfStmt, ReturnStmt, WhileStmt}
 import org.combinators.cogen.paradigm.IfThenElse
 import org.combinators.cogen.paradigm.control.{AssignVariable, DeclareVariable, LiftExpression, Return, While, Imperative as Imp}

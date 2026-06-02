@@ -1,4 +1,4 @@
-package org.combinators.cogen.paradigm.ffi
+package org.combinators.cogen.paradigm.ffi     /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.{AnyParadigm, Apply, Reify}
 import org.combinators.cogen.{Command, Understands, TypeRep}

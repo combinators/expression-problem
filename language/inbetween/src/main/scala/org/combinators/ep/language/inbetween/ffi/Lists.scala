@@ -1,14 +1,9 @@
-package org.combinators.ep.language.inbetween.ffi
-
-/*DI:LI:AI*/
-
-// cannot find 'lists'
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{Append, Cons, Create, Head, Tail, Lists as Lsts}
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
-import org.combinators.ep.language.inbetween.{any, polymorphism}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 trait Lists[AST <: ListsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {

@@ -1,15 +1,12 @@
-package org.combinators.ep.language.inbetween.ffi
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphismAST
 
 trait MapsAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST {
   object mapsOps {
     trait CreateMap extends any.Type
-
     trait ContainsKeyOp extends operatorExpressions.Operator
-
     trait GetOp extends operatorExpressions.Operator
-
     trait PutOp extends operatorExpressions.Operator
 
     trait Factory {

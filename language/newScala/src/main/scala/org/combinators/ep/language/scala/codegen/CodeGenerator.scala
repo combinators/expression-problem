@@ -1,6 +1,4 @@
-package org.combinators.ep.language.scala.codegen
-
-/*DI:LD:AI*/
+package org.combinators.ep.language.scala.codegen     /*DI:LD:AI*/
 
 import cats.Apply as _
 import org.combinators.cogen.Command.Generator

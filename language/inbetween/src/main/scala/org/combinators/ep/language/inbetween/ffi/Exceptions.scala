@@ -1,6 +1,4 @@
-package org.combinators.ep.language.inbetween.ffi
-
-/*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.ffi.{Exception, Exceptions as Excptns}
 import org.combinators.cogen.Command.Generator
@@ -12,6 +10,7 @@ trait Exceptions[AST <: ExceptionsAST, B](val _base: AnyParadigm.WithAST[AST] & 
     val base: _base.type = _base
     import base.ast.exceptionsOpsFactory
     import base.ast.any
+    import base.ast
 
     val exceptionsCapabilities: ExceptionsCapabilities = new ExceptionsCapabilities {
 
@@ -19,6 +18,7 @@ trait Exceptions[AST <: ExceptionsAST, B](val _base: AnyParadigm.WithAST[AST] & 
         new Understands[any.Method,Exception[any.Expression, any.Statement]] {
           def perform(context: any.Method, command: Exception[any.Expression, any.Statement]): (any.Method, any.Statement) = {
             val expr = exceptionsOpsFactory.raiseOp(command.exp)
+
             // Need to convert this EXPR into a STATEMENT
             (context, ???)
           }

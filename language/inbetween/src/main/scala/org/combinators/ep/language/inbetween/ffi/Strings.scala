@@ -1,15 +1,11 @@
-package org.combinators.ep.language.inbetween.ffi
-
-/*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{GetCharAt, GetStringLength, StringAppend, SubString, ToString, Strings as Strs}
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
-import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-// cannot find 'strings'
 trait Strings[AST <: StringAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
   trait StringsInMethods extends Strs[_base.ast.any.Method] {
     override val base: _base.type = _base

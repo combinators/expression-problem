@@ -12,7 +12,6 @@ import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{And, False, Not, Or, True, Booleans as Bools}
 
-
 class Booleans[Ctxt, AP <: AnyParadigm](val base: AP) extends Bools[Ctxt] {
   case object BooleansEnabled
 

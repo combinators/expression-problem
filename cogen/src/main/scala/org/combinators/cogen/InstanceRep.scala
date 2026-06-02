@@ -1,4 +1,4 @@
-package org.combinators.cogen
+package org.combinators.cogen     /*DI:LI:AI*/
 
 /** A host language (Scala) instance, which can be represented inside of a domain.
   *

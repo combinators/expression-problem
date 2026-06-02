@@ -1,4 +1,4 @@
-package org.combinators.ep.language.inbetween.ffi
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 trait StringAST extends OperatorExpressionOpsAST  {
   object stringOps {
@@ -7,7 +7,6 @@ trait StringAST extends OperatorExpressionOpsAST  {
     trait StringLengthOp extends operatorExpressions.Operator
     trait SubStringOp extends operatorExpressions.Operator
     trait ToStringOp extends operatorExpressions.Operator
-
 
     trait Factory {
       def appendStringOp(): AppendStringOp

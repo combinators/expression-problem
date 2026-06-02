@@ -1,6 +1,4 @@
-package org.combinators.ep.language.java.paradigm.ffi
-
-/*DI:LD:AI*/
+package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.body.InitializerDeclaration

@@ -1,18 +1,12 @@
-package org.combinators.ep.language.inbetween.ffi
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
-/*DI:LI:AI*/
-
-import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{And, False, Not, Or, True, Booleans as Bools}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.Understands
-import org.combinators.cogen.paradigm.ffi.*
-import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.cogen.Command
 
-// cannot find 'boolean'
 trait Booleans[AST <: BooleanAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
   trait BooleansInMethods extends Bools[_base.ast.any.Method] {
     override val base: _base.type = _base

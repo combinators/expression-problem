@@ -1,6 +1,4 @@
-package org.combinators.ep.builder.scala
-
-/*DD:LD:AD*/
+package org.combinators.ep.builder.scala    /*DD:LD:AD*/
 
 /**
  * To generate a single approach for a single stage in an Extension Graph, see [[DirectToDiskMain]]
@@ -41,7 +39,7 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.cogen.FileWithPathPersistable.*
 import org.combinators.cogen.{Command, FileWithPath, FileWithPathPersistable}
-import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, Traditional, TriviallyClean, Visitor, Visualize}
+import org.combinators.ep.approach.oo.{CoCoClean, ExtensibleVisitor, Interpreter, ObjectAlgebras, RuntimeDispatch, Traditional, TriviallyClean, Visitor, Visualize}
 import org.combinators.ep.domain.Evolution
 import org.combinators.ep.domain.math.{A1, A1M3, A1M3I2, A3, C2, I2M3I1N1, M0, M1, M2, M2_ABS, M3, M3I1, M3W1, M4, M5, M6, M7, M7I2, M8, M9, N1, P1, Q1, V1, W1}
 import org.combinators.ep.domain.math.eips
@@ -105,7 +103,7 @@ class Main(choice:String, select:String) {
   val cocoCleanApproach: CoCoClean.WithParadigm[generator.paradigm.type] = CoCoClean[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
   val triviallyCleanApproach: TriviallyClean.WithParadigm[generator.paradigm.type] = TriviallyClean[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm)
 
-  //val dispatchApproach = RuntimeDispatch[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative, generator.strings, generator.exceptions, generator.ooParadigm)
+  val dispatchApproach = RuntimeDispatch[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods, generator.strings.stringsInMethods, generator.exceptions.exceptionsInMethods, generator.ooParadigm)
   val algebraApproach: ObjectAlgebras.WithParadigm[generator.paradigm.type] = ObjectAlgebras[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.parametricPolymorphism)(generator.generics)
 
   val visualizeApproach: Visualize.WithParadigm[generator.paradigm.type] = Visualize[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm)
@@ -121,7 +119,7 @@ class Main(choice:String, select:String) {
     case "interpreter" => interpreterApproach
     case "coco" => cocoCleanApproach
     case "trivially" => triviallyCleanApproach
-    case "dispatch" => ???  // not yet implemented b/c Exceptions not yet in inBetween
+    case "dispatch" => dispatchApproach
     case "algebra" => algebraApproach
 
     case _ => ???
@@ -720,7 +718,7 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
-    val approach = if (args.isEmpty) "visitor" else args.head // {coco, O1OA} fails
+    val approach = if (args.isEmpty) "dispatch" else args.head // {coco, O1OA} fails
     if (approach == "exit") {
       sys.exit(0)
     }

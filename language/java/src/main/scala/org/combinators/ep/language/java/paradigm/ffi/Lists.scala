@@ -12,7 +12,7 @@ import com.github.javaparser.ast.{ImportDeclaration, NodeList}
 import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.ffi.{Append, Cons, Create, Head, Tail, Lists as Lsts}
-import org.combinators.cogen.paradigm.{AddImport, Apply, GetMember}
+import org.combinators.cogen.paradigm.{AddImport, Apply}
 
 trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
   case object ListsEnabled

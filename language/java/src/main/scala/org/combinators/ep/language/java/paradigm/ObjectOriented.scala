@@ -1,14 +1,14 @@
 package org.combinators.ep.language.java.paradigm    /*DI:LD:AI*/
 
 import java.util.UUID
-import com.github.javaparser.ast.{ArrayCreationLevel, ImportDeclaration, Modifier, NodeList}
+import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList}
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{ArrayCreationExpr, AssignExpr, CastExpr, EnclosedExpr, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Expression as JExpression, Name as JName}
+import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, EnclosedExpr, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Expression as JExpression, Name as JName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt, ReturnStmt}
 import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.TypeRep
-import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, RemoveMethod, ResolveImport, SelfReference, SetAbstract, SetInterface, SetOverride, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented as OO}
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, ResolveImport, SelfReference, SetAbstract, SetInterface, SetOverride, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented as OO}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.Syntax.MangledName

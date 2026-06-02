@@ -1,15 +1,14 @@
 package org.combinators.ep.language.inbetween.imperative   /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.{IfThenElse, control}
-import org.combinators.cogen.paradigm.control.{AssignVariable, DeclareVariable, LiftExpression, Return, While}
+import org.combinators.cogen.paradigm.control.{AssignVariable, DeclareVariable, LiftExpression, While}
 import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.{Command, FileWithPath, Understands, paradigm}
-import org.combinators.cogen.paradigm.control.{Return, DeclareVariable as DV, Imperative as Imp}
+import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.paradigm.control.Return
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-
 // Requires "recursive solution" to the EP, where Ctxt has a producer method and so this needs an EP solution, while
-// talking about something which doesn't need to have one..
+// talking about something which doesn't need to have one.
 trait Imperative[AST <: ImperativeAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
   trait ImperativeInMethods extends control.Imperative[_base.ast.any.Method] {
     override val base: _base.type = _base

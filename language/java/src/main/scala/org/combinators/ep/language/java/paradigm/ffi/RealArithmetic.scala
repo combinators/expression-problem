@@ -13,7 +13,6 @@ import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
 
-
 class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
   val base: AP,
   rep: TypeRep.OfHostType[T],

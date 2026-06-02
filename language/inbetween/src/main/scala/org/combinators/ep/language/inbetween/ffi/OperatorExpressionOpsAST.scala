@@ -1,6 +1,5 @@
-package org.combinators.ep.language.inbetween.ffi   /*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
-import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyAST
 
 trait OperatorExpressionOpsAST extends AnyAST {

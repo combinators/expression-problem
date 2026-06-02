@@ -1,6 +1,4 @@
-package org.combinators.ep.builder.java
-
-/*DD:LD:AD*/
+package org.combinators.ep.builder.java    /*DD:LD:AD*/
 
 /**
   * 1. To generate a single approach for a single stage in an Extension Graph, see [[DirectToDiskMain]]

@@ -3,7 +3,7 @@ package org.combinators.ep.language.java     /*DI:LD:AI*/
 import cats.{Apply => _}
 import com.github.javaparser.ast.PackageDeclaration
 import com.github.javaparser.ast.`type`.PrimitiveType
-import com.github.javaparser.ast.expr.{DoubleLiteralExpr, IntegerLiteralExpr, TypeExpr}
+import com.github.javaparser.ast.expr.{DoubleLiteralExpr, IntegerLiteralExpr}
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.Command
 import org.combinators.ep.language.java.paradigm._

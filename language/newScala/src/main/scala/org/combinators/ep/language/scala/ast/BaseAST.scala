@@ -1,9 +1,8 @@
-package org.combinators.ep.language.scala.ast
+package org.combinators.ep.language.scala.ast     /*DI:LD:AI*/
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.TypeRep.OfHostType
 import org.combinators.cogen.{FileWithPath, NameProvider, TypeRep}
-import org.combinators.ep.language.inbetween.functional
 import org.combinators.ep.language.inbetween.functional.FunctionalAST
 import org.combinators.ep.language.inbetween.functional.control.FunctionalControlAST
 import org.combinators.ep.language.inbetween.imperative.ImperativeAST
@@ -11,7 +10,6 @@ import org.combinators.ep.language.inbetween.oo.OOAST
 import org.combinators.ep.language.inbetween.polymorphism.generics.GenericsAST
 
 import java.util.UUID
-
 
 trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalControlAST with ImperativeAST with NameProviderAST {
   object scalaBase {

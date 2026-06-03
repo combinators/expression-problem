@@ -14,7 +14,7 @@ import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import FileWithPathPersistable.*
 import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
-import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
+import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, PartiallyBoxed, Syntax, Unboxed}
 import org.combinators.models.*
 
 import java.nio.file.{Path, Paths}
@@ -25,7 +25,7 @@ import java.nio.file.{Path, Paths}
 abstract class EnhancedDPMainJava extends IOApp with EnhancedMainInterface {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = Unboxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
-  val dpApproach = EnhancedDPObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.mapsInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
+  val dpApproach = EnhancedDPObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod,  generator.ooParadigm, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.mapsInMethod, generator.mapsInConstructor, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -51,6 +51,7 @@ abstract class EnhancedDPMainJava extends IOApp with EnhancedMainInterface {
         _ <- generator.assertionsInMethod.enable()
         _ <- generator.booleansInMethod.enable()
         _ <- generator.mapsInMethod.enable()
+        _ <- generator.mapsInConstructor.enable()
 
         // HERE you can finally specify the method to use for testing and the test cases
         _ <- dpApproach.implement(model, tests, option)

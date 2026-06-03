@@ -154,7 +154,7 @@ trait AnyParadigm[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax.Abstract
             typeLookupMap = context.methodTypeLookupMap
           )
           lastFresh = sample.getFreshName(lastFresh)   // prepare for next time
-          emptyMethod.addTestExpressions(g)
+          sample.addTestExpressions(g)                 // when emptymethod, scala generation fails to generation intermediate stmts instantiating arrays
         })
         (context.copy(tests = context.tests ++ blocks), ())
       }

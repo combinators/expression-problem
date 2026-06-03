@@ -315,15 +315,16 @@ object EnhancedDPObjectOrientedProvider {
   (base: P)
   (nameProvider: NameProvider[base.syntax.Name],
    imp: Imperative.WithBase[base.MethodBodyContext, base.type],
+   oo: ObjectOriented.WithBase[base.type],
    ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
    ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
    con: Console.WithBase[base.MethodBodyContext, base.type],
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
    mps: Maps.WithBase[base.MethodBodyContext, base.type],
+   mpsInConst: Maps.WithBase[oo.ConstructorContext, base.type],
    assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
    stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
    eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
-   oo: ObjectOriented.WithBase[base.type],
    parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
    booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
   )
@@ -340,6 +341,7 @@ object EnhancedDPObjectOrientedProvider {
       override val console: Console.WithBase[base.MethodBodyContext, paradigm.type] = con
       override val array: Arrays.WithBase[base.MethodBodyContext, paradigm.type] = arr
       override val maps: Maps.WithBase[base.MethodBodyContext, paradigm.type] = mps
+      override val mapsInConstructors: Maps.WithBase[ooParadigm.ConstructorContext, paradigm.type] = mpsInConst
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn
       override val strings: Strings.WithBase[base.MethodBodyContext, paradigm.type] = stringsIn
       override val eqls: Equality.WithBase[base.MethodBodyContext, paradigm.type] = eqlsIn

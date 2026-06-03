@@ -61,11 +61,22 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
         Some(
           for {
             elemTpe <- ToTargetLanguageType[ast.any.Type](elemTpe).interpret(canToTargetLanguage)
-            arrayTpe <- Command.lift(ast.ooFactory.classReferenceType(nameProvider.mangle("Array")))
+            arrayTpe <- Command.lift(ast.arraysOpsFactory.array())
             tpe <- Apply[
               ast.any.Type,
               ast.any.Type,
               ast.any.Type](arrayTpe, Seq(elemTpe)).interpret(canApplyType)
+          } yield tpe)
+      case TypeRep.Map(keyTpe, elemTpe) =>
+        Some(
+          for {
+            keyTpe <- ToTargetLanguageType[ast.any.Type](keyTpe).interpret(canToTargetLanguage)
+            elemTpe <- ToTargetLanguageType[ast.any.Type](elemTpe).interpret(canToTargetLanguage)
+            mapTpe <- Command.lift(ast.mapsOpsFactory.map())
+            tpe <- Apply[
+              ast.any.Type,
+              ast.any.Type,
+              ast.any.Type](mapTpe, Seq(keyTpe, elemTpe)).interpret(canApplyType)
           } yield tpe)
       case TypeRep.Sequence(elemTpeRep) =>
         Some(
@@ -98,6 +109,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
       Seq("Double"),
       Seq("Boolean"),
       Seq("Int"),
+      Seq("Map"),
       Seq("Unit"),
       Seq("String"),
       Seq("Seq"),
@@ -239,53 +251,11 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
 
   val equality: Equals.WithBase[ast.type, paradigm.type] = Equals[ast.type, paradigm.type](paradigm)
 
-  /*val consoleInMethod =
-    new Console[MethodBodyCtxt, paradigm.type](
-      paradigm, stringsInMethod
-    )
-
-  val consoleInConstructor =
-    new Console[CtorCtxt, paradigm.type](
-      paradigm, stringsInConstructor
-    )
-
-  val arraysInMethod =
-    new Arrays[MethodBodyCtxt, paradigm.type](
-      paradigm
-    )
-
-  val arraysInConstructor =
-    new Arrays[CtorCtxt, paradigm.type](
-      paradigm
-    )
-    */
-
   val lists: Lists.WithBase[ast.type, paradigm.type] = Lists[ast.type, paradigm.type](paradigm)
   val maps: Maps.WithBase[ast.type, paradigm.type] = Maps[ast.type, paradigm.type](paradigm)
-  
-  /*val listsInConstructor =
-    Lists[CtorCtxt, paradigm.type, generics.type](
-      paradigm,
-      ooParadigm.constructorCapabilities.canGetMemberInConstructor,
-      ooParadigm.constructorCapabilities.canApplyInConstructor,
-      generics.constructorCapabilities.canApplyTypeInConstructor,
-      ooParadigm.constructorCapabilities.canAddImportInConstructor
-    )(generics)
-  */
-  
-/*
-  val treesInConstructor =
-    Trees[CtorCtxt, paradigm.type, ObjectOriented](
-      paradigm,
-      ooParadigm.constructorCapabilities.canAddImportInConstructor
-    )(ooParadigm)
-
-  val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)
-  val exceptionsInMethod = new Exceptions[paradigm.type](paradigm)*/
 
   val assertions = Assertions[ast.type, paradigm.type](paradigm)
   val exceptions: Exceptions.WithBase[ast.type, paradigm.type] = Exceptions[ast.type, paradigm.type](paradigm)
-
 }
 
 object CodeGenerator {
@@ -293,7 +263,6 @@ object CodeGenerator {
   case object Enable extends Command {
     type Result = Unit
   }
-
 
   def apply[AST <: FullAST](domainName: String, ast: AST, additionalPrefixExcludedTypes: Set[Seq[ast.any.Name]] = Set.empty): CodeGenerator[ast.type] =
     new CodeGenerator[ast.type](domainName, ast, additionalPrefixExcludedTypes)

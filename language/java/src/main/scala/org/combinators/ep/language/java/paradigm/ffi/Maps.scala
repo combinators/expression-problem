@@ -40,11 +40,23 @@ trait Maps[Ctxt, AP <: AnyParadigm] extends Mps[Ctxt] {
           case (key, value) =>
             new MethodCallExpr(classScope, "entry", new NodeList(key, value))
         })
+
+        val boxedKeyType = if (command.functional.keyType.isPrimitiveType) {
+          command.functional.keyType.asPrimitiveType().toBoxedType
+        } else {
+          command.functional.keyType
+        }
+        val boxedElemType = if (command.functional.elementType.isPrimitiveType) {
+          command.functional.elementType.asPrimitiveType().toBoxedType
+        } else {
+          command.functional.elementType
+        }
+
         val gen = for {
           _ <- AddImport(mapImp).interpret(canAddImport)
         } yield new MethodCallExpr(
           classScope,
-          new NodeList(command.functional.keyType, command.functional.elementType),
+          new NodeList(boxedKeyType, boxedElemType),
           "ofEntries",
           new NodeList(entries*))
 
@@ -139,7 +151,9 @@ trait Maps[Ctxt, AP <: AnyParadigm] extends Mps[Ctxt] {
                 for {
                   keyType <- projectResolution(k)(keyRep)
                   elemType <- projectResolution(k)(elemRep)
-                  resultType <- Apply[Type, Type, Type](mapType, Seq(keyType, elemType)).interpret(using canApplyType)
+                  boxedKeyType = if (keyType.isPrimitiveType) { keyType.asPrimitiveType().toBoxedType } else { keyType }
+                  boxedElemType = if (elemType.isPrimitiveType) { elemType.asPrimitiveType().toBoxedType } else { elemType }
+                  resultType <- Apply[Type, Type, Type](mapType, Seq(boxedKeyType, boxedElemType)).interpret(using canApplyType)
                 } yield resultType
               case other => toResolution(k)(other)
             }
@@ -161,6 +175,7 @@ trait Maps[Ctxt, AP <: AnyParadigm] extends Mps[Ctxt] {
                     }
                     keyType <- projectResolution(k)(keyTypeRep)
                     elemType <- projectResolution(k)(elemTypeRep)
+
                     res <- Apply[CreateMap[Type], (Expression, Expression), Expression](CreateMap(keyType, elemType), elems).interpret(using canCreateMap)
                   } yield res
                 case _ => reify(k)(rep)

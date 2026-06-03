@@ -9,34 +9,34 @@ import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 trait Maps[AST <: MapsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
   // TODO: These are defined in Method context. What about constructor? What about Class context when needing to add Field?
-  trait MapsInMethods extends Mps[_base.ast.any.Method] {
+  trait MapsIn[Ctxt] extends Mps[Ctxt] {
     val base: _base.type = _base
 
     import base.ast.mapsOpsFactory
     import base.ast.any
 
     override val mapCapabilities: MapCapabilities = new MapCapabilities {
-      override implicit val canCreate: Understands[any.Method, Apply[CreateMap[any.Type], (any.Expression,any.Expression), any.Expression]] =
-        new Understands[any.Method, Apply[CreateMap[any.Type], (any.Expression,any.Expression), any.Expression]] {
-          override def perform(context: any.Method, command: Apply[CreateMap[any.Type], (any.Expression, any.Expression), any.Expression]): (any.Method, any.Expression) = {
-            (context, mapsOpsFactory.createMap(command.functional.keyType, command.arguments.flatMap(pair => Seq(pair._1, pair._2))))
+      override implicit val canCreate: Understands[Ctxt, Apply[CreateMap[any.Type], (any.Expression,any.Expression), any.Expression]] =
+        new Understands[Ctxt, Apply[CreateMap[any.Type], (any.Expression,any.Expression), any.Expression]] {
+          override def perform(context: Ctxt, command: Apply[CreateMap[any.Type], (any.Expression, any.Expression), any.Expression]): (Ctxt, any.Expression) = {
+            (context, mapsOpsFactory.createMap(command.functional.keyType, command.functional.elementType, command.arguments))
           }
         }
-      override implicit val canContainsKey: Understands[any.Method, Apply[ContainsKey, any.Expression, any.Expression]] =
-          new Understands[any.Method, Apply[ContainsKey, any.Expression, any.Expression]] {
-            override def perform(context: any.Method, command: Apply[ContainsKey, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      override implicit val canContainsKey: Understands[Ctxt, Apply[ContainsKey, any.Expression, any.Expression]] =
+          new Understands[Ctxt, Apply[ContainsKey, any.Expression, any.Expression]] {
+            override def perform(context: Ctxt, command: Apply[ContainsKey, any.Expression, any.Expression]): (Ctxt, any.Expression) = {
               (context, mapsOpsFactory.containsKey(command.arguments(0), command.arguments(1)))
             }
           }
-      override implicit val canGet: Understands[any.Method, Apply[GetOrElse, any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[GetOrElse, any.Expression, any.Expression]] {
-          override def perform(context: any.Method, command: Apply[GetOrElse, any.Expression, any.Expression]): (any.Method, any.Expression) = {
-            (context, mapsOpsFactory.get(command.arguments(0), command.arguments(1)))
+      override implicit val canGet: Understands[Ctxt, Apply[GetOrElse, any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[GetOrElse, any.Expression, any.Expression]] {
+          override def perform(context: Ctxt, command: Apply[GetOrElse, any.Expression, any.Expression]): (Ctxt, any.Expression) = {
+            (context, mapsOpsFactory.get(command.arguments(0), command.arguments(1), command.arguments(2)))
           }
         }
-      override implicit val canPut: Understands[any.Method, Apply[Put, any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[Put, any.Expression, any.Expression]] {
-          override def perform(context: any.Method, command: Apply[Put, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      override implicit val canPut: Understands[Ctxt, Apply[Put, any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[Put, any.Expression, any.Expression]] {
+          override def perform(context: Ctxt, command: Apply[Put, any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, mapsOpsFactory.put(command.arguments(0), command.arguments(1), command.arguments(2)))
           }
         }
@@ -46,7 +46,8 @@ trait Maps[AST <: MapsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
 
   // TODO: These are only for methods. What about constructors? Which are based on OO concept? And so might not be part of inBetween?
   
-  val mapsInMethods: MapsInMethods = new MapsInMethods {}
+  def mapsIn[Ctxt]: MapsIn[Ctxt] = new MapsIn[Ctxt] {}
+  val mapsInMethods:MapsIn[_base.ast.any.Method] = mapsIn[_base.ast.any.Method]
 }
 
 object Maps {

@@ -37,7 +37,7 @@ abstract class EnhancedDPMainScala extends IOApp with EnhancedMainInterface {
   }
   val generator: CodeGenerator[_ast.type] = CodeGenerator("dp", _ast, Set.empty)
 
-  val dpApproach = EnhancedDPObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods, generator.doubles.arithmeticInMethods, generator.realDoubles.realArithmeticInMethods, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.maps.mapsInMethods, generator.assertions.assertionsInMethods, generator.strings.stringsInMethods, generator.equality.equalsInMethods, generator.ooParadigm, generator.parametricPolymorphism, generator.booleans.booleansInMethodsInMethods)(generator.generics)
+  val dpApproach = EnhancedDPObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods,  generator.ooParadigm, generator.doubles.arithmeticInMethods, generator.realDoubles.realArithmeticInMethods, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.maps.mapsInMethods, generator.maps.mapsIn[generator.ooParadigm.ConstructorContext], generator.assertions.assertionsInMethods, generator.strings.stringsInMethods, generator.equality.equalsInMethods, generator.parametricPolymorphism, generator.booleans.booleansInMethodsInMethods)(generator.generics)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -63,6 +63,7 @@ abstract class EnhancedDPMainScala extends IOApp with EnhancedMainInterface {
         _ <- generator.assertions.assertionsInMethods.enable()
         _ <- generator.booleans.booleansInMethodsInMethods.enable()
         _ <- generator.maps.mapsInMethods.enable()
+        _ <- generator.maps.mapsIn[generator.ooParadigm.ConstructorContext].enable()
 
         // HERE you can finally specify the method to use for testing and the test cases
         _ <- dpApproach.implement(model, tests, option)

@@ -23,7 +23,7 @@ class NeedlemanWunschSequenceInput(val string1:String, val string2:String, val m
 class NeedlemanWunschMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = Unboxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("dp"))))
 
-  val dpApproach = NeedlemanWunschSequenceAlignmentProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.mapsInMethod, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.ooParadigm, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
+  val dpApproach = NeedlemanWunschSequenceAlignmentProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.doublesInMethod, generator.realDoublesInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.mapsInMethod, ???, generator.assertionsInMethod, generator.stringsInMethod, generator.equalityInMethod, generator.parametricPolymorphism, generator.booleansInMethod)(generator.generics)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 

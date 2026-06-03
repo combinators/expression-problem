@@ -36,7 +36,7 @@ class HelloWorldMainScala {
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
     with FinalStringAST {
-    val reificationExtensions = List(scalaMapsOps.mapReificationExtensions)
+    val reificationExtensions = List.empty
   }
   val generator: CodeGenerator[_ast.type] = CodeGenerator("dp", _ast, Set.empty)
 

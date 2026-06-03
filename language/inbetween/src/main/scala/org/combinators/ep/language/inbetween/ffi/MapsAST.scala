@@ -4,32 +4,63 @@ import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
 
 trait MapsAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST {
   object mapsOps {
-    trait CreateMap extends any.Type
+    trait FinalTypes {
+      type Map <: mapsOps.Map
+      type CreateMapExpression <: mapsOps.CreateMap
+    }
+
+    trait Map extends any.Type {
+      def getSelfMapType: mapsOpsFinalTypes.Map
+
+      def copy() : Map = mapsOpsFactory.map()
+    }
+
+    trait CreateMap extends any.Expression {
+      def getSelfCreateMapExpression: mapsOpsFinalTypes.CreateMapExpression
+
+      def keyType:any.Type
+      def elementType: any.Type
+      
+      def initialKeyValuePairs: Seq[(any.Expression,any.Expression)]
+
+      def copy(keyType: any.Type = this.keyType, 
+               elementType: any.Type = this.elementType,
+               initialKeyValuePairs: Seq[(any.Expression, any.Expression)] = this.initialKeyValuePairs): CreateMap =
+        mapsOpsFactory.createMap(keyType, elementType, initialKeyValuePairs)
+    }
+    
     trait ContainsKeyOp extends operatorExpressions.Operator
     trait GetOp extends operatorExpressions.Operator
     trait PutOp extends operatorExpressions.Operator
 
     trait Factory {
-      def createMap(): CreateMap
+      def createMap(keyType: any.Type,
+                    elementType: any.Type,
+                    keyValuePairs: Seq[(any.Expression,any.Expression)]): CreateMap
 
-      def createMap(tpe: any.Type, elems: Seq[any.Expression]): any.ApplyExpression =
-        factory.applyExpression(polymorphismFactory.typeReferenceExpression(polymorphismFactory.typeApplication(createMap(), Seq(tpe))),
-          elems)
-
+      def map(): Map
+      def map(keyType: any.Type, elementType: any.Type): any.Type = {
+        polymorphismFactory.typeApplication(map(), Seq(keyType, elementType))
+      }
+      
       def containsKeyOp(): ContainsKeyOp
       def getOp(): GetOp
       def putOp(): PutOp
 
-      def containsKey(key: any.Expression, map: any.Expression): operatorExpressions.BinaryExpression =
-        operatorExpressionsFactory.binaryExpression(containsKeyOp(), key, map)
+      def containsKey(map: any.Expression, key: any.Expression): operatorExpressions.BinaryExpression =
+        operatorExpressionsFactory.binaryExpression(containsKeyOp(), map, key)
 
-      def get(key: any.Expression, map: any.Expression): operatorExpressions.BinaryExpression =
-        operatorExpressionsFactory.binaryExpression(getOp(), key, map)
+      def get(map: any.Expression, key: any.Expression, defaultValue: any.Expression): operatorExpressions.TernaryExpression =
+        operatorExpressionsFactory.ternaryExpression(getOp(), map, key, defaultValue)
 
-      def put(key: any.Expression, map: any.Expression, value: any.Expression): operatorExpressions.TernaryExpression =
-        operatorExpressionsFactory.ternaryExpression(putOp(), key, map, value)
+      def put(map: any.Expression, key: any.Expression, value: any.Expression): operatorExpressions.TernaryExpression =
+        operatorExpressionsFactory.ternaryExpression(putOp(), map, key, value)
+
+      implicit def convert(other: CreateMap): mapsOpsFinalTypes.CreateMapExpression = other.getSelfCreateMapExpression
+      implicit def convert(other: Map): mapsOpsFinalTypes.Map = other.getSelfMapType
     }
   }
 
+  val mapsOpsFinalTypes: mapsOps.FinalTypes
   val mapsOpsFactory: mapsOps.Factory
 }

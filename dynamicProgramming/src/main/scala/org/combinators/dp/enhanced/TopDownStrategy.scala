@@ -4,11 +4,11 @@ import org.combinators.cogen.TypeRep
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.control.Imperative
-import org.combinators.cogen.paradigm.ffi._
-import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.cogen.paradigm.ffi.*
+import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism, ToTargetLanguageType}
 import org.combinators.cogen.{Command, NameProvider}
 import org.combinators.dp.original.Utility
-import org.combinators.models._
+import org.combinators.models.*
 
 /**
  * Concepts necessary to realize top-down solutions
@@ -29,15 +29,17 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val maps: Maps.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val mapsInConstructors: Maps.WithBase[ooParadigm.ConstructorContext, paradigm.type]
   val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
 
   import ooParadigm._
   import paradigm._
   import syntax._
 
-  lazy val memoName       = names.mangle("memo")
-  lazy val keyName        = names.mangle("key")
-  lazy val pairName       = names.mangle("pair")
+  lazy val memoFunctionName = names.mangle("memo")     // function name
+  lazy val memoMapName      = names.mangle("memoMap")  // storage
+  lazy val keyName          = names.mangle("key")
+  lazy val pairName         = names.mangle("pair")
 
   lazy val computedResult = names.mangle("computed_result")
 
@@ -74,9 +76,9 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
       }
 
       intType <- toTargetLanguageType(TypeRep.Int)
-      helperType <- helper_method_type(model)
+      helperType = helper_problemType(model)
       self <- ooParadigm.methodBodyCapabilities.selfReference()
-      memo_field <- ooParadigm.methodBodyCapabilities.getMember(self, memoName)
+      memo_field <- ooParadigm.methodBodyCapabilities.getMember(self, memoMapName)
 
       pair_func <- ooParadigm.methodBodyCapabilities.getMember(self, pairName)
 
@@ -103,8 +105,8 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
 //        get_method <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("get"))
 //        get_call <- paradigm.methodBodyCapabilities.apply(get_method, Seq(key_var))
         zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
-        get_call <- maps.mapCapabilities.getOrElse(memo_field, key_var, zero)
-        _ <- report_td(get_call.toString)
+        helper_default <- helper_default(model)
+        get_call <- maps.mapCapabilities.getOrElse(memo_field, key_var, helper_default)
         stmt1 <- impParadigm.imperativeCapabilities.returnStmt(get_call)
         _ <- addBlockDefinitions(Seq(stmt1))
       } yield None, Seq.empty)
@@ -113,10 +115,11 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
       helper_method <- ooParadigm.methodBodyCapabilities.getMember(self, helperName)
 
       helper_expr <- paradigm.methodBodyCapabilities.apply(helper_method, allExpressions)
-      result_var <- impParadigm.imperativeCapabilities.declareVar(computedResult, helperType, Some(helper_expr))
+      actual_type <- toTargetLanguageType(helperType)
+      result_var <- impParadigm.imperativeCapabilities.declareVar(computedResult, actual_type, Some(helper_expr))
 
       self <- ooParadigm.methodBodyCapabilities.selfReference()
-      memo_field <- ooParadigm.methodBodyCapabilities.getMember(self, memoName)
+      memo_field <- ooParadigm.methodBodyCapabilities.getMember(self, memoMapName)
 //      put_method <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("put"))
 //      func_call <- paradigm.methodBodyCapabilities.apply(put_method, Seq(key_var, result_var))
 //
@@ -128,23 +131,21 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
     } yield Some(result_var)
   }
 
-  /**
-   * Create the MemoType, which is always HashMap<Integer,Integer> because the solution to a DP is an integer, and
-   * you can convert the subproblem arguments into an Integer using Cantor's pairing function.
-   */
-  def make_memo_type(keyType:Type, valueType:Type): Generator[ConstructorContext, Type] = {
-    import genericsParadigm.constructorCapabilities._
-    import ooParadigm.constructorCapabilities._
-
-    for {
-      mapClass <- ooParadigm.constructorCapabilities.findClass(
-        names.mangle("java"), names.mangle("util"), names.mangle("HashMap")
-      )
-
-      finalTpe <- applyType(mapClass, Seq(keyType, valueType))
-
-    } yield finalTpe
-  }
+//  /**
+//   * Create the MemoType, which is always HashMap<Integer,Integer> because the solution to a DP is an integer, and
+//   * you can convert the subproblem arguments into an Integer using Cantor's pairing function.
+//   */
+//  def make_memo_type(keyType:Type, valueType:Type): Generator[ConstructorContext, Type] = {
+//    import genericsParadigm.constructorCapabilities._
+//    import ooParadigm.constructorCapabilities._
+//
+//    for {
+//      mapClass <- toTargetLanguageType(TypeRep.Map(keyType, valueType))
+//
+//      finalTpe <- applyType(mapClass, Seq(keyType, valueType))
+//
+//    } yield finalTpe
+//  }
 
   /**
    * Constructor now takes the responsibility of taking the arguments to the problem. Takes
@@ -174,11 +175,11 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
       _ <- if (useMemo) {
         for {
           intType <- toTargetLanguageType(TypeRep.Int)
-          helperType <- helper_method_type_in_constructor(model)
-          tpe <- make_memo_type(intType, helperType)         // Key is key() result, and Value is DP-int solution
-          obj <- instantiateObject(tpe, Seq.empty)
-          /// obj <- maps.mapCapabilities.create(intType, intType)  TODO: CANNOT do this until we have mapsInConstructors
-          _ <- initializeField(memoName, obj)
+          helperType = helper_problemType(model)
+          actualType <- toTargetLanguageType(helperType)
+          obj <- mapsInConstructors.mapCapabilities.create(intType, actualType)
+          //obj <- maps.mapCapabilities.create(intType, intType)
+          _ <- initializeField(memoMapName, obj)
         } yield None
       } else {
         Command.skip[ConstructorContext]
@@ -189,17 +190,17 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
   def make_top_down(useMemo:Boolean, model:EnhancedModel): Generator[ProjectContext, Unit] = {
     import ooParadigm.projectCapabilities._
 
-    def makeMemo(keyType:Type, valueType:Type) : Generator[ClassContext, Unit] = {
+    def makeMemo(keyTypeRep:TypeRep, valueTypeRep:TypeRep) : Generator[ClassContext, Unit] = {
       import classCapabilities._
       import genericsParadigm.classCapabilities._
 
       for {
-        mapClass <- ooParadigm.classCapabilities.findClass(
-          names.mangle("java"), names.mangle("util"), names.mangle("HashMap")
-        )
-        finalTpe <- applyType(mapClass, Seq(keyType, valueType))
+//        mapClass <- ooParadigm.classCapabilities.findClass(
+//          names.mangle("java"), names.mangle("util"), names.mangle("HashMap")
+//        )
+        actual_type <- toTargetLanguageType(TypeRep.Map(keyTypeRep, valueTypeRep))
 
-        _ <- addField(memoName, finalTpe)
+        _ <- addField(memoMapName, actual_type)
       } yield None
     }
 
@@ -207,8 +208,9 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
       import paradigm.methodBodyCapabilities._
       for {
         _ <- symbol_table_from_solution(model.solution)  // Needed to set params for memo
-        retType <- helper_method_type(model)
-        _ <- setReturnType(retType)
+        retType = helper_problemType(model)
+        actual_type <- toTargetLanguageType(retType)
+        _ <- setReturnType(actual_type)
         res <- memo_helper_body(model)
       } yield res
     }
@@ -223,10 +225,9 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
         }
 
         _ <- if (useMemo) {
+         val returnType = helper_problemType(model)
          for {
-           intType <- toTargetLanguageType(TypeRep.Int)  // key will always be an IntType since that is the cantor pairing
-           returnType <- helper_method_type_in_class(model)
-           _ <- makeMemo(intType, returnType)
+           _ <- makeMemo(TypeRep.Int, returnType)
          } yield ()
         } else {
           Command.skip[ClassContext]
@@ -241,7 +242,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
 
         _ <- if (useMemo) {
           for {
-            _ <- addMethod(memoName, create_memo_helper())
+            _ <- addMethod(memoFunctionName, create_memo_helper())
             _ <- addMethod(pairName, pair_helper())
           } yield ()
         } else {

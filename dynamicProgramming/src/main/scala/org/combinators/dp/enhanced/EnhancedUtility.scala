@@ -59,73 +59,65 @@ trait EnhancedUtility {
     }
   }
 
-  def helper_method_type(model:EnhancedModel) : Generator[MethodBodyContext, Type] = {
-    import paradigm.methodBodyCapabilities._
+//  def helper_method_type(model:EnhancedModel) : Generator[MethodBodyContext, Type] = {
+//    import paradigm.methodBodyCapabilities._
+//
+//    model.subproblemType match {
+//      case _:IntegerType => for {
+//        intType <- toTargetLanguageType(TypeRep.Int)
+//      } yield intType
+//
+//      case _:CharType => for {
+//        charType <- toTargetLanguageType(TypeRep.Char)
+//      } yield charType
+//
+//      case _:BooleanType => for {
+//        boolType <- toTargetLanguageType(TypeRep.Boolean)
+//      } yield boolType
+//
+//      case _:StringType => for {
+//        strType <- toTargetLanguageType(TypeRep.String)
+//      } yield strType
+//
+//      case _ => ???
+//    }
+//  }
 
-    model.subproblemType match {
-      case _:IntegerType => for {
-        intType <- toTargetLanguageType(TypeRep.Int)
-      } yield intType
+//  def helper_method_type_in_class(model:EnhancedModel) : TypeRep = {
+//
+//    model.subproblemType match {
+//      case _:IntegerType => TypeRep.Int
+//      case _:CharType => TypeRep.Char
+//      case _:BooleanType => TypeRep.Boolean
+//      case _:StringType => TypeRep.String
+//
+//      case _ => ???
+//    }
+//  }
 
-      case _:CharType => for {
-        charType <- toTargetLanguageType(TypeRep.Char)
-      } yield charType
+  def helper_default(model:EnhancedModel) : Generator[MethodBodyContext, Expression ] = {
 
-      case _:BooleanType => for {
-        boolType <- toTargetLanguageType(TypeRep.Boolean)
-      } yield boolType
+        model.subproblemType match {
+          case _: IntegerType => for {
+            zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 0)
+          } yield zero
 
-      case _:StringType => for {
-        strType <- toTargetLanguageType(TypeRep.String)
-      } yield strType
+          case _: BooleanType => for {
+            falseValue <- paradigm.methodBodyCapabilities.reify(TypeRep.Boolean, false)
+          } yield falseValue
 
-      case _ => ???
-    }
+          case _ => ???
+        }
   }
 
-  def helper_method_type_in_class(model:EnhancedModel) : Generator[ClassContext, Type] = {
-    import ooParadigm.classCapabilities._
-
-    model.subproblemType match {
-      case _:IntegerType => for {
-        intType <- toTargetLanguageType(TypeRep.Int)
-      } yield intType
-
-      case _:CharType => for {
-        charType <- toTargetLanguageType(TypeRep.Char)
-      } yield charType
-
-      case _:BooleanType => for {
-        boolType <- toTargetLanguageType(TypeRep.Boolean)
-      } yield boolType
-
-      case _:StringType => for {
-        strType <- toTargetLanguageType(TypeRep.String)
-      } yield strType
-
-      case _ => ???
-    }
-  }
-
-  def helper_method_type_in_constructor(model:EnhancedModel) : Generator[ConstructorContext, Type] = {
+  def helper_problemType(model:EnhancedModel) : TypeRep = {
     import ooParadigm.constructorCapabilities._
 
     model.subproblemType match {
-      case _:IntegerType => for {
-        intType <- toTargetLanguageType(TypeRep.Int)
-      } yield intType
-
-      case _:CharType => for {
-        charType <- toTargetLanguageType(TypeRep.Char)
-      } yield charType
-
-      case _:BooleanType => for {
-        boolType <- toTargetLanguageType(TypeRep.Boolean)
-      } yield boolType
-
-      case _:StringType => for {
-        strType <- toTargetLanguageType(TypeRep.String)
-      } yield strType
+      case _:IntegerType => TypeRep.Int
+      case _:CharType => TypeRep.Char
+      case _:BooleanType => TypeRep.Boolean
+      case _:StringType => TypeRep.String
 
       case _ => ???
     }

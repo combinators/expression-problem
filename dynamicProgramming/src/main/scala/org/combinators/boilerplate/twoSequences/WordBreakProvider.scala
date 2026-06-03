@@ -155,6 +155,7 @@ object WordBreakProvider {
       override val console: Console.WithBase[base.MethodBodyContext, paradigm.type] = con
       override val array: Arrays.WithBase[base.MethodBodyContext, paradigm.type] = arr
       override val maps: Maps.WithBase[base.MethodBodyContext, paradigm.type] = maps
+      override val mapsInConstructors = ???
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn
       override val strings: Strings.WithBase[base.MethodBodyContext, paradigm.type] = stringsIn
       override val eqls: Equality.WithBase[base.MethodBodyContext, paradigm.type] = eqlsIn

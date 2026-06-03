@@ -20,7 +20,7 @@ class MinCostClimbingStair {
 
     /*
      *   P(i,j,k) = 0, if i == 0 || j == 0 || k == 0 for all Ranges
-     *   P(i,j,k) = Max of three sub-cases
+     *   P(i,j,k) = Max of three subcases
      */
 
     // return cost[i] + Math.min(helper_topdown(i - 1),

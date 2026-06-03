@@ -641,7 +641,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
   }
 
   /**
-   * Creates the signature for the 'abstract R visit(DataType exp)' method which still has no body, and can
+   * Creates the signature for the 'abstract R visit(DataType exp)' method which still has no code body, and can
    * thus become an abstract interface declaration or form the basis for an implementation.
    *
    * {{{
@@ -755,7 +755,7 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
       _ <- addClassToProject(visitorSpecifics.makeVisitorInterface(flatDomain.typeCases.distinct), visitorClass)
 
       // Figure out which model to use for this operation so it aligns with EIPS. In fact, sending flatDomain is exactly wrong
-      // if two predecessors (and cannot decide which one to take) then we are in charge otherwise we pick one branch that has latest one
+      // if two predecessors (and cannot decide which one to take) then we are in charge otherwise we pick one branch that has the latest one
       _ <- forEach (flatDomain.ops) { op => {
         addClassToProject(visitorSpecifics.makeOperationImplementation(gdomain, op, domainSpecific), names.mangle(names.conceptNameOf(op)))
       }

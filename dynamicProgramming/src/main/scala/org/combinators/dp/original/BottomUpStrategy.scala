@@ -247,7 +247,7 @@ trait BottomUpStrategy extends Utility {
             _ <- addBlockDefinitions(Seq(av))
           } yield None
           ,
-          // collection of (condition, block) for all of the remaining cases
+          // collection of (condition, block) for all remaining cases
           all_rest
           ,
           // terminating 'else' takes the elseCase and adds it last
@@ -278,7 +278,7 @@ trait BottomUpStrategy extends Utility {
 
 
 
-      // return last element dp[n] because dp is 1 larger in size than n
+      // return last element dp[n] because dp has n+1 elements
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
       dpo <- array.arrayCapabilities.get(dpexp, Seq(max_bound_outer))
       dpi <- array.arrayCapabilities.get(dpo, Seq(max_bound_inner))
@@ -344,7 +344,7 @@ trait BottomUpStrategy extends Utility {
             _ <- addBlockDefinitions(Seq(av))
           } yield None
           ,
-          // collection of (condition, block) for all of the remaining cases
+          // collection of (condition, block) for all remaining cases
           all_rest
           ,
           // terminating 'else' takes the elseCase and adds it last
@@ -363,7 +363,7 @@ trait BottomUpStrategy extends Utility {
 
       _ <- addBlockDefinitions(Seq(whileLoop))
 
-      // return last element dp[n] because dp is 1 larger in size than n
+      // return last element dp[n] because dp is n+1 in size
       dpexp <- ooParadigm.methodBodyCapabilities.getMember(self, dpName)
       dpn <- array.arrayCapabilities.get(dpexp, Seq(max_bound))
       retstmt <- Command.lift(dpn)
@@ -394,7 +394,7 @@ trait BottomUpStrategy extends Utility {
       //      instantiated <- ooParadigm.methodBodyCapabilities.instantiateObject(arrayType, Seq(nplus1), None)
       //      self <- selfReference()
 
-      // I CANNOT GET THIS TO WOK
+      // I CANNOT GET THIS TO WORK
 
       //dp <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle("dp"))
       //_ <- initializeField(names.mangle("dp"), instantiated)

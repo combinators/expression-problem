@@ -217,7 +217,7 @@ object J6funct {
               leftSide <- forApproach.dispatch(SendRequest(
                 innerLit,
                 systemJ.J6.getModel.baseDataType,
-                Request(systemJ.J6.PowBy, Map(Parameter("other", onRequest.request.op.returnType) -> onRequest.attributes.head._2)) // MUST contain exp some how?
+                Request(systemJ.J6.PowBy, Map(Parameter("other", onRequest.request.op.returnType) -> onRequest.attributes.head._2)) // MUST contain exp somehow?
               ))
 
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.systemJ.J2.Mult, leftSide, left)

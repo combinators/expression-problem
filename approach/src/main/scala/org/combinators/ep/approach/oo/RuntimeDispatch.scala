@@ -18,7 +18,7 @@ import org.combinators.ep.domain.extensions._
   * Runtime Dispatch
   *
   * Have to decide whether to use side effects or Generics. This current implementation uses the Visitor<R> generics
-  * approach, which can be adopted by different object oriented languages.
+  * approach, which can be adopted by different object-oriented languages.
   */
 trait RuntimeDispatch extends SharedOO with OperationAsClass {
   val paradigm: AnyParadigm

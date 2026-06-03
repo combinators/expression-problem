@@ -85,12 +85,12 @@ trait PascalObjectOrientedProvider extends Utility {
       iName <- freshName(names.mangle("i"))
       iVar <- impParadigm.imperativeCapabilities.declareVar(iName, intType, Some(zero))
       iVarPlusOne <- arithmetic.arithmeticCapabilities.add(iVar,one)
-      outerCond <- arithmetic.arithmeticCapabilities.lt(iVar, rp1);
+      outerCond <- arithmetic.arithmeticCapabilities.lt(iVar, rp1)
       outerLoop <-impParadigm.imperativeCapabilities.whileLoop(outerCond,
         for {
           jName <- freshName(names.mangle("j"))
           jVar <- impParadigm.imperativeCapabilities.declareVar(jName, intType, Some(zero))
-          innerCond <- arithmetic.arithmeticCapabilities.lt(jVar, iVar);
+          innerCond <- arithmetic.arithmeticCapabilities.lt(jVar, iVar)
           innerLoop <-impParadigm.imperativeCapabilities.whileLoop(innerCond,
             for {
               condExpr1 <- arithmetic.arithmeticCapabilities.le(jVar, zero)

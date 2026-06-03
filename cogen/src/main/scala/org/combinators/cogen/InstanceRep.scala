@@ -1,6 +1,6 @@
 package org.combinators.cogen     /*DI:LI:AI*/
 
-/** A host language (Scala) instance, which can be represented inside of a domain.
+/** A host language (Scala) instance, which can be represented inside a domain.
   *
   * In type theory this is encoded as a dependent sum, Sigma, where there exists a type and an instance for that type.
   * Check [[https://partialflow.wordpress.com/2017/07/26/dependent-types-type-level-programming/ this introduction]]

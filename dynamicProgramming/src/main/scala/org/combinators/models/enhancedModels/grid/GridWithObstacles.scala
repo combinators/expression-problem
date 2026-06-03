@@ -6,7 +6,7 @@ import org.combinators.models.*
  * Name: Grid With Obstacles
  * Description:
  * Given an m x n grid, find the number of unique paths from the top-left
- * to the bottom-right corner. You can only move down or right at each step and you
+ * to the bottom-right corner. You can only move down or right at each step, and you
  * must avoid cells containing a 1 (obstacle). This is a variation of UniquePaths
  *
  * Recurrence:

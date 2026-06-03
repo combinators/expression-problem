@@ -4,7 +4,7 @@ import org.combinators.cogen.paradigm.{AnyParadigm, Apply, Reify}
 import org.combinators.cogen.{Command, TypeRep, Understands}
 import Command.Generator
 
-// if have contents, must pass in Seq[Int] to be able to group one-dimensional sequence into appropriate sub-structures.
+// if this has contents, must pass in Seq[Int] to be able to group one-dimensional sequence into appropriate sub-structures.
 case class CreateArray[Type,Expression](elementType: Type, dimensions: Seq[Expression], contentSpec:Option[(Seq[Int], Seq[Expression])]) extends Command {
   override type Result = Expression
 }

@@ -270,7 +270,7 @@ class GenericModel(val name:String,
   /**
    * Determines if this model or its history contain any binary methods.
    *
-   * Typical usage is to call getModel.flatten before calling this method.
+   * Typical usage is to call 'getModel.flatten' before calling this method.
    */
   def hasBinaryMethod: Boolean =
     toSeq.exists(_.ops.exists(_.isBinary(this)))
@@ -278,7 +278,7 @@ class GenericModel(val name:String,
   /**
    * Determine if this model or its history contain any producer operations.
    *
-   * Typical usage is to call getModel.flatten before calling this method.
+   * Typical usage is to call 'getModel.flatten' before calling this method.
    */
   def hasProducerOperation: Boolean =
     toSeq.exists(_.ops.exists(_.isProducer(this)))
@@ -366,8 +366,8 @@ class GenericModel(val name:String,
   *
   * Use `evolve` to obtain the next model and [[org.combinators.ep.domain.GenericModel.base]] for the initial one.
   *
-  * This will be renamed LinearModel and a superclass is non-linear model. In nonlinear model, could
-  * have a linearize() method that "zips" up to create a linear model.
+  * This will be renamed LinearModel and a superclass is non-linear model. In non-linear model, there could be
+  * a linearize() method that "zips" up to create a linear model.
   *
   * @note Names act as unique identifiers within the context of one domain.
   */

@@ -204,20 +204,20 @@ trait Utility {
       case _:StringType => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()
         field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(argExpr.name))
-        lengthMethod <- ooParadigm.methodBodyCapabilities.getMember(field, names.mangle("length"))     // bit of a hack for string
+        lengthMethod <- ooParadigm.methodBodyCapabilities.getMember(field, names.mangle("length"))     // a bit of a hack for string
         invoke <- paradigm.methodBodyCapabilities.apply(lengthMethod, Seq.empty)
       } yield invoke
 
       case _:IntegerArrayType => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()
         field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(argExpr.name))
-        lengthField <- ooParadigm.methodBodyCapabilities.getMember(field, names.mangle("length"))     // bit of a hack for string
+        lengthField <- ooParadigm.methodBodyCapabilities.getMember(field, names.mangle("length"))     // a bit of a hack for string
       } yield lengthField
 
       case _:IntegerArray2DType => for {
         self <- ooParadigm.methodBodyCapabilities.selfReference()
         field <- ooParadigm.methodBodyCapabilities.getMember(self, names.mangle(argExpr.name))
-        lengthField <- ooParadigm.methodBodyCapabilities.getMember(field, names.mangle("length"))     // bit of a hack for string
+        lengthField <- ooParadigm.methodBodyCapabilities.getMember(field, names.mangle("length"))     // a bit of a hack for string
       } yield lengthField
 
       // find which ones need to be implemented
@@ -477,7 +477,7 @@ trait Utility {
         actual <- paradigm.methodBodyCapabilities.reify(TypeRep.Char, char.literal)
       } yield actual
 
-      case _ => for {   // PLACE HOLDER FOR EVERYTHING ELSE
+      case _ => for {   // PLACEHOLDER FOR EVERYTHING ELSE
         zero <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, -99)
       } yield zero
     }

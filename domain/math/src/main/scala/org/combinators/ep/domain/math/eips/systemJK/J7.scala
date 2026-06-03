@@ -15,7 +15,7 @@ import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstan
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
-// Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be used in an uniform way.
+// Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be used in a uniform way.
 sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
 
   type IfThenElseCommand =
@@ -186,7 +186,7 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         } else if (onRequest.request.op == math.systemJ.J2.isOp(onRequest.tpeCase)) {
           genericLogic(forApproach)(onRequest) // same isOpTypeCase applied to TypeCase can pass in
         } else {
-          // if opname is a "isSub" or "isAdd" for older typecase, but we are in newest one? Still send to generic logic
+          // if opname is a "isSub" or "isAdd" for older typecase, but we are in the newest one? Still send to generic logic
           val pastOps = math.systemJ.J2.isOps(model.flatten.typeCases)
           if (pastOps.contains(onRequest.request.op)) {
             genericLogic(forApproach)(onRequest)

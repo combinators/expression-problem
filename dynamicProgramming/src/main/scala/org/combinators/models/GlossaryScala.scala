@@ -1,7 +1,7 @@
 package org.combinators.models
 
 /**
- * sbt "dp/runMain org.combinators.modelTests.Glossary [bottomUp | topDown | topDownMemo]
+ * sbt "dp/runMain org.combinators.modelTests.Glossary [bottomUp | topDown | topDownMemo]"
  *
  * Creates output files in target/bottomUp or target\topDown or target\topDownMemo
  */

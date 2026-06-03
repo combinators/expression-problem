@@ -210,12 +210,12 @@ trait JumpToObjectOrientedProvider {
   /*
   int minJumps(int[] arr) {
 
-            int ans = minJumpsRecur(0, arr);
+            int answer = minJumpsRecur(0, arr);
 
-            if (ans == retrieveMax(arr))
+            if (answer == retrieveMax(arr))
                 return -1;
 
-            return ans;
+            return answer;
         }
    */
 

@@ -37,7 +37,7 @@ class JumpToMainJava {
           _ <- generator.doublesInMethod.enable()
           _ <- generator.intsInMethod.enable()
           _ <- generator.stringsInMethod.enable()
-          _ <- generator.listsInMethod.enable()     // should be array, but this still needs to be added as an FFI
+          _ <- generator.listsInMethod.enable()
           _ <- generator.consoleInMethod.enable()
           _ <- generator.arraysInMethod.enable()
           _ <- generator.equalityInMethod.enable()

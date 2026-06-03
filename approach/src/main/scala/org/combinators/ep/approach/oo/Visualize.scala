@@ -18,7 +18,7 @@ import org.combinators.ep.domain.extensions._
   * https://dreampuf.github.io/GraphvizOnline
   *
   * Choose "graphviz" as the approach and (for either Java or Scala) generate the resulting
-  * code. What it does, instead, is generate the OO solution and then creates files, either
+  * code. What it does, instead, is to generate the OO solution and then creates files, either
   * "eip.viz" (structural evolution) or "evolution.viz" (which also includes dependency links)
   * that you can copy and paste into the above service.
   */

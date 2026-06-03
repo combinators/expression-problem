@@ -46,7 +46,7 @@ trait ImperativeAST extends AnyAST {
       def copy(expression: any.Expression = expression): LiftExpression = imperativeFactory.liftExpression(expression)
     }
 
-    trait Tertiary extends any.Expression {    // WAS any.Statement BUT i think this is an Expression 
+    trait Tertiary extends any.Expression { 
       def getSelfTertiary: imperativeFinalTypes.Tertiary
       def condition: any.Expression
       def trueExpression: any.Expression

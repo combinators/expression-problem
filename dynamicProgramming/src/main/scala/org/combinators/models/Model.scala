@@ -53,7 +53,7 @@ class Argument (val argName:String, val argType:ArgumentType)
 
     int min = Integer.MAX_VALUE;  // could store in array and find min but then req extra storage
     for (int k = i; k < j; k++) {
-      // compute cost of each possible starting point for a '(' between i and j-1 with a ')' at j
+      // compute cost of each possible starting point for a '(' between 'i' and 'j-1' with a ')' at j
       int count = helper(i, k) + helper(k+1, j) + A[i-1] * A[k] * A[j];
       if (count < min) { min = count; decision.put(key(i,j), k); }
     }

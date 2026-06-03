@@ -11,7 +11,7 @@ import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedReq
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 /** Upon merging M3 and W1 there is a need for MultByx(Divd, Mult, Neg) as well as a need for
- * (Collect,Simplify,Id,AsTree,Equals,PowBy)xPower
+ * (Collect, Simplify, ID, AsTree, Equals, PowBy) x Power
  *
  * These all have to be captured here...
  */

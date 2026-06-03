@@ -11,15 +11,15 @@ import org.combinators.cogen.{AbstractSyntax, Command, NameProvider}
  * Take advantage of observation that:
  *
  *   Lucas(n) = Fib(n-1) + F(n+1) for n > 1
- *   Fib(x+y) = [(Fib(x)*Lucas(y) + Fib(y)*Locas(x)] / 2
+ *   Fib(x+y) = [Fib(x)*Lucas(y) + Fib(y)*Locas(x)] / 2
  *
  * With this you can declare
  *
  *   n1 = floor(n/2)
  *   n2 = n - n1
- *   Fib(n) = [(Fib(n1)*Lucas(n2) + Fib(n2)*Locas(n1)] / 2
+ *   Fib(n) = [Fib(n1)*Lucas(n2) + Fib(n2)*Locas(n1)] / 2
  *
- * And the resulting speed up is quite impressive
+ * And the resulting speed-up is quite impressive
  */
 trait FibonacciWithLucas {
   val paradigm: AnyParadigm

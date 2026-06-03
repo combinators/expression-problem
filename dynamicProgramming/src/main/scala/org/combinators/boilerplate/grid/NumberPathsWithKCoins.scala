@@ -3,7 +3,7 @@ package org.combinators.boilerplate.grid
 import org.combinators.dp.TestExample
 import org.combinators.dp.enhanced.{EnhancedDPMainJava, EnhancedDPMainScala}
 import org.combinators.models.*
-import org.combinators.models.enhancedModels.grid.{GridWithObstacles, NumberPathsWithKCoins}
+import org.combinators.models.enhancedModels.grid.NumberPathsWithKCoins
 
 trait NumberPathsWithKCoinsApp {
   def tests = Seq(

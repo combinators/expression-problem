@@ -118,7 +118,7 @@ object J6 {
 
               one <- forApproach.reify(InstanceRep(TypeRep.Double)(1.0))
 
-              // Know you have add data type so you can construct it
+              // Know you have `Add` data type so you can construct it
               condExpr <- ffiArithmetic.arithmeticCapabilities.lt(one, ctrVar)
               stmt <- ffiImper.imperativeCapabilities.whileLoop(condExpr, for {
                 res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.systemJ.J2.Mult, resultVar, onRequest.selfReference)
@@ -190,7 +190,7 @@ object J6 {
               leftSide <- forApproach.dispatch(SendRequest(
                 innerLit,
                 systemJ.J6.getModel.baseDataType,
-                Request(systemJ.J6.PowBy, Map(Parameter("other", onRequest.request.op.returnType) -> onRequest.attributes.head._2)) // MUST contain exp some how?
+                Request(systemJ.J6.PowBy, Map(Parameter("other", onRequest.request.op.returnType) -> onRequest.attributes.head._2)) // MUST contain exp somehow?
               ))
 
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.systemJ.J2.Mult, leftSide, left)

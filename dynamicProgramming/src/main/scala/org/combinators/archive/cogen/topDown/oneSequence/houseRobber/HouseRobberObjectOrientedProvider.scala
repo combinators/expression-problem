@@ -122,7 +122,7 @@ trait HouseRobberObjectOrientedProvider {
     } yield Some(zero)
   }
 
-    /** Method implementation: top-down DP with memoization (pseudo-code). */
+    /** Method implementation: top-down DP with memoization (pseudocode). */
   def robMethodImplementation(): Generator[MethodBodyContext, Option[Expression]] = {
     import paradigm.methodBodyCapabilities._
     for {

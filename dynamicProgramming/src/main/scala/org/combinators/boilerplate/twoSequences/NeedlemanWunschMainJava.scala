@@ -6,7 +6,6 @@ import org.apache.commons.io.FileUtils
 import org.combinators.dp.TestExample
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import FileWithPathPersistable.*
-import org.combinators.boilerplate.twoSequences.WordBreakProvider
 import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
 import org.combinators.ep.language.java.paradigm.ObjectOriented
 import org.combinators.ep.language.java.{CodeGenerator, JavaNameProvider, Syntax, Unboxed}
@@ -44,7 +43,7 @@ class NeedlemanWunschMainJava {
         _ <- generator.realDoublesInMethod.enable()
         _ <- generator.intsInMethod.enable()
         _ <- generator.stringsInMethod.enable()
-        _ <- generator.listsInMethod.enable() // should be array, but this still needs to be added as an FFI
+        _ <- generator.listsInMethod.enable()
         _ <- generator.consoleInMethod.enable()
         _ <- generator.arraysInMethod.enable()
         _ <- generator.equalityInMethod.enable()

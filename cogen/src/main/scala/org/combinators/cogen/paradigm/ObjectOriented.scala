@@ -83,7 +83,7 @@ case class SelfReference[Expression]() extends Command {
   type Result = Expression
 }
 
-/** Used for super. or (when tpe exists) then qn.super. */
+/** Used for 'super' or (when tpe exists) then 'qn.super'. */
 case class SuperReference[Name, Expression](qualifiedName:Seq[Name] = Seq.empty) extends Command {
   type Result = Expression
 }

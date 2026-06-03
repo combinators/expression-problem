@@ -10,7 +10,7 @@ class MatrixChainMultiplicationTD {
     val two:  LiteralInt = LiteralInt(2)
 
     // MatrixChainMultiplication has an array of N+1 integers,representing N 2D Matrices
-    val array = ArgExpression(0, "nums", IntegerArrayType(), "c")     // not too sure whether 'i' remains a requirement as argument here
+    val array = ArgExpression(0, "nums", IntegerArrayType(), "c") 
     val bound = List(array)
 
     val i: HelperExpression = HelperExpression("i", zero, SelfExpression("i") <= ArrayLengthExpression(array), ArrayLengthExpression(array))   // MOST of this unnecessary

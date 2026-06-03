@@ -133,7 +133,7 @@ trait AnyParadigm[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax.Abstract
       }
     }
 
-    // Seem to be missing 'canAddBlockDefinitionsInTest
+    // Seem to be missing 'canAddBlockDefinitionsInTest'
 
     implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[Method, Name, Expression]] = new Understands[TestContext, AddTestCase[Method, Name, Expression]] {
       def perform(context: TestContext, command: AddTestCase[Method, Name, Expression]): (TestContext, Unit) = {

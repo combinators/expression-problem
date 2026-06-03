@@ -35,7 +35,7 @@ trait DPObjectOrientedProvider extends DPProvider with Utility with TopDownStrat
   lazy val resultVarName = names.mangle("result")
 
   /**
-   * Method creates a compute() method with no arguments that invokes helper method:
+   * Method creates compute() method with no arguments that invokes helper method:
    *
    *   public Integer compute() {
    *     return this.helper(this.n);

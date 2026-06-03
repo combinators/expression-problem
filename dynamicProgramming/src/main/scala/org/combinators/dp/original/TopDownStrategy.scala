@@ -40,7 +40,7 @@ trait TopDownStrategy extends Utility {
 
   lazy val computedResult = names.mangle("computed_result")
 
-  // is provided by the DP common provider -- neither a topDown or a bottomUp concept
+  // is provided by the DP common provider -- neither a topDown nor a bottomUp concept
   def make_compute_method(model:Model): Generator[paradigm.MethodBodyContext, Option[Expression]]
 
   def create_key(): Generator[paradigm.MethodBodyContext, Option[Expression]] = {

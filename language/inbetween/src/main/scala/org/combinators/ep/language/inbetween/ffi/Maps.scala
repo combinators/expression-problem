@@ -34,10 +34,10 @@ trait Maps[AST <: MapsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
             (context, mapsOpsFactory.get(command.arguments(0), command.arguments(1), command.arguments(2)))
           }
         }
-      override implicit val canPut: Understands[Ctxt, Apply[Put, any.Expression, any.Expression]] =
-        new Understands[Ctxt, Apply[Put, any.Expression, any.Expression]] {
-          override def perform(context: Ctxt, command: Apply[Put, any.Expression, any.Expression]): (Ctxt, any.Expression) = {
-            (context, mapsOpsFactory.put(command.arguments(0), command.arguments(1), command.arguments(2)))
+      override implicit val canPut: Understands[Ctxt, Apply[Put[any.Type], any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[Put[any.Type], any.Expression, any.Expression]] {
+          override def perform(context: Ctxt, command: Apply[Put[any.Type], any.Expression, any.Expression]): (Ctxt, any.Expression) = {
+            (context, mapsOpsFactory.put(command.arguments(0), command.functional.keyType, command.functional.valueType, command.arguments(1), command.arguments(2)))
           }
         }
     }

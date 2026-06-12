@@ -70,6 +70,10 @@ trait MapsAST extends InbetweenMapsAST { self: OperatorExpressionsAST & BaseAST 
 
           s"$base.updated($key, $value)"
         }
+
+        override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): mapsOps.PutOp =
+          copy(keyType = keyType.prefixRootPackage(rootPackageName, excludedTypeNames),
+            elementType = elementType.prefixRootPackage(rootPackageName, excludedTypeNames))
       }
 
       trait Factory extends mapsOps.Factory {}
@@ -119,9 +123,9 @@ trait FinalMapsAST extends MapsAST { self: FinalOperatorExpressionsAST & FinalBa
         GetOp()
       }
 
-      def putOp(): mapsOps.PutOp = {
-        case class PutOp() extends scalaMapsOps.mapsOpsOverride.PutOp with finalOperatorExpressions.operatorExpressionsOverrides.Operator
-        PutOp()
+      override def putOp(keyType: any.Type, elementType: any.Type): mapsOps.PutOp = {
+        case class PutOp(keyType: any.Type, elementType: any.Type) extends scalaMapsOps.mapsOpsOverride.PutOp with finalOperatorExpressions.operatorExpressionsOverrides.Operator
+        PutOp(keyType, elementType)
       }
     }
   }

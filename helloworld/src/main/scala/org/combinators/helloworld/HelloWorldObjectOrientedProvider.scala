@@ -169,7 +169,7 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
       newKey <- paradigm.methodBodyCapabilities.reify(TypeRep.String, "there")
       newValue <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 88)
 
-      expr2 <- maps.mapCapabilities.put(mapVar, newKey, newValue)
+      expr2 <- maps.mapCapabilities.put(mapVar, stringType, intType, newKey, newValue)
       mapVar <- impParadigm.imperativeCapabilities.declareVar(names.mangle("myMap3"), mapType, Some(expr2))
 
     } yield None // Some(res)

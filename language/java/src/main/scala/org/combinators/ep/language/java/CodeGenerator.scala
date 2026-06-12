@@ -133,13 +133,23 @@ class CodeGenerator(config: Config) { cc =>
   val mapsInMethod =
     Maps[MethodBodyCtxt, paradigm.type, Generics](
       paradigm,
-      paradigm.methodBodyCapabilities.canAddImportInMethodBody
+      paradigm.methodBodyCapabilities.canAddImportInMethodBody,
+      parametricPolymorphism.methodBodyCapabilities.canApplyTypeInMethod,
+      paradigm.methodBodyCapabilities.canGetFreshNameInMethodBody,
+      imperativeInMethod.imperativeCapabilities.canDeclareVariable,
+      imperativeInMethod.imperativeCapabilities.canLiftExpression,
+      paradigm.methodBodyCapabilities.canAddBlockDefinitionsInMethodBody
     )(generics)
 
   val mapsInConstructor =
     Maps[CtorCtxt, paradigm.type, Generics](
       paradigm,
-      ooParadigm.constructorCapabilities.canAddImportInConstructor
+      ooParadigm.constructorCapabilities.canAddImportInConstructor,
+      generics.constructorCapabilities.canApplyTypeInConstructor,
+      ooParadigm.constructorCapabilities.canGetFreshNameInConstructor,
+      imperativeInConstructor.imperativeCapabilities.canDeclareVariable,
+      imperativeInConstructor.imperativeCapabilities.canLiftExpression,
+      ooParadigm.constructorCapabilities.canAddBlockDefinitionsInConstructor
     )(generics)
 
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)

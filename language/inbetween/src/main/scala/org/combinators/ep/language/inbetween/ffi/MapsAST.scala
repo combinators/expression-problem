@@ -31,7 +31,12 @@ trait MapsAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST {
     
     trait ContainsKeyOp extends operatorExpressions.Operator
     trait GetOp extends operatorExpressions.Operator
-    trait PutOp extends operatorExpressions.Operator
+    trait PutOp extends operatorExpressions.Operator {
+      def keyType: any.Type
+      def elementType: any.Type
+      
+      def copy(keyType: any.Type = this.keyType, elementType: any.Type = this.elementType): PutOp = mapsOpsFactory.putOp(keyType = keyType, elementType = elementType)
+    }
 
     trait Factory {
       def createMap(keyType: any.Type,
@@ -45,7 +50,7 @@ trait MapsAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST {
       
       def containsKeyOp(): ContainsKeyOp
       def getOp(): GetOp
-      def putOp(): PutOp
+      def putOp(keyType:any.Type, elementType: any.Type): PutOp
 
       def containsKey(map: any.Expression, key: any.Expression): operatorExpressions.BinaryExpression =
         operatorExpressionsFactory.binaryExpression(containsKeyOp(), map, key)
@@ -53,8 +58,8 @@ trait MapsAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST {
       def get(map: any.Expression, key: any.Expression, defaultValue: any.Expression): operatorExpressions.TernaryExpression =
         operatorExpressionsFactory.ternaryExpression(getOp(), map, key, defaultValue)
 
-      def put(map: any.Expression, key: any.Expression, value: any.Expression): operatorExpressions.TernaryExpression =
-        operatorExpressionsFactory.ternaryExpression(putOp(), map, key, value)
+      def put(map: any.Expression, keyType: any.Type, elementType: any.Type, key: any.Expression, value: any.Expression): operatorExpressions.TernaryExpression =
+        operatorExpressionsFactory.ternaryExpression(putOp(keyType, elementType), map, key, value)
 
       implicit def convert(other: CreateMap): mapsOpsFinalTypes.CreateMapExpression = other.getSelfCreateMapExpression
       implicit def convert(other: Map): mapsOpsFinalTypes.Map = other.getSelfMapType

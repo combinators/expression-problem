@@ -123,7 +123,7 @@ trait TopDownStrategy extends Utility with EnhancedUtility {
 //      put_method <- ooParadigm.methodBodyCapabilities.getMember(memo_field, names.mangle("put"))
 //      func_call <- paradigm.methodBodyCapabilities.apply(put_method, Seq(key_var, result_var))
 //
-      func_call <- maps.mapCapabilities.put(memo_field, key_var, result_var)
+      func_call <- maps.mapCapabilities.put(memo_field, intType, intType, key_var, result_var)
       stmt1 <- impParadigm.imperativeCapabilities.assignVar(memo_field, func_call)
       //stmt1 <- impParadigm.imperativeCapabilities.liftExpression(func_call)
       _ <- addBlockDefinitions(Seq(stmt1))

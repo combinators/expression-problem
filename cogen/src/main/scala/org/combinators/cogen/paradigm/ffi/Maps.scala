@@ -7,7 +7,7 @@ import Command.Generator
 case class CreateMap[Type](keyType:Type, elementType: Type)
 case class GetOrElse()
 case class ContainsKey()
-case class Put()
+case class Put[Type](keyType: Type, valueType: Type)
 
 trait Maps[Context] extends FFI {
   import base._
@@ -26,9 +26,9 @@ trait Maps[Context] extends FFI {
     def getOrElse(map: Expression, key: Expression, defaultVal: Expression): Generator[Context, Expression] =
       AnyParadigm.capability(Apply[GetOrElse, Expression, Expression](GetOrElse(), Seq(map, key, defaultVal)))
 
-    implicit val canPut: Understands[Context, Apply[Put, Expression, Expression]]
-    def put(map: Expression, key:Expression, value:Expression): Generator[Context, Expression] =
-      AnyParadigm.capability(Apply[Put, Expression, Expression](Put(), Seq(map, key, value)))
+    implicit val canPut: Understands[Context, Apply[Put[Type], Expression, Expression]]
+    def put(map: Expression, keyType: Type, valueType: Type, key:Expression, value:Expression): Generator[Context, Expression] =
+      AnyParadigm.capability(Apply[Put[Type], Expression, Expression](Put(keyType, valueType), Seq(map, key, value)))
 
   }
   val mapCapabilities: MapCapabilities

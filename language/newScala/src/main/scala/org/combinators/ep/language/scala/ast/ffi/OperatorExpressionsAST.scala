@@ -19,6 +19,7 @@ trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: Ba
 
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): operatorExpressions.TernaryExpression =
           copy(
+            operator = operator.getSelfOperator.prefixRootPackage(rootPackageName, excludedTypeNames),
             left  = left.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
             mid   = mid.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
             right = right.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames)
@@ -31,6 +32,7 @@ trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: Ba
 
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): operatorExpressions.BinaryExpression =
           copy(
+            operator = operator.getSelfOperator.prefixRootPackage(rootPackageName, excludedTypeNames),
             left = left.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
             right = right.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames)
           )
@@ -41,12 +43,15 @@ trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: Ba
 
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): operatorExpressions.UnaryExpression =
           copy(
+            operator = operator.getSelfOperator.prefixRootPackage(rootPackageName, excludedTypeNames),
             operand = operand.getSelfExpression.prefixRootPackage(rootPackageName, excludedTypeNames)
           )
       }
 
       trait Operator extends operatorExpressions.Operator {
         def toScala(operands: any.Expression*): String
+
+        def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): operatorExpressions.Operator = this
       }
       
       trait Factory extends operatorExpressions.Factory {}

@@ -1,15 +1,11 @@
-package org.combinators.ep.language.inbetween.ffi
-
-/*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{Assert, Assertions as Asrts}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, Understands}
-import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-// cannot find 'assertions'
 trait Assertions[AST <: AssertionsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
   trait AssertionsInMethods extends Asrts[_base.ast.any.Method] {
     val base: _base.type = _base

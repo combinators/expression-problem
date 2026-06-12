@@ -3,7 +3,7 @@ package org.combinators.ep.language.java.extensibleVisitor   /*DI:LD:AD*/
 import com.github.javaparser.ast.body.{ConstructorDeclaration, MethodDeclaration, TypeDeclaration}
 //import org.combinators.ep.domain.BaseDomain
 import org.combinators.ep.domain.abstractions.Operation
-//import org.combinators.ep.generator.OperationDependency
+//import org.combinators.cogen.OperationDependency
 import org.combinators.ep.language.java.JavaNameProvider.mangle
 import org.combinators.ep.language.java.JavaSyntax.Statement
 import org.combinators.ep.language.java.visitor.VisitorGenerator

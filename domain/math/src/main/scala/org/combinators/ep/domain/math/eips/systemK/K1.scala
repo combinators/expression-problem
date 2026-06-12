@@ -76,7 +76,7 @@ object K1 {
         } else if (onRequest.request.op == math.systemJ.J2.isOp(onRequest.tpeCase)) {
           genericLogic(forApproach)(onRequest) // same isOpTypeCase applied to TypeCase can pass in
         } else {
-          // if opname is a "isSub" or "isAdd" for older typecase, but we are in newest one? Still send to generic logic
+          // if opname is a "isSub" or "isAdd" for older typecase, but we are in the newest one? Still send to generic logic
           val pastOps = math.systemJ.J2.isOps(model.flatten.typeCases)
           if (pastOps.contains(onRequest.request.op)) {
             genericLogic(forApproach)(onRequest)

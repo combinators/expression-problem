@@ -1,6 +1,4 @@
-package org.combinators.ep.language.inbetween.any
-
-/*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.any    /*DI:LI:AI*/
 
 import org.combinators.cogen.AbstractSyntax as AS
 

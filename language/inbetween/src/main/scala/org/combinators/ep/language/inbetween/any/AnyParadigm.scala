@@ -1,9 +1,7 @@
-package org.combinators.ep.language.inbetween.any
-
-/*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.any    /*DI:LI:AI*/
 
 import org.combinators.cogen.TypeRep
-import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddCustomFile, AddImport, AddMethod, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP}
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddCustomFile, AddImport, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, Understands}
 
@@ -72,11 +70,6 @@ trait AnyParadigm[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax.Abstract
         (context, ())
       }
     }
-    implicit val canOutputToConsole: Understands[MethodBodyContext, OutputToConsole[syntax.Expression]] = new Understands[MethodBodyContext, OutputToConsole[syntax.Expression]] {
-      def perform(context: MethodBodyContext, command: OutputToConsole[syntax.Expression]): (MethodBodyContext, Unit) = {
-        (context, ())
-      }
-    }
 
     implicit val canAddImportInMethodBody: Understands[MethodBodyContext, AddImport[syntax.Import]] = new Understands[MethodBodyContext, AddImport[syntax.Import]] {
       def perform(context: MethodBodyContext, command: AddImport[syntax.Import]): (MethodBodyContext, Unit) = {
@@ -140,7 +133,7 @@ trait AnyParadigm[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax.Abstract
       }
     }
 
-    // Seem to be missing 'canAddBlockDefinitionsInTest
+    // Seem to be missing 'canAddBlockDefinitionsInTest'
 
     implicit val canAddTestCaseInTest: Understands[TestContext, AddTestCase[Method, Name, Expression]] = new Understands[TestContext, AddTestCase[Method, Name, Expression]] {
       def perform(context: TestContext, command: AddTestCase[Method, Name, Expression]): (TestContext, Unit) = {
@@ -154,13 +147,14 @@ trait AnyParadigm[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax.Abstract
         // underlying methods to exceed their maximum size.
         val groups = result.sliding(25,25)
 
+        var lastFresh:Name = command.name
         val blocks = groups.map(g => {
           val emptyMethod = factory.method(
             name = sample.getFreshName(command.name),
             typeLookupMap = context.methodTypeLookupMap
           )
-          val (generatedMethod, _) = Command.runGenerator(command.code, emptyMethod)
-          generatedMethod.addTestExpressions(g)
+          lastFresh = sample.getFreshName(lastFresh)   // prepare for next time
+          sample.addTestExpressions(g)                 // when emptymethod, scala generation fails to generation intermediate stmts instantiating arrays
         })
         (context.copy(tests = context.tests ++ blocks), ())
       }

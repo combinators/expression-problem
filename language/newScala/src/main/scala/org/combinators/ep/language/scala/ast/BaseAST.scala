@@ -1,9 +1,8 @@
-package org.combinators.ep.language.scala.ast
+package org.combinators.ep.language.scala.ast     /*DI:LD:AI*/
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.TypeRep.OfHostType
 import org.combinators.cogen.{FileWithPath, NameProvider, TypeRep}
-import org.combinators.ep.language.inbetween.functional
 import org.combinators.ep.language.inbetween.functional.FunctionalAST
 import org.combinators.ep.language.inbetween.functional.control.FunctionalControlAST
 import org.combinators.ep.language.inbetween.imperative.ImperativeAST
@@ -11,7 +10,6 @@ import org.combinators.ep.language.inbetween.oo.OOAST
 import org.combinators.ep.language.inbetween.polymorphism.generics.GenericsAST
 
 import java.util.UUID
-
 
 trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalControlAST with ImperativeAST with NameProviderAST {
   object scalaBase {
@@ -225,7 +223,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
         override def emptyPatternCtxt: funcontrol.PatternContext = functionalControlFactory.patternContext(Seq.empty)
 
         def addTestExpressions(exprs: Seq[any.Expression]): any.Method = {
-          copy(statements = exprs.map(liftExpression))
+          copy(statements = statements ++ exprs.map(liftExpression))
         }
 
         def findClass(qualifiedName: any.Name*): any.Type =
@@ -287,7 +285,8 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             underlyingClass.addParent(classReferenceType(
               Seq("org", "scalatest", "funsuite", "AnyFunSuite").map(n => nameProvider.mangle(n)) *
             ))
-          val methodsAsTests = withFunSuiteExtension.methods.zip(this.testMarkers).filter { case (m, isTest) => isTest }.map { case (m, _) => {
+            
+          val methodsAsTests = withFunSuiteExtension.methods.zip(this.testMarkers).filter { case (m, isTest) => isTest }.map { case (m, _) => 
             liftExpression(applyExpression(
               applyExpression(
                 memberAccessExpression(selfReferenceExpression, nameProvider.mangle("test")),
@@ -295,7 +294,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
               ),
               Seq(blockExpression(m.statements))
             ))
-          }
+          
           }
           val withPrimaryClsConstructor = if (underlyingClass.constructors.isEmpty) {
             withFunSuiteExtension.addConstructor(constructor(statements = methodsAsTests))
@@ -1053,6 +1052,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
       trait FinalTypes extends imperative.FinalTypes {
         type DeclareVariable <: imperativeOverrides.DeclareVariable
         type AssignVariable <: imperativeOverrides.AssignVariable
+        type Tertiary <: imperativeOverrides.Tertiary
         type IfThenElse <: imperativeOverrides.IfThenElse
         type While <: imperativeOverrides.While
         type VariableReferenceExpression <: imperativeOverrides.VariableReferenceExpression
@@ -1062,6 +1062,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
         import factory.*
         def toScala: String = {
           val init = this.initializer.map(ie => s" = ${ie.toScala}").getOrElse("")
+          assert(!init.isBlank)   // CANNOT be blank for Scala var
           s"""
              |var ${this.name.toScala}: ${this.tpe.toScala}$init
              |""".stripMargin
@@ -1086,6 +1087,28 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
 
         def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): imperative.AssignVariable =
           copy(assignmentExpression = assignmentExpression.prefixRootPackage(rootPackageName, excludedTypeNames))
+      }
+
+      trait Tertiary extends imperative.Tertiary with anyOverrides.Expression {
+        import factory.*
+
+        def toScala: String = {
+
+          s"""
+             |if (${condition.toScala}) {
+             |  ${trueExpression.toScala}
+             |} else {
+             |  ${falseExpression.toScala}
+             |}
+                      """.stripMargin
+        }
+
+        def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): imperative.Tertiary =
+          copy(
+            condition = condition.prefixRootPackage(rootPackageName, excludedTypeNames),
+            trueExpression = trueExpression.prefixRootPackage(rootPackageName, excludedTypeNames),
+            falseExpression = falseExpression.prefixRootPackage(rootPackageName, excludedTypeNames)
+          )
       }
 
       trait IfThenElse extends imperative.IfThenElse with anyOverrides.Statement {
@@ -1196,6 +1219,8 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
               value.asInstanceOf[Seq[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Seq(", ", ", ")")
             case t: TypeRep.Array[_] =>
               value.asInstanceOf[Array[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Array(", ", ", ")")
+            case t: TypeRep.Char.type => s"""'$value'"""
+
             case _ =>
               value.toString
           }
@@ -1385,6 +1410,7 @@ trait FinalBaseAST extends BaseAST {
 
       type DeclareVariable = imperativeOverrides.DeclareVariable
       type AssignVariable = imperativeOverrides.AssignVariable
+      type Tertiary = imperativeOverrides.Tertiary
       type IfThenElse = imperativeOverrides.IfThenElse
       type While = imperativeOverrides.While
       type VariableReferenceExpression = imperativeOverrides.VariableReferenceExpression
@@ -1768,6 +1794,21 @@ trait FinalBaseAST extends BaseAST {
         }
         LiftExpression(expression)
       }
+
+      def tertiary(condition: any.Expression,
+                   trueExpression: any.Expression,
+                   falseExpression: any.Expression): imperative.Tertiary = {
+        case class Tertiary(
+             override val condition: any.Expression,
+             override val trueExpression: any.Expression,
+             override val falseExpression: any.Expression)
+          extends scalaBase.imperativeOverrides.Tertiary
+            with finalBaseAST.anyOverrides.FinalExpression {
+          def getSelfTertiary: imperativeFinalTypes.Tertiary = this
+        }
+        Tertiary(condition, trueExpression, falseExpression)
+      }
+
       def ifThenElse(condition: any.Expression,
                      ifBranch: Seq[any.Statement],
                      elseIfBranches: Seq[(any.Expression, Seq[any.Statement])],
@@ -1783,6 +1824,7 @@ trait FinalBaseAST extends BaseAST {
         }
         IfThenElse(condition, ifBranch, elseIfBranches, elseBranch)
       }
+      
       def whileLoop(condition: any.Expression, body: Seq[any.Statement]): imperative.While = {
         case class WhileLoop(override val condition: any.Expression, override val body: Seq[any.Statement])
           extends scalaBase.imperativeOverrides.While

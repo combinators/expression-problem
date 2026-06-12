@@ -13,7 +13,7 @@ import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedReq
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider}
 
 // Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be
-// used in an uniform way.
+// used in a uniform way.
 sealed class K2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
   type IfThenElseCommand =
     (paradigm.syntax.Expression,

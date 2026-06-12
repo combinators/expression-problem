@@ -1,11 +1,9 @@
-package org.combinators.ep.language.inbetween.functional.control
+package org.combinators.ep.language.inbetween.functional.control    /*DI:LI:AI*/
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.control.*
-import org.combinators.cogen.paradigm.control.{DeclareFunVariable as DFV, Functional as Fun}
 import org.combinators.cogen.paradigm.{Apply, IfThenElse, Reify, control}
-import org.combinators.cogen.{Command, Understands, paradigm}
-import org.combinators.ep.language.inbetween.any
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 trait Functional[AST <: FunctionalControlAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
@@ -44,7 +42,7 @@ trait Functional[AST <: FunctionalControlAST, B](val _base: AnyParadigm.WithAST[
             (resContext, functionalControlFactory.declareFunVariable(command.name, command.tpe, isRecursive = true, initExp, inExp))
           }
         }
-
+      
       implicit val canIfThenElse: Understands[any.Method, IfThenElse[any.Expression, Generator[any.Method, any.Expression], Generator[any.Method, any.Expression], any.Expression]] =
         new Understands[any.Method, IfThenElse[any.Expression, Generator[any.Method, any.Expression], Generator[any.Method, any.Expression], any.Expression]] {
           override def perform(context: any.Method, command: IfThenElse[any.Expression, Generator[any.Method, any.Expression], Generator[any.Method, any.Expression], any.Expression]): (any.Method, any.Expression) = {

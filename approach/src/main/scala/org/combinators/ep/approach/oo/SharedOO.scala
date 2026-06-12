@@ -388,7 +388,7 @@ trait SharedOO extends ApproachImplementationProvider {
   }
 
   /**
-   *  Make a single getter method for the 'att' attribute which only has signature, and no body.
+   *  Make a single getter method for the 'att' attribute which only has signature, and no code body.
    *
    * The following example is for the 'Right' attribute where the type is mapped to Exp
    * {{{

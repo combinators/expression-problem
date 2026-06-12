@@ -1,4 +1,4 @@
-package org.combinators.cogen.paradigm
+package org.combinators.cogen.paradigm     /*DI:LI:AI*/
 
 import org.combinators.cogen.{Command, Understands, TypeRep}
 import Command.Generator
@@ -83,7 +83,7 @@ case class SelfReference[Expression]() extends Command {
   type Result = Expression
 }
 
-/** Used for super. or (when tpe exists) then qn.super. */
+/** Used for 'super' or (when tpe exists) then 'qn.super'. */
 case class SuperReference[Name, Expression](qualifiedName:Seq[Name] = Seq.empty) extends Command {
   type Result = Expression
 }
@@ -135,11 +135,6 @@ trait ObjectOriented {
     implicit val canAddImplementedInClass: Understands[ClassContext, AddImplemented[Type]]
     def addImplemented(interface: Type): Generator[ClassContext, Unit] =
       AnyParadigm.capability(AddImplemented(interface))
-
-    // FIRST REMOVE CAPABILITY
-    implicit val canRemoveMethodFromClass: Understands[ClassContext, RemoveMethod[Type, Name]]
-    def removeMethod(interface: Type, name:Name): Generator[ClassContext, Unit] =
-      AnyParadigm.capability(RemoveMethod(interface, name))
 
     implicit val canAddFieldInClass: Understands[ClassContext, AddField[Name, Type, Expression]]
     def addField(name: Name, tpe: Type, init:Option[Expression] = Option.empty): Generator[ClassContext, Unit] =

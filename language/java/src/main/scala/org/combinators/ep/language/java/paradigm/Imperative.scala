@@ -85,6 +85,7 @@ trait Imperative[Ctxt, AP <: AnyParadigm] extends Imp[Ctxt] {
           (manip.copyWithBlock(afterElseCtxt, manip.getBlock(context)), iteStmt.clone())
         }
       }
+
     implicit val canWhile: Understands[Ctxt, While[Ctxt, Expression, Statement]] =
       new Understands[Ctxt, While[Ctxt, Expression, Statement]] {
         def perform(context: Ctxt, command: While[Ctxt, Expression, Statement]): (Ctxt, Statement) = {

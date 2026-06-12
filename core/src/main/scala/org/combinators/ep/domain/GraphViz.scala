@@ -155,7 +155,7 @@ object GraphViz {
           })
         })
 
-        // even if neither types or ops (especially then, since a merge) must find dependencies.
+        // even if neither types nor ops (especially then, since a merge) must find dependencies.
       })
 
     addedNodes.foreach(pair => fileWriter.write (pair._1 + "\n"))

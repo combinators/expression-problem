@@ -4,18 +4,18 @@ import java.util.UUID
 import com.github.javaparser.ast.{ImportDeclaration, Modifier, NodeList}
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, EnclosedExpr, Expression => JExpression, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Name as JName}
+import com.github.javaparser.ast.expr.{AssignExpr, CastExpr, EnclosedExpr, FieldAccessExpr, InstanceOfExpr, MethodCallExpr, NameExpr, ObjectCreationExpr, ThisExpr, TypeExpr, Expression as JExpression, Name as JName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExplicitConstructorInvocationStmt, ExpressionStmt, ReturnStmt}
 import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.TypeRep
-import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, RemoveMethod, ResolveImport, SelfReference, SetAbstract, SetInterface, SetOverride, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented as OO}
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddClass, AddConstructor, AddField, AddImplemented, AddImport, AddMethod, AddParent, AddTypeLookup, Apply, CastObject, Debug, FindClass, FreshName, GetArguments, GetConstructor, GetField, GetMember, InitializeField, InitializeParent, InstanceOfType, InstantiateObject, Reify, ResolveImport, SelfReference, SetAbstract, SetInterface, SetOverride, SetParameters, SetStatic, SuperReference, ToTargetLanguageType, ObjectOriented as OO}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.Syntax.MangledName
 import org.combinators.ep.language.java.{ClassCtxt, ContextSpecificResolver, CtorCtxt, JavaNameProvider, MethodBodyCtxt, TestCtxt}
 
 import scala.util.Try
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 trait ObjectOriented[AP <: AnyParadigm] extends OO {
   val base: AP
@@ -148,21 +148,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
             (context.copy(cls = resultCls), ())
           }
         }
-      implicit val canRemoveMethodFromClass: Understands[ClassContext, RemoveMethod[Type, Name]] =
-        new Understands[ClassContext, RemoveMethod[Type, Name]] {
-          def perform(
-            context: ClassContext,
-            command: RemoveMethod[Type, Name]
-          ): (ClassContext, Unit) = {
-            val resultCls = context.cls.clone()
-
-            // TODO: DO SOMETHING HERE (HEINEMAN)
-            val method = resultCls.getMethodsByName(command.name.mangled)
-            resultCls.remove(method.get(0))
-
-            (context.copy(cls = resultCls), ())
-          }
-        }
+        
       implicit val canAddFieldInClass: Understands[ClassContext, AddField[Name, Type, Expression]] =
         new Understands[ClassContext, AddField[Name, Type, Expression]] {
           def perform(
@@ -609,7 +595,7 @@ trait ObjectOriented[AP <: AnyParadigm] extends OO {
               (context.copy(resolver = newCtxt.resolver, extraImports = newCtxt.extraImports), result)
             } else {
               (context, result)
-            }
+            }            
           }
         }
 

@@ -81,7 +81,7 @@ class Main  {
     generator.doublesInMethod,
     generator.booleansInMethod,
     generator.equalityInMethod)
-  val m8_eip =  eips.M8.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7i2_eip)(
+  val m8_eip = eips.M8.imperative[approach.paradigm.type,ApproachImplementationProvider.WithParadigm](approach.paradigm)(m7i2_eip)(
     generator.imperativeInMethod,
     generator.doublesInMethod,
     generator.booleansInMethod,

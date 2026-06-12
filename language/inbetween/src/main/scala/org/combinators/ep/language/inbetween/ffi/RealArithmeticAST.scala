@@ -1,10 +1,12 @@
-package org.combinators.ep.language.inbetween.ffi
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 trait RealArithmeticAST extends OperatorExpressionOpsAST  {
   object realArithmeticOps {
     trait SqrtOp extends operatorExpressions.Operator
     trait PowOp extends operatorExpressions.Operator
     trait LogOp extends operatorExpressions.Operator
+    trait MaxOp extends operatorExpressions.Operator
+    trait MinOp extends operatorExpressions.Operator
     trait SinOp extends operatorExpressions.Operator
     trait CosOp extends operatorExpressions.Operator
     trait AbsOp extends operatorExpressions.Operator
@@ -16,6 +18,8 @@ trait RealArithmeticAST extends OperatorExpressionOpsAST  {
       def sqrtOp(): SqrtOp
       def powOp(): PowOp
       def logOp(): LogOp
+      def maxOp(): MaxOp
+      def minOp(): MinOp
       def sinOp(): SinOp
       def cosOp(): CosOp
       def absOp(): AbsOp
@@ -31,6 +35,11 @@ trait RealArithmeticAST extends OperatorExpressionOpsAST  {
 
       def log(of: any.Expression, base: any.Expression): operatorExpressions.BinaryExpression =
         operatorExpressionsFactory.binaryExpression(logOp(), of, base) // FIXME: unaryExpression(logOp(), of)
+
+      def max(left: any.Expression, right: any.Expression): operatorExpressions.BinaryExpression =
+        operatorExpressionsFactory.binaryExpression(maxOp(), left, right)
+      def min(left: any.Expression, right: any.Expression): operatorExpressions.BinaryExpression =
+          operatorExpressionsFactory.binaryExpression(minOp(), left, right)
       def sin(of: any.Expression): operatorExpressions.UnaryExpression =
         operatorExpressionsFactory.unaryExpression(sinOp(), of)
       def cos(of: any.Expression): operatorExpressions.UnaryExpression =

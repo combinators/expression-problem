@@ -70,6 +70,7 @@ object A1  {
             case _ => ???
           }
 
+        //noinspection SpellCheckingInspection
         val result =
           for {
             atts <- forEach (onRequest.tpeCase.attributes) { att =>

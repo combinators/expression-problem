@@ -1,4 +1,4 @@
-package org.combinators.ep.language.inbetween.imperative
+package org.combinators.ep.language.inbetween.imperative    /*DI:LI:AI*/
 
 import org.combinators.ep.language.inbetween.any.AnyAST
 
@@ -7,6 +7,7 @@ trait ImperativeAST extends AnyAST {
     trait FinalTypes {
       type DeclareVariable <: imperative.DeclareVariable
       type AssignVariable <: imperative.AssignVariable
+      type Tertiary <: imperative.Tertiary
       type IfThenElse <: imperative.IfThenElse
       type While <: imperative.While
       type VariableReferenceExpression <: imperative.VariableReferenceExpression
@@ -45,6 +46,20 @@ trait ImperativeAST extends AnyAST {
       def copy(expression: any.Expression = expression): LiftExpression = imperativeFactory.liftExpression(expression)
     }
 
+    trait Tertiary extends any.Expression { 
+      def getSelfTertiary: imperativeFinalTypes.Tertiary
+      def condition: any.Expression
+      def trueExpression: any.Expression
+      def falseExpression: any.Expression
+
+      def copy(
+        condition: any.Expression = condition,
+        trueExpression: any.Expression = trueExpression,
+        falseExpression: any.Expression = falseExpression
+      ): Tertiary =
+      imperativeFactory.tertiary(condition, trueExpression, falseExpression)
+    }
+    
     trait IfThenElse extends any.Statement {
       def getSelfIfThenElse: imperativeFinalTypes.IfThenElse
 
@@ -86,6 +101,12 @@ trait ImperativeAST extends AnyAST {
       def assignVariable(variable: any.Expression, expression: any.Expression): AssignVariable
       def liftExpression(expression: any.Expression): LiftExpression
 
+      def tertiary(
+        condition: any.Expression,
+        trueExpression: any.Expression,
+        falseExpression: any.Expression
+        ): Tertiary
+      
       def ifThenElse(
         condition: any.Expression,
         ifBranch: Seq[any.Statement],

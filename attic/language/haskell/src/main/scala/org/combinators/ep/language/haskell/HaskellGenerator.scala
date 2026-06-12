@@ -90,7 +90,7 @@ trait HaskellGenerator extends DomainIndependentGenerator with StandardHaskellBi
       Haskell(s"${exp.concept} $list") // not sure how much this is needed
     }).mkString("  | ")
 
-    val binaryTreeInterface =  if (m.flatten().hasBinaryMethod) {
+    val binaryTreeInterface = if (m.flatten().hasBinaryMethod) {
       // astree method declaration
       definedDataSubTypes("", m.types) ++ declarations
     } else {

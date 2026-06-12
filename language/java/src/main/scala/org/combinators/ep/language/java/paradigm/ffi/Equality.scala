@@ -49,16 +49,17 @@ class Equality[Ctxt, AP <: AnyParadigm](
           }
         }
     }
-  def enable(): Generator[base.ProjectContext, Unit] = Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
-    def perform(
-      context: ProjectCtxt,
-      command: Enable.type
-    ): (ProjectCtxt, Unit) = {
-      if (!context.resolver.resolverInfo.contains(EqualityEnabled)) {
-        val resolverUpdate =
-          ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, PrimitiveType.booleanType())(new BooleanLiteralExpr(_))
-        (context.copy(resolver = resolverUpdate(context.resolver).addInfo(EqualityEnabled)), ())
-      } else (context, ())
-    }
-  })
+  def enable(): Generator[base.ProjectContext, Unit] =
+    Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
+      def perform(
+        context: ProjectCtxt,
+        command: Enable.type
+      ): (ProjectCtxt, Unit) = {
+        if (!context.resolver.resolverInfo.contains(EqualityEnabled)) {
+          val resolverUpdate =
+            ContextSpecificResolver.updateResolver(base.config, TypeRep.Boolean, PrimitiveType.booleanType())(new BooleanLiteralExpr(_))
+          (context.copy(resolver = resolverUpdate(context.resolver).addInfo(EqualityEnabled)), ())
+        } else (context, ())
+      }
+    })
 }

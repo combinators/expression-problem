@@ -148,6 +148,7 @@ object Generics {
       override val base: b.type)(
       override val ooParadigm: oo.type = oo,
       override val ppolyParadigm: ppol.type = ppol) extends Generics[b.type]
-    return G(b)(oo, ppol)
+
+     G(b)(oo, ppol)
   }
 }

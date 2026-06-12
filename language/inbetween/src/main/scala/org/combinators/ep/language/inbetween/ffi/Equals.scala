@@ -1,14 +1,10 @@
-package org.combinators.ep.language.inbetween.ffi
-
-/*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, Understands}
-import org.combinators.cogen.paradigm.ffi.{Equality as Eqls, *}
+import org.combinators.cogen.paradigm.ffi.Equality as Eqls
 import org.combinators.cogen.paradigm.{Apply, ffi}
-import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
-
 
 trait Equals[AST <: EqualsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
   trait BooleansInMethods extends Eqls[_base.ast.any.Method] {

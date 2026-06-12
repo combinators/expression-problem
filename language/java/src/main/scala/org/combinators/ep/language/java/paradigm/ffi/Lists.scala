@@ -43,7 +43,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
     )
 
   def toStream(exp: Expression): Expression =
-    new MethodCallExpr(exp,"stream")
+    new MethodCallExpr(exp, "stream")
 
   def listCreation[Ctxt](canAddImport: Understands[Ctxt, AddImport[Import]]): Understands[Ctxt, Apply[Create[Type], Expression, Expression]] =
     new Understands[Ctxt, Apply[Create[Type], Expression, Expression]] {
@@ -54,11 +54,11 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
         val gen: Generator[Ctxt, Expression] =
           if (command.arguments.isEmpty) {
             for {
-              _ <- AddImport[Import](new ImportDeclaration("java.util.Collections", false, false)).interpret(canAddImport)
+              _ <- AddImport[Import](new ImportDeclaration("java.util.Collections", false, false)).interpret(using canAddImport)
             } yield new MethodCallExpr(ObjectOriented.nameToExpression(ObjectOriented.fromComponents("java", "util", "Collections")), "emptyList")
           } else {
             for {
-              _ <- AddImport[Import](new ImportDeclaration("java.util.Arrays", false, false)).interpret(canAddImport)
+              _ <- AddImport[Import](new ImportDeclaration("java.util.Arrays", false, false)).interpret(using canAddImport)
             } yield new MethodCallExpr(ObjectOriented.nameToExpression(ObjectOriented.fromComponents("java", "util", "Arrays")), "asList", new NodeList[Expression](command.arguments*))
           }
         Command.runGenerator[Ctxt, Expression](gen, context)
@@ -79,8 +79,8 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
           ): (Ctxt, Expression) = {
             val gen: Generator[Ctxt, Expression] =
               for {
-                _ <- AddImport[Import](streamImp).interpret(addImport)
-                _ <- AddImport[Import](collectorsImp).interpret(addImport)
+                _ <- AddImport[Import](streamImp).interpret(using addImport)
+                _ <- AddImport[Import](collectorsImp).interpret(using addImport)
               } yield {
                 streamCollect(
                   streamConcat(
@@ -133,8 +133,8 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
           ): (Ctxt, Expression) = {
             val gen: Generator[Ctxt, Expression] =
               for {
-                _ <- AddImport[Import](streamImp).interpret(addImport)
-                _ <- AddImport[Import](collectorsImp).interpret(addImport)
+                _ <- AddImport[Import](streamImp).interpret(using addImport)
+                _ <- AddImport[Import](collectorsImp).interpret(using addImport)
               } yield
                 streamCollect(
                   streamConcat(
@@ -148,7 +148,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
     }
 
   def enable(): Generator[base.ProjectContext, Unit] =
-    Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
+    Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type
@@ -168,7 +168,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
               case TypeRep.Sequence(elemRep) =>
                 for {
                   elemType <- projectResolution(k)(elemRep)
-                  resultType <- Apply[Type, Type, Type](listType, Seq(elemType)).interpret(canApplyType)
+                  resultType <- Apply[Type, Type, Type](listType, Seq(elemType)).interpret(using canApplyType)
                 } yield resultType
               case other => toResolution(k)(other)
             }
@@ -186,7 +186,7 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
                       projectReiification(k)(InstanceRep(elemTypeRep)(elem))
                     }
                     elemType <- projectResolution(k)(elemTypeRep)
-                    res <- Apply[Create[Type], Expression, Expression](Create(elemType), elems).interpret(canCreateList)
+                    res <- Apply[Create[Type], Expression, Expression](Create(elemType), elems).interpret(using canCreateList)
                   } yield res
                 case _ => reify(k)(rep)
               }
@@ -252,21 +252,21 @@ object Lists {
     val generics: Gen
   }
   def apply[Ctxt, AP <: AnyParadigm, Gen[A <: AP] <: Generics[A]](
-    base: AP,
-    applyType: Understands[Ctxt, Apply[Type, Type, Type]],
-    addImport: Understands[Ctxt, AddImport[Import]])(
-    generics: Gen[base.type]
-  ): Aux[Ctxt, base.type, generics.type] = {
+     base: AP,
+     applyType: Understands[Ctxt, Apply[Type, Type, Type]],
+     addImport: Understands[Ctxt, AddImport[Import]])(
+     generics: Gen[base.type]
+   ): Aux[Ctxt, base.type, generics.type] = {
     val b: base.type = base
     val appTy = applyType
     val addImp = addImport
     val gen: generics.type = generics
 
     case class Lsts(override val base: b.type,
-      override val applyType: Understands[Ctxt, Apply[Type, Type, Type]],
-      override val addImport: Understands[Ctxt, AddImport[Import]],
-      override val generics: gen.type
-    ) extends Lists[Ctxt, b.type]
+                    override val applyType: Understands[Ctxt, Apply[Type, Type, Type]],
+                    override val addImport: Understands[Ctxt, AddImport[Import]],
+                    override val generics: gen.type
+                   ) extends Lists[Ctxt, b.type]
 
     Lsts(b, appTy, addImp, gen)
   }

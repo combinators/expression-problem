@@ -1,6 +1,6 @@
 package org.combinators.ep.language.scala.paradigm.ffi    /*DI:LD:AI*/
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.ep.domain.instances.InstanceRep
 import org.combinators.ep.domain.tree.{Leaf, Node}
 import org.combinators.ep.generator.Command.Generator

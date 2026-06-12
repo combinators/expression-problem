@@ -1,3 +1,4 @@
+//noinspection SpellCheckingInspection
 package org.combinators.ep.domain.math.eips      /*DD:LI:AI*/
 
 import org.combinators.cogen.paradigm.AnyParadigm

@@ -1,14 +1,28 @@
-package org.combinators.ep.language.inbetween.ffi   /*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
-import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyAST
 
 trait OperatorExpressionOpsAST extends AnyAST {
   object operatorExpressions {
     trait FinalTypes {
       type Operator <: operatorExpressions.Operator
+      type TernaryExpression <: operatorExpressions.TernaryExpression
       type BinaryExpression <: operatorExpressions.BinaryExpression
       type UnaryExpression <: operatorExpressions.UnaryExpression
+    }
+    
+    trait TernaryExpression extends any.Expression {
+      def getSelfTernaryExpression: operatorExpressionsFinalTypes.TernaryExpression
+      def operator: Operator
+      def left: any.Expression
+      def mid: any.Expression
+      def right: any.Expression
+      def copy(
+        operator: Operator = operator,
+        left: any.Expression = left,
+        mid: any.Expression = mid,
+        right: any.Expression = right
+      ): TernaryExpression = operatorExpressionsFactory.ternaryExpression(operator, left, mid, right)
     }
 
     trait BinaryExpression extends any.Expression {
@@ -40,12 +54,15 @@ trait OperatorExpressionOpsAST extends AnyAST {
     }
 
     trait Factory {
+      def ternaryExpression(operator: Operator, left: any.Expression, middle: any.Expression, right: any.Expression): TernaryExpression
       def binaryExpression(operator: Operator, left: any.Expression, right: any.Expression): BinaryExpression
       def unaryExpression(operator: Operator, operand: any.Expression): UnaryExpression
 
       implicit def convert(other: Operator): operatorExpressionsFinalTypes.Operator = other.getSelfOperator
+      implicit def convert(other: TernaryExpression): operatorExpressionsFinalTypes.TernaryExpression = other.getSelfTernaryExpression
       implicit def convert(other: BinaryExpression): operatorExpressionsFinalTypes.BinaryExpression = other.getSelfBinaryExpression
       implicit def convert(other: UnaryExpression): operatorExpressionsFinalTypes.UnaryExpression = other.getSelfUnaryExpression
+
     }
   }
   

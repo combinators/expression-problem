@@ -201,7 +201,7 @@ object N1funct {
               leftSide <- forApproach.dispatch(SendRequest(
                 innerLit,
                 math.M2.getModel.baseDataType,
-                Request(math.M7.PowBy,  Map(Parameter("other", onRequest.request.op.returnType) -> onRequest.attributes.head._2))  // MUST contain exp some how?
+                Request(math.M7.PowBy,  Map(Parameter("other", onRequest.request.op.returnType) -> onRequest.attributes.head._2))  // MUST contain exp somehow?
               ))
 
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M3.Mult, leftSide, left)

@@ -12,7 +12,7 @@ import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionIm
 import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstance
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 
-// Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be used in an uniform way.
+// Takes adapters for return in if-then-else, s.t. functional- and imperative-style if-then-else can be used in a uniform way.
 sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementationProvider.WithParadigm[P], IfBlockType](val paradigm: P) {
 
   type IfThenElseCommand =

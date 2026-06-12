@@ -1,15 +1,11 @@
-package org.combinators.ep.language.inbetween.ffi
-
-/*DI:LI:AI*/
+package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.Apply
-import org.combinators.cogen.paradigm.ffi.{GetStringLength, StringAppend, ToString, Strings as Strs}
+import org.combinators.cogen.paradigm.ffi.{GetCharAt, GetStringLength, StringAppend, SubString, ToString, Strings as Strs}
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
-import org.combinators.ep.language.inbetween.any
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-// cannot find 'strings'
 trait Strings[AST <: StringAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
   trait StringsInMethods extends Strs[_base.ast.any.Method] {
     override val base: _base.type = _base
@@ -18,6 +14,20 @@ trait Strings[AST <: StringAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
     import base.ast.stringOpsFactory
 
     val stringCapabilities: StringCapabilities = new StringCapabilities {
+      implicit val canAppend: Understands[any.Method, Apply[StringAppend, any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[StringAppend, any.Expression, any.Expression]] {
+          def perform(context: any.Method, command: Apply[StringAppend, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, command.arguments.tail.foldLeft(command.arguments.head) { case (r, l) => stringOpsFactory.appendString(r, l) })
+          }
+        }
+
+      implicit val canGetCharAt: Understands[any.Method, Apply[GetCharAt, any.Expression, any.Expression]] =
+        new Understands[any.Method, Apply[GetCharAt, any.Expression, any.Expression]] {
+          def perform(context: any.Method, command: Apply[GetCharAt, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+            (context, stringOpsFactory.getCharAt(command.arguments.head, command.arguments.tail.head))
+          }
+        }
+      
       implicit val canGetStringLength: Understands[any.Method, Apply[GetStringLength, any.Expression, any.Expression]] =
         new Understands[any.Method, Apply[GetStringLength, any.Expression, any.Expression]] {
           def perform(context: any.Method, command: Apply[GetStringLength, any.Expression, any.Expression]): (any.Method, any.Expression) = {
@@ -25,12 +35,13 @@ trait Strings[AST <: StringAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
           }
         }
 
-      implicit val canAppend: Understands[any.Method, Apply[StringAppend, any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[StringAppend, any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[StringAppend, any.Expression, any.Expression]): (any.Method, any.Expression) = {
-            (context, command.arguments.tail.foldLeft(command.arguments.head) { case (r, l) => stringOpsFactory.appendString(r, l) })
+      implicit val canSubString: Understands[any.Method, Apply[SubString, any.Expression, any.Expression]] =
+          new Understands[any.Method, Apply[SubString, any.Expression, any.Expression]] {
+            def perform(context: any.Method, command: Apply[SubString, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+              (context, stringOpsFactory.subString(command.arguments.head, command.arguments.tail.head, command.arguments.tail.tail.head))
+            }
           }
-        }
+          
       implicit val canToStringInCtxt: Understands[any.Method, Apply[ToString[any.Type], any.Expression, any.Expression]] =
         new Understands[any.Method, Apply[ToString[any.Type], any.Expression, any.Expression]] {
           def perform(context: any.Method, command: Apply[ToString[any.Type], any.Expression, any.Expression]): (any.Method, any.Expression) = {

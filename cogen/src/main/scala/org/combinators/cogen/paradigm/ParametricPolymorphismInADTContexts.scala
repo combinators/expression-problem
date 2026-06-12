@@ -1,4 +1,4 @@
-package org.combinators.cogen.paradigm
+package org.combinators.cogen.paradigm     /*DI:LI:AI*/
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.Understands

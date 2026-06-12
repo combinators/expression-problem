@@ -3,7 +3,7 @@ package org.combinators.ep.language.java     /*DI:LD:AI*/
 import cats.{Apply => _}
 import com.github.javaparser.ast.PackageDeclaration
 import com.github.javaparser.ast.`type`.PrimitiveType
-import com.github.javaparser.ast.expr.{DoubleLiteralExpr, IntegerLiteralExpr, TypeExpr}
+import com.github.javaparser.ast.expr.{DoubleLiteralExpr, IntegerLiteralExpr}
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.Command
 import org.combinators.ep.language.java.paradigm._
@@ -128,6 +128,28 @@ class CodeGenerator(config: Config) { cc =>
       paradigm,
       generics.constructorCapabilities.canApplyTypeInConstructor,
       ooParadigm.constructorCapabilities.canAddImportInConstructor
+    )(generics)
+
+  val mapsInMethod =
+    Maps[MethodBodyCtxt, paradigm.type, Generics](
+      paradigm,
+      paradigm.methodBodyCapabilities.canAddImportInMethodBody,
+      parametricPolymorphism.methodBodyCapabilities.canApplyTypeInMethod,
+      paradigm.methodBodyCapabilities.canGetFreshNameInMethodBody,
+      imperativeInMethod.imperativeCapabilities.canDeclareVariable,
+      imperativeInMethod.imperativeCapabilities.canLiftExpression,
+      paradigm.methodBodyCapabilities.canAddBlockDefinitionsInMethodBody
+    )(generics)
+
+  val mapsInConstructor =
+    Maps[CtorCtxt, paradigm.type, Generics](
+      paradigm,
+      ooParadigm.constructorCapabilities.canAddImportInConstructor,
+      generics.constructorCapabilities.canApplyTypeInConstructor,
+      ooParadigm.constructorCapabilities.canGetFreshNameInConstructor,
+      imperativeInConstructor.imperativeCapabilities.canDeclareVariable,
+      imperativeInConstructor.imperativeCapabilities.canLiftExpression,
+      ooParadigm.constructorCapabilities.canAddBlockDefinitionsInConstructor
     )(generics)
 
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)

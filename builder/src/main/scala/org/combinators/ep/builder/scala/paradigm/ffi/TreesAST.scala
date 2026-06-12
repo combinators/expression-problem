@@ -1,4 +1,4 @@
-package org.combinators.ep.builder.scala.paradigm.ffi
+package org.combinators.ep.builder.scala.paradigm.ffi    /*DI:LD:AI*/
 
 import org.combinators.cogen.{FileWithPath, TypeRep}
 import org.combinators.ep.builder.inbetween.paradigm.ffi.TreesAST as InbetweenTreesAST
@@ -16,8 +16,6 @@ trait TreesAST extends InbetweenTreesAST { self: ParametricPolymorphismAST & Bas
         type Leaf <: treesOpsOverride.Leaf
         type Node <: treesOpsOverride.Node
       }
-      
-      
       
       trait Tree extends treesOps.Tree with scalaBase.ooOverrides.ClassReferenceType {
         def qualifiedClassName: Seq[any.Name] = qualifiedClassNameTree
@@ -44,7 +42,6 @@ trait TreesAST extends InbetweenTreesAST { self: ParametricPolymorphismAST & Bas
         case _ => None
       }
     }
-    
     
     val qualifiedClassNameTree: Seq[any.Name] = Seq("org", "combinators", "ep", "util", "Tree").map(n => scalaBaseFactory.name(n, n))
     val qualifiedClassNameLeaf: Seq[any.Name] = Seq("org", "combinators", "ep", "util", "Leaf").map(n => scalaBaseFactory.name(n, n))

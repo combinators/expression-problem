@@ -1,4 +1,4 @@
-package org.combinators.cogen
+package org.combinators.cogen     /*DI:LI:AI*/
 
 case class FreshNameProvider[Name](
   pushName: (Name, Int) => Name,

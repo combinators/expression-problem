@@ -8,7 +8,7 @@ package org.combinators.fibonacci
  * advantage of an identity with the Lucas Numbers:
  *
  *   Lucas(n) = Fib(n-1) + F(n+1) for n > 1
- *   Fib(x+y) = [(Fib(x)*Lucas(y) + Fib(y)*Locas(x)] / 2
+ *   Fib(x+y) = [Fib(x)*Lucas(y) + Fib(y)*Locas(x)] / 2
 
           package fibonacci
           def fib(n: Int): Int = {
@@ -70,10 +70,14 @@ class FibonacciMainWithLucasScala {
   val ast: FullAST = new FinalBaseAST
     with FinalNameProviderAST
     with FinalArithmeticAST
+    with FinalArraysAST
     with FinalAssertionsAST
     with FinalBooleanAST
+    with FinalConsoleAST
+    with FinalExceptionsAST
     with FinalEqualsAST
     with FinalListsAST
+    with FinalMapsAST
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
     with FinalStringAST {

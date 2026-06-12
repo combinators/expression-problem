@@ -1,4 +1,4 @@
-package org.combinators.cogen
+package org.combinators.cogen     /*DI:LI:AI*/
 
 /** Provides mangled names for domain entities. */
 abstract class NameProvider[Name] {

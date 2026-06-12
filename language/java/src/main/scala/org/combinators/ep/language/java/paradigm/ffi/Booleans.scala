@@ -12,7 +12,6 @@ import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{And, False, Not, Or, True, Booleans as Bools}
 
-
 class Booleans[Ctxt, AP <: AnyParadigm](val base: AP) extends Bools[Ctxt] {
   case object BooleansEnabled
 
@@ -44,7 +43,7 @@ class Booleans[Ctxt, AP <: AnyParadigm](val base: AP) extends Bools[Ctxt] {
         }
     }
   def enable(): Generator[base.ProjectContext, Unit] =
-    Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
+    Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type

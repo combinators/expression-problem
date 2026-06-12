@@ -1,4 +1,4 @@
-package org.combinators.ep.approach.oo   /*DI:LI:AD*/
+package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax._
@@ -18,7 +18,7 @@ import org.combinators.ep.domain.extensions._
   * Runtime Dispatch
   *
   * Have to decide whether to use side effects or Generics. This current implementation uses the Visitor<R> generics
-  * approach, which can be adopted by different object oriented languages.
+  * approach, which can be adopted by different object-oriented languages.
   */
 trait RuntimeDispatch extends SharedOO with OperationAsClass {
   val paradigm: AnyParadigm
@@ -125,7 +125,7 @@ trait RuntimeDispatch extends SharedOO with OperationAsClass {
     */
   def makeDispatchingOperation(model: GenericModel, op: Operation): Generator[ClassContext, Unit] = {
     def ifStmt(): Generator[MethodBodyContext, Option[Expression]] = {
-      import exceptions.exceptionCapabilities._
+      import exceptions.exceptionsCapabilities._
       import impParadigm.imperativeCapabilities._
       import ooParadigm.methodBodyCapabilities._
       import paradigm.methodBodyCapabilities._

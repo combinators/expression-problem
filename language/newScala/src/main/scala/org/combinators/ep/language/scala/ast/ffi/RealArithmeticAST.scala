@@ -1,4 +1,4 @@
-package org.combinators.ep.language.scala.ast.ffi
+package org.combinators.ep.language.scala.ast.ffi     /*DI:LD:AI*/
 
 import org.combinators.ep.language.inbetween.ffi.RealArithmeticAST as InbetweenRealArithmeticAST
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
@@ -28,6 +28,27 @@ trait RealArithmeticOpsAST extends InbetweenRealArithmeticAST { self: OperatorEx
         override def operator: String = "log"
         override def toScala(operands: any.Expression*): String = {
           s"(Math.$operator(${operands(0).toScala})/Math.$operator(${operands(1).toScala}))"
+        }
+      }
+
+      trait MaxOp extends realArithmeticOps.MaxOp
+        with scalaOperatorExpressions.operatorExpressionsOverrides.Operator
+        with scalaOperatorExpressions.MathFunctionOperator {
+        import factory.*
+        override def operator: String = "max"
+
+        override def toScala(operands: any.Expression*): String = {
+          s"(Math.$operator(${operands(0).toScala}, ${operands(1).toScala}))"
+        }
+      }
+
+      trait MinOp extends realArithmeticOps.MinOp
+        with scalaOperatorExpressions.operatorExpressionsOverrides.Operator
+        with scalaOperatorExpressions.MathFunctionOperator {
+        import factory.*
+        override def operator: String = "min"
+        override def toScala(operands: any.Expression*): String = {
+          s"(Math.$operator(${operands(0).toScala}, ${operands(1).toScala}))"
         }
       }
 
@@ -92,6 +113,16 @@ trait FinalRealArithmeticOpsAST extends RealArithmeticOpsAST { self: FinalOperat
         case class LogOp() extends scalaRealArithmeticOps.realArithmeticOpsOverride.LogOp
           with finalOperatorExpressions.operatorExpressionsOverrides.Operator {}
         LogOp()
+      }
+      def maxOp(): realArithmeticOps.MaxOp = {
+        case class MaxOp() extends scalaRealArithmeticOps.realArithmeticOpsOverride.MaxOp
+          with finalOperatorExpressions.operatorExpressionsOverrides.Operator {}
+        MaxOp()
+      }
+      def minOp(): realArithmeticOps.MinOp = {
+        case class MinOp() extends scalaRealArithmeticOps.realArithmeticOpsOverride.MinOp
+          with finalOperatorExpressions.operatorExpressionsOverrides.Operator {}
+        MinOp()
       }
       def sinOp(): realArithmeticOps.SinOp = {
         case class SinOp() extends scalaRealArithmeticOps.realArithmeticOpsOverride.SinOp

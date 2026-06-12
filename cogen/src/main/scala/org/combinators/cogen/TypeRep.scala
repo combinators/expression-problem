@@ -1,4 +1,4 @@
-package org.combinators.cogen
+package org.combinators.cogen     /*DI:LI:AI*/
 
 /**
   * Represents a host language (Scala) type within the domain.
@@ -39,6 +39,11 @@ object TypeRep {
     type HostType = scala.Boolean
   }
 
+  /** Represents the Scala type `Char`. */
+  case object Char extends TypeRep {
+    type HostType = scala.Char
+  }
+
   /** Represents the type `Seq[A]` */
   case class Sequence[T](elemTpe: TypeRep.OfHostType[T]) extends TypeRep {
     type HostType = Seq[T]
@@ -46,7 +51,12 @@ object TypeRep {
 
   /** Represents the type `Array[T]` */
   case class Array[T](elemTpe: TypeRep.OfHostType[T]) extends TypeRep {
-    type HostType = Array[T]
+    type HostType = scala.Array[T]
+  }
+
+  /** Represents the type `Map[K,V]` */
+  case class Map[K,V](keyTpe: TypeRep.OfHostType[K], elemTpe: TypeRep.OfHostType[V]) extends TypeRep {
+    type HostType = scala.collection.immutable.Map[K,V]
   }
 
   /** Represents the type A => B */

@@ -2,10 +2,8 @@ package org.combinators.ep.language.inbetween.functional   /*DI:LI:AI*/
 
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{AddImport, AddMethod, AddType, AddTypeConstructor, AddTypeLookup, FindMethod, FindType, InstantiateType, ResolveImport, ToTargetLanguageType, Functional as FP}
-import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.{Command, FileWithPath, Understands, paradigm}
+import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
-import org.combinators.ep.language.inbetween.any
 
 trait FunctionalParadigm[AST <: FunctionalAST, B](val base: AnyParadigm.WithAST[AST] & B) extends FP {
   import base.ast.any

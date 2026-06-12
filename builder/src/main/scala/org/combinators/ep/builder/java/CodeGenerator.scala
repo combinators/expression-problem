@@ -1,7 +1,5 @@
-package org.combinators.ep.builder.java
+package org.combinators.ep.builder.java    /*DI:LD:AI*/
 
-import com.github.javaparser.ast.PackageDeclaration
-import org.combinators.cogen.Command
 import org.combinators.ep.builder.java.paradigm.ffi.Trees
 import org.combinators.ep.language.java.{Config, CtorCtxt, MethodBodyCtxt}
 import org.combinators.ep.language.java.paradigm.ObjectOriented

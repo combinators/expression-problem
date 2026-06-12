@@ -1,10 +1,8 @@
-package org.combinators.ep.language.java
-
-/*DI:LD:AI*/
+package org.combinators.ep.language.java     /*DI:LD:AI*/
 
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.{CompilationUnit, ImportDeclaration, Node}
-import com.github.javaparser.ast.expr.{CastExpr, LambdaExpr, Name, SimpleName}
+import com.github.javaparser.ast.CompilationUnit
+import com.github.javaparser.ast.expr.{LambdaExpr, Name, SimpleName}
 import com.github.javaparser.ast.stmt.{BlockStmt, CatchClause, ForEachStmt, ForStmt, SwitchEntry, SwitchStmt}
 import com.github.javaparser.ast.visitor.Visitable
 import org.combinators.cogen.FreshNameProvider

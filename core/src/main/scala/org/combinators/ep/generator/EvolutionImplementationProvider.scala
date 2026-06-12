@@ -2,9 +2,8 @@ package org.combinators.ep.generator   /*DI:LI:AI*/
 
 import cats.kernel.Monoid
 import org.combinators.cogen.paradigm.AnyParadigm
-import org.combinators.cogen.paradigm.ffi.FFI
 import org.combinators.ep.domain.GenericModel
-import org.combinators.ep.domain.abstractions.{DataTypeCase, Operation}
+import org.combinators.ep.domain.abstractions.Operation
 import org.combinators.cogen.Command
 import Command.Generator
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, SendRequest}
@@ -21,35 +20,7 @@ trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
     */
   def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit]
 
-//  /** Accesses API with PotentialRequest derived from onRequest. */
-//  def applicableIn(forApproach: AIP)(onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression], currentModel:GenericModel): Option[GenericModel] =
-//    applicableIn(forApproach, PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op), currentModel)
-//
-//  /** For more complicated ExtensionGraphs, this returns most appropriate evolution for which an EIP is available.
-//   * In linear histories, this is the most recent. For histories involving merging, the EIP is responsible
-//   * for choosing which branch(es) to forward request to. Takes care to check against "current model" to
-//   * avoid returning an implementation for the future. */
-//  def applicableIn(forApproach: AIP, potentialRequest: PotentialRequest, currentModel:GenericModel): Option[GenericModel] =
-//    if ((model == currentModel || model.before(currentModel)) && applicable(forApproach, potentialRequest)) {
-//      Some(model)
-//    } else {
-//      None
-//    }
-//
-//  /** Tests if this evolution implementation provider is applicable for the given request */
-//  def applicable(forApproach: AIP)(onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]): Boolean =
-//    applicable(forApproach, PotentialRequest(onRequest.onType, onRequest.tpeCase, onRequest.request.op))
-//
-//  /** Tests if this evolution implementation provider is applicable for the given request */
-//  def applicable(forApproach: AIP, onRequest: PotentialRequest): Boolean
-//
-//  /** Can vary by operation and data type. */
-//  @Deprecated def dependencies(op:Operation, dt:DataTypeCase) : Option[Set[Operation]] = None
-
   def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = None
-
-//  @Deprecated def evolutionSpecificDependencies(op: Operation, dt: DataTypeCase): Map[GenericModel, Set[Operation]] =
-//    dependencies(op, dt).map(deps => Map(model -> deps)).getOrElse(Map.empty)
 
   def evolutionSpecificDependencies(potentialRequest: PotentialRequest): Map[GenericModel, Set[Operation]] =
     dependencies(potentialRequest).map(deps => Map(model -> deps)).getOrElse(Map.empty)
@@ -187,11 +158,6 @@ object EvolutionImplementationProvider {
             case _ => second.logic(forApproach)(onRequest)
           }
 
-//          if (first.applicable(forApproach)(onRequest)) {
-//            first.logic(forApproach)(onRequest)
-//          } else {
-//            second.logic(forApproach)(onRequest)
-//          }
         }
       }
     }

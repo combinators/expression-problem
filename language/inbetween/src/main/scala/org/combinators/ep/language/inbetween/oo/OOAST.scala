@@ -1,4 +1,4 @@
-package org.combinators.ep.language.inbetween.oo
+package org.combinators.ep.language.inbetween.oo    /*DI:LI:AI*/
 
 import org.combinators.cogen.{FileWithPath, TypeRep}
 import org.combinators.cogen.Command.Generator

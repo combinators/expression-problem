@@ -39,7 +39,7 @@ object DataTypeCase {
   def unary(name: String)(implicit domain: GenericModel): DataTypeCase =
     DataTypeCase(name, Seq(Attribute.inner))
 
-  /** Constructs a type case with a two attributes "left" and "right" of the base data type
+  /** Constructs a type case with two attributes "left" and "right" of the base data type
    * of the implicitly given domain model.
    */
   def binary(name: String)(implicit domain: GenericModel): DataTypeCase =
@@ -138,7 +138,7 @@ object Operation {
 
   /** Returns a [[org.combinators.ep.domain.matchers.Matchable]] transforming the given function on
    * [[org.combinators.ep.domain.abstractions.Parameter Parameters]] and a
-   * [[TypeRep return type representation]] to a a partial function on a
+   * [[TypeRep return type representation]] to a partial function on a
    * signature of operations of the same name as the given operation.
    *
    * Example:

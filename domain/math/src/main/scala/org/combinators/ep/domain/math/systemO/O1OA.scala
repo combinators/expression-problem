@@ -5,7 +5,7 @@ import org.combinators.ep.domain._
 import org.combinators.ep.domain.math.M2
 
 /**
- * Combines together two different evolutions, each of which has an independent Op/TypeCase whose implementation
+ * Combines two different evolutions, each of which has an independent Op/TypeCase whose implementation
  * has been optimized, as declared by the EIP.
  */
 object O1OA extends Evolution {

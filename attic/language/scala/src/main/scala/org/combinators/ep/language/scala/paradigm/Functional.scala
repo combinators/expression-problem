@@ -1,6 +1,6 @@
 package org.combinators.ep.language.scala.paradigm   /*DI:LD:AI*/
 
-import org.combinators.ep.domain.abstractions.TypeRep
+import org.combinators.cogen.TypeRep
 import org.combinators.ep.generator.paradigm.{AddImport, AddMethod, AddType, AddTypeConstructor, AddTypeLookup, FindMethod, FindType, InstantiateType, ResolveImport, ToTargetLanguageType, Functional => Func}
 import org.combinators.ep.language.scala.{Syntax, TypeCtxt, _}
 import org.combinators.ep.generator.Understands

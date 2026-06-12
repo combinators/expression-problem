@@ -1,6 +1,4 @@
-package org.combinators.ep.approach.oo
-
-/*DI:LI:AD*/
+package org.combinators.ep.approach.oo    /*DI:LI:AD*/
 
 import org.combinators.cogen.{Command, TestCase, TypeRep, Understands, NameProvider, AbstractSyntax}
 import Command.Generator
@@ -186,7 +184,7 @@ sealed trait Interpreter extends SharedOO {
     for {
       _ <- setInterface()
 
-      // former merge points need to be included, so  past.lastModelWithOperation) is changed to below. Make
+      // former merge points need to be included, so  past.lastModelWithOperation is changed to below. Make
       // sure to 'distinct' these models to avoid adding same interface multiple time (can happen with 3-way merge)
       _ <- forEach(domain.former.map(past => latestModelDefiningNewTypeInterface(past)).distinct) { m =>
         for {
@@ -286,9 +284,6 @@ sealed trait Interpreter extends SharedOO {
 
   /**
     * Access attributes using default getter methods.
-    *
-    * @param attribute Data Type Case attribute to be accessed
-    * @return
     */
   def attributeInterpreterAccess(att: Attribute, tpeCase: DataTypeCase, domain: GenericModel, baseType: Option[paradigm.syntax.Type]): Generator[MethodBodyContext, Expression] = {
     import ooParadigm.methodBodyCapabilities._
@@ -361,7 +356,7 @@ sealed trait Interpreter extends SharedOO {
       }
     }
 
-    // add a parent IF type defined earlier, in ANY of its formers..
+    // add a parent IF type defined earlier, in ANY of its formers.
     def shouldAddParent: Boolean = {
       model.former.exists(m => m.findTypeCase(tpeCase).isDefined)
     }

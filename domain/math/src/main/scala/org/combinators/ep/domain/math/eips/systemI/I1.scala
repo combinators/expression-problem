@@ -94,7 +94,7 @@ object I1 {
 
               one <- forApproach.reify(InstanceRep(TypeRep.Double)(1.0))
 
-              // Know you have add data type so you can construct it
+              // Know you have `ADD` data type so you can construct it
               condExpr <- ffiArithmetic.arithmeticCapabilities.lt(one, ctrVar)
               stmt <- ffiImper.imperativeCapabilities.whileLoop(condExpr, for {
                 res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.M0.Add, resultVar, onRequest.request.arguments.head._2)

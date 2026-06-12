@@ -162,7 +162,7 @@ final class CPPClass (val _name:String, _signature:String, val _publicArea:Seq[C
   val name:String = _name
   val signature:String = _signature
   val publicArea:Seq[CPPElement] = _publicArea
-  val privateArea:Seq[CPPElement] =  _privateArea
+  val privateArea:Seq[CPPElement] = _privateArea
   var superClass : String = ""
 
   override def fileName:String = name

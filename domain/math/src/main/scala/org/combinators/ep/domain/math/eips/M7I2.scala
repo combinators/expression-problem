@@ -13,7 +13,7 @@ import org.combinators.ep.generator.EvolutionImplementationProvider.monoidInstan
 import org.combinators.ep.generator.communication.{PotentialRequest, ReceivedRequest, Request, SendRequest}
 
 /** Upon merging M7 and I2 there is a need for MultByx(Divd, Mult, Neg) as well as a need for
-  * (Collect,Simplify,Id,AsTree,Equals,PowBy)xPower
+  * (Collect,Simplify,ID,AsTree,Equals,PowBy)xPower
   *
   * These all have to be captured here...
   */
@@ -190,7 +190,7 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
             } yield Some(res)
 
           case p@math.M7.PowBy =>  // on Power
-            // must handle Power dataType. HERE WE CAN OPTIMIZED.
+            // must handle Power dataType. HERE WE CAN OPTIMIZE.
              for {
               res <- forApproach.instantiate(math.M0.getModel.baseDataType, math.systemI.I2.Power, onRequest.selfReference, onRequest.request.arguments.head._2)
             } yield Some(res)

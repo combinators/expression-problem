@@ -1,4 +1,4 @@
-package org.combinators.cogen
+package org.combinators.cogen     /*DI:LI:AI*/
 
 @scala.annotation.implicitNotFound(msg = "Context ${Context} does not understand ${Cmd}")
 trait Understands[Context, Cmd <: Command] {

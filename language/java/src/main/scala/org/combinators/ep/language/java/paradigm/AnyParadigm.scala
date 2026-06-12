@@ -5,12 +5,12 @@ import java.util.UUID
 import com.github.javaparser.ast.{ImportDeclaration, Modifier, Node, NodeList}
 import com.github.javaparser.ast.`type`.VoidType
 import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, MethodDeclaration}
-import com.github.javaparser.ast.expr.{MethodCallExpr, NameExpr, NullLiteralExpr, Name as JName}
+import com.github.javaparser.ast.expr.{MethodCallExpr, NameExpr, NullLiteralExpr}
 import com.github.javaparser.ast.nodeTypes.{NodeWithScope, NodeWithSimpleName}
 import com.github.javaparser.ast.stmt.{BlockStmt, ExpressionStmt}
 import org.combinators.cogen.InstanceRep
 import org.combinators.cogen.TypeRep
-import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddCustomFile, AddImplementedTestCase, AddImport, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, OutputToConsole, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP, ObjectOriented as _}
+import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, AddCustomFile, AddImplementedTestCase, AddImport, AddTestCase, AddTestSuite, AddTypeLookup, Apply, Debug, FreshName, GetArguments, Reify, ResolveImport, SetParameters, SetReturnType, ToTargetLanguageType, AnyParadigm as AP, ObjectOriented as _}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, Understands}
 import org.combinators.ep.language.java.Syntax.MangledName
@@ -18,8 +18,7 @@ import org.combinators.ep.language.java.{CodeGenerator, CompilationUnitCtxt, Con
 import org.combinators.templating.persistable.{BundledResource, JavaPersistable}
 
 import scala.util.Try
-import scala.jdk.CollectionConverters.*
-
+import scala.jdk.CollectionConverters._
 
 trait AnyParadigm extends AP {
   lazy val config: Config
@@ -40,8 +39,8 @@ trait AnyParadigm extends AP {
             context: ProjectCtxt,
             command: Debug
           ): (ProjectCtxt, Unit) = {
-            val units = context.units.toSeq.mkString(", ")
-            System.err.println (command.tag + ": " + units)
+
+            context.units.foreach (u => System.err.println (command.tag + ": " + u))
             (context,())
           }
         }
@@ -194,16 +193,6 @@ trait AnyParadigm extends AP {
           }
         }
 
-      implicit val canOutputToConsole: Understands[MethodBodyCtxt, OutputToConsole[Expression]] =
-        new Understands[MethodBodyCtxt, OutputToConsole[Expression]] {
-          def perform(
-                       context: MethodBodyCtxt,
-                       command: OutputToConsole[Expression]
-                     ): (MethodBodyCtxt, Unit) = {
-            (context.copy(), ())
-          }
-        }
-
       implicit val canAddImportInMethodBody: Understands[MethodBodyCtxt, AddImport[ImportDeclaration]] =
         new Understands[MethodBodyCtxt, AddImport[ImportDeclaration]] {
           def perform(
@@ -240,7 +229,7 @@ trait AnyParadigm extends AP {
             context: MethodBodyCtxt,
             command: SetReturnType[Type]
           ): (MethodBodyCtxt, Unit) = {
-            val updatedMethod =  {
+            val updatedMethod = {
               val oldMethod = context.method
               val tpe = command.tpe
               val newMethod = oldMethod.clone()
@@ -299,7 +288,7 @@ trait AnyParadigm extends AP {
             val stripped = AnyParadigm.stripGenerics(command.forElem)
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               if (stripped.isClassOrInterfaceType) {
-                val importName: JName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
+                val importName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
                 val newImport =
                   new ImportDeclaration(
                     importName,
@@ -388,7 +377,7 @@ trait AnyParadigm extends AP {
             val stripped = AnyParadigm.stripGenerics(command.forElem)
             Try { (context, context.resolver.importResolution(stripped)) } getOrElse {
               if (stripped.isClassOrInterfaceType) {
-                val importName: JName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
+                val importName = ObjectOriented.typeToName(stripped.asClassOrInterfaceType())
                 val newImport =
                   new ImportDeclaration(
                     importName,

@@ -1,6 +1,4 @@
-package org.combinators.ep.language.scala.codegen
-
-/*DI:LD:AI*/
+package org.combinators.ep.language.scala.codegen     /*DI:LD:AI*/
 
 import cats.Apply as _
 import org.combinators.cogen.Command.Generator
@@ -22,11 +20,15 @@ import java.nio.file.{Path, Paths}
 
 type FullAST = BaseAST
   & NameProviderAST
+  & ArraysAST
   & ArithmeticAST
   & AssertionsAST
   & BooleanAST
+  & ConsoleAST
+  & ExceptionsAST
   & EqualsAST
   & ListsAST
+  & MapsAST
   & OperatorExpressionOpsAST
   & RealArithmeticAST
   & StringAST
@@ -55,6 +57,27 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
       case TypeRep.Boolean => toLookup("Boolean")
       case TypeRep.String => toLookup("String")
       case TypeRep.Unit => toLookup("Unit")
+      case TypeRep.Array(elemTpe) =>
+        Some(
+          for {
+            elemTpe <- ToTargetLanguageType[ast.any.Type](elemTpe).interpret(canToTargetLanguage)
+            arrayTpe <- Command.lift(ast.arraysOpsFactory.array())
+            tpe <- Apply[
+              ast.any.Type,
+              ast.any.Type,
+              ast.any.Type](arrayTpe, Seq(elemTpe)).interpret(canApplyType)
+          } yield tpe)
+      case TypeRep.Map(keyTpe, elemTpe) =>
+        Some(
+          for {
+            keyTpe <- ToTargetLanguageType[ast.any.Type](keyTpe).interpret(canToTargetLanguage)
+            elemTpe <- ToTargetLanguageType[ast.any.Type](elemTpe).interpret(canToTargetLanguage)
+            mapTpe <- Command.lift(ast.mapsOpsFactory.map())
+            tpe <- Apply[
+              ast.any.Type,
+              ast.any.Type,
+              ast.any.Type](mapTpe, Seq(keyTpe, elemTpe)).interpret(canApplyType)
+          } yield tpe)
       case TypeRep.Sequence(elemTpeRep) =>
         Some(
           for {
@@ -82,9 +105,11 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
 
   def prefixExcludedTypes: Set[Seq[ast.any.Name]] = {
     Set(
+      Seq("Array"),
       Seq("Double"),
       Seq("Boolean"),
       Seq("Int"),
+      Seq("Map"),
       Seq("Unit"),
       Seq("String"),
       Seq("Seq"),
@@ -170,10 +195,8 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
       )(functional.typeCapabilities.canTranslateTypeInType,
         parametricPolymorphismInADTContexts.algebraicDataTypeCapabilities.canApplyTypeInADT)
 
-
     val (generatedProject, _) = Command.runGenerator(generator, projectWithLookups)
     val withPrefix = ast.factory.convert(generatedProject).prefixRootPackage(Seq(nameProvider.mangle(domainName)), prefixExcludedTypes)
-
 
     def toFileWithPath(cu: ast.any.CompilationUnit, basePath: Path): FileWithPath = {
       FileWithPath(ast.factory.convert(cu).toScala, {
@@ -215,11 +238,11 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
   val generics: Generics.WithBase[ast.type, paradigm.type, ooParadigm.type, parametricPolymorphism.type] = Generics[ast.type, paradigm.type, ooParadigm.type, parametricPolymorphism.type](paradigm, ooParadigm, parametricPolymorphism)
   val parametricPolymorphismInADTContexts: ParametricPolymorphismInADTContexts.WithBase[ast.type, paradigm.type, functional.type] = ParametricPolymorphismInADTContexts[ast.type, paradigm.type, functional.type](paradigm, functional)
 
-
+  val arrays: Arrays.WithBase[ast.type, paradigm.type] = Arrays[ast.type, paradigm.type](paradigm)
   val booleans: Booleans.WithBase[ast.type, paradigm.type] = Booleans[ast.type, paradigm.type](paradigm)
 
   val doubles: Arithmetic.WithBase[Double, ast.type, paradigm.type] = Arithmetic[Double, ast.type, paradigm.type](paradigm)
-
+  val console: Console.WithBase[ast.type, paradigm.type] = Console[ast.type, paradigm.type](paradigm)
   val realDoubles: RealArithmetic.WithBase[Double, ast.type, paradigm.type] = RealArithmetic[Double, ast.type, paradigm.type](paradigm)
 
   val ints: Arithmetic.WithBase[Int, ast.type, paradigm.type] = Arithmetic[Int, ast.type, paradigm.type](paradigm)
@@ -228,51 +251,11 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
 
   val equality: Equals.WithBase[ast.type, paradigm.type] = Equals[ast.type, paradigm.type](paradigm)
 
-  /*val consoleInMethod =
-    new Console[MethodBodyCtxt, paradigm.type](
-      paradigm, stringsInMethod
-    )
-
-  val consoleInConstructor =
-    new Console[CtorCtxt, paradigm.type](
-      paradigm, stringsInConstructor
-    )
-  
-  val arraysInMethod =
-    new Arrays[MethodBodyCtxt, paradigm.type](
-      paradigm
-    )
-
-  val arraysInConstructor =
-    new Arrays[CtorCtxt, paradigm.type](
-      paradigm
-    )
-    */
-
   val lists: Lists.WithBase[ast.type, paradigm.type] = Lists[ast.type, paradigm.type](paradigm)
-
-  /*val listsInConstructor =
-    Lists[CtorCtxt, paradigm.type, generics.type](
-      paradigm,
-      ooParadigm.constructorCapabilities.canGetMemberInConstructor,
-      ooParadigm.constructorCapabilities.canApplyInConstructor,
-      generics.constructorCapabilities.canApplyTypeInConstructor,
-      ooParadigm.constructorCapabilities.canAddImportInConstructor
-    )(generics)
-  */
-  
-/*
-  val treesInConstructor =
-    Trees[CtorCtxt, paradigm.type, ObjectOriented](
-      paradigm,
-      ooParadigm.constructorCapabilities.canAddImportInConstructor
-    )(ooParadigm)
-
-  val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)
-  val exceptionsInMethod = new Exceptions[paradigm.type](paradigm)*/
+  val maps: Maps.WithBase[ast.type, paradigm.type] = Maps[ast.type, paradigm.type](paradigm)
 
   val assertions = Assertions[ast.type, paradigm.type](paradigm)
-  
+  val exceptions: Exceptions.WithBase[ast.type, paradigm.type] = Exceptions[ast.type, paradigm.type](paradigm)
 }
 
 object CodeGenerator {
@@ -280,7 +263,6 @@ object CodeGenerator {
   case object Enable extends Command {
     type Result = Unit
   }
-
 
   def apply[AST <: FullAST](domainName: String, ast: AST, additionalPrefixExcludedTypes: Set[Seq[ast.any.Name]] = Set.empty): CodeGenerator[ast.type] =
     new CodeGenerator[ast.type](domainName, ast, additionalPrefixExcludedTypes)

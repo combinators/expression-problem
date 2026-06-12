@@ -22,7 +22,7 @@ import java.nio.file.{Path, Paths}
 class HelloWorldMainJava {
   val generator = CodeGenerator(CodeGenerator.defaultConfig.copy(boxLevel = PartiallyBoxed, targetPackage = new PackageDeclaration(ObjectOriented.fromComponents("world"))))
   
-  val helloWorldApproach = HelloWorldObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod)
+  val helloWorldApproach = HelloWorldObjectOrientedProvider[Syntax.default.type, generator.paradigm.type](generator.paradigm)(JavaNameProvider, generator.imperativeInMethod, generator.ooParadigm, generator.intsInMethod, generator.consoleInMethod, generator.arraysInMethod, generator.assertionsInMethod, generator.equalityInMethod, generator.mapsInMethod)
 
   val persistable: Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
 
@@ -34,12 +34,13 @@ class HelloWorldMainJava {
           _ <- generator.doublesInMethod.enable()
           _ <- generator.intsInMethod.enable()
           _ <- generator.stringsInMethod.enable()
-          _ <- generator.listsInMethod.enable()     // should be array, but this still needs to be added as an FFI
+          _ <- generator.listsInMethod.enable()
           _ <- generator.consoleInMethod.enable()
           _ <- generator.arraysInMethod.enable()
           _ <- generator.equalityInMethod.enable()
           _ <- generator.assertionsInMethod.enable()
-          
+          _ <- generator.mapsInMethod.enable()           // needed for resolution
+
           _ <- helloWorldApproach.implement()
         } yield ()
       }

@@ -1,7 +1,7 @@
 package org.combinators.cogen.paradigm.control
 
 import org.combinators.cogen.paradigm.{AnyParadigm, Apply, IfThenElse, Reify}
-import org.combinators.cogen.{TypeRep, Command, Understands}
+import org.combinators.cogen.{Command, TypeRep, Understands}
 import Command.Generator
 
 case class PatternMatch[MethodBodyContext, PatternContext, Expression](

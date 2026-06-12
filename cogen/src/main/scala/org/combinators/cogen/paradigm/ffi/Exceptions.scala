@@ -1,6 +1,6 @@
-package org.combinators.cogen.paradigm.ffi
+package org.combinators.cogen.paradigm.ffi     /*DI:LI:AI*/
 
-import org.combinators.cogen.paradigm.{AnyParadigm}
+import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.{Command, Understands}
 import Command.Generator
 
@@ -11,14 +11,14 @@ case class Exception[Expression,Stmt](exp:Expression) extends Command {
 trait Exceptions[Context] extends FFI {
   import base.syntax._
 
-  trait ExceptionCapabilities {
+  trait ExceptionsCapabilities {
     implicit val canRaise: Understands[Context, Exception[Expression, Statement]]
 
     def raise(exp: Expression): Generator[Context, Statement] =
       AnyParadigm.capability(Exception[Expression, Statement](exp))
   }
   
-  val exceptionCapabilities: ExceptionCapabilities
+  val exceptionsCapabilities: ExceptionsCapabilities
 }
 
 object Exceptions {

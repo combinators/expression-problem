@@ -1,6 +1,4 @@
-package org.combinators.ep.builder.java.paradigm.ffi
-
-/*DI:LD:AI*/
+package org.combinators.ep.builder.java.paradigm.ffi    /*DI:LD:AI*/
 
 import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.`type`.Type
@@ -15,7 +13,7 @@ import org.combinators.ep.domain.abstractions.DomainTpeRep
 import org.combinators.ep.domain.tree.{Leaf, Node}
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.Syntax.default.*
-import org.combinators.ep.language.java.paradigm.{AnyParadigm, Generics, ObjectOriented}
+import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
 
 trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {

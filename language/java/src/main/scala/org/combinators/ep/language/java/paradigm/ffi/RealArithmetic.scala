@@ -5,14 +5,13 @@ import com.github.javaparser.ast.expr.BinaryExpr.Operator
 import com.github.javaparser.ast.expr.{BinaryExpr, Expression, FieldAccessExpr, MethodCallExpr}
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.Apply
-import org.combinators.cogen.paradigm.ffi.{Abs, Cos, EulersNumber, Floor, Log, Pi, Pow, Sin, Sqrt, RealArithmetic as RArith}
+import org.combinators.cogen.paradigm.ffi.{Abs, Cos, EulersNumber, Floor, Log, Min, Max, Pi, Pow, Sin, Sqrt, RealArithmetic as RArith}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
-
 
 class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
   val base: AP,
@@ -55,6 +54,26 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
       }
     }
 
+  private def javaMathMaxOp[Ctxt, Op](): Understands[Ctxt, Apply[Op, Expression, Expression]] =
+    new Understands[Ctxt, Apply[Op, Expression, Expression]] {
+      def perform(
+                   context: Ctxt,
+                   command: Apply[Op, Expression, Expression]
+                 ): (Ctxt, Expression) = {
+        (context, new MethodCallExpr(mathExp, "max", new NodeList[Expression](command.arguments*)))
+      }
+    }
+
+  private def javaMathMinOp[Ctxt, Op](): Understands[Ctxt, Apply[Op, Expression, Expression]] =
+    new Understands[Ctxt, Apply[Op, Expression, Expression]] {
+      def perform(
+                   context: Ctxt,
+                   command: Apply[Op, Expression, Expression]
+                 ): (Ctxt, Expression) = {
+        (context, new MethodCallExpr(mathExp, "min", new NodeList[Expression](command.arguments*)))
+      }
+    }
+
   private def javaMathConst[Ctxt, Const <: Command.WithResult[Expression]](constName: String): Understands[Ctxt, Const] =
     new Understands[Ctxt, Const] {
       def perform(
@@ -73,6 +92,10 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
         javaMathOp("pow")
       implicit val canLog: Understands[Ctxt, Apply[Log[T], Expression, Expression]] =
         javaMathLogOp()
+      implicit val canMax: Understands[Ctxt, Apply[Max[T], Expression, Expression]] =
+        javaMathMaxOp()
+      implicit val canMin: Understands[Ctxt, Apply[Min[T], Expression, Expression]] =
+        javaMathMinOp()
       implicit val canSin: Understands[Ctxt, Apply[Sin[T], Expression, Expression]] =
         javaMathOp("sin")
       implicit val canCos: Understands[Ctxt, Apply[Cos[T], Expression, Expression]] =
@@ -88,7 +111,7 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
     }
 
   def enable(): Generator[base.ProjectContext, Unit] =
-    Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
+    Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type

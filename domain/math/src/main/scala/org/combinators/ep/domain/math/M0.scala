@@ -31,7 +31,7 @@ object M0 extends Evolution {
   val addi: DataTypeInstance = AddInst(LitInst(1.0), LitInst(2.0))
   val liti: DataTypeInstance = LitInst(5.0)
 
-  // defining tests exactly once means they can be eliminated later (in Evolution) when it uses 'distinct' on past test cases)
+  // defining tests exactly once means they can be eliminated later (in Evolution) when it uses 'distinct' on past test cases
   val m0_test_1: TestCase = EqualsTestCase(getModel.baseDataType, addi, Eval, DoubleInst(3.0))
   val m0_test_2: TestCase = EqualsTestCase(getModel.baseDataType, liti, Eval, DoubleInst(5.0))
 

@@ -1,13 +1,8 @@
-package org.combinators.ep.language.inbetween.polymorphism
-
-/*DI:LI:AI*/
-
+package org.combinators.ep.language.inbetween.polymorphism    /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.{AddTypeParameter, Apply, GetTypeArguments, ParametricPolymorphism as PP}
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
-import org.combinators.ep.language.inbetween.any
-
 
 trait ParametricPolymorphism[AST <: ParametricPolymorphismAST, B](val base: AnyParadigm.WithAST[AST] & B) extends PP {
   import base.ast.factory

@@ -1,0 +1,122 @@
+package org.combinators.archive.unenhancedModels.boilerplate.threeStringLCS
+
+import org.combinators.dp.TestExample
+import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
+import org.combinators.cogen.paradigm.control.Imperative
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, RealArithmetic, Strings}
+import org.combinators.cogen.paradigm.{AnyParadigm, Generics, ObjectOriented, ParametricPolymorphism}
+import org.combinators.cogen.{AbstractSyntax, NameProvider, TypeRep}
+import org.combinators.dp.original.DPObjectOrientedProvider
+import org.combinators.models.{LiteralInt, LiteralString}
+import org.combinators.archive.unenhancedModels.models.LiteralStringTriple
+
+/** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
+ * in a variety of contexts. This trait provides that capability
+ */
+trait ThreeStringLCSProvider extends DPObjectOrientedProvider {
+  val ooParadigm: ObjectOriented.WithBase[paradigm.type]
+  val polymorphics: ParametricPolymorphism.WithBase[paradigm.type]
+  val genericsParadigm: Generics.WithBase[paradigm.type, ooParadigm.type, polymorphics.type]
+
+  val names: NameProvider[paradigm.syntax.Name]
+  val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val arithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
+  val realArithmetic: RealArithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Double]
+  val console: Console.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val array: Arrays.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val strings: Strings.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
+  val booleans:  Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
+
+  import paradigm._
+  import syntax._
+
+  // Specific examples hard coded for Int input and Int output
+  def makeTests(implementation:String, tests: Seq[TestExample] = Seq.empty): Generator[MethodBodyContext, Seq[Expression]] = {
+    import eqls.equalityCapabilities._
+    import paradigm.methodBodyCapabilities._
+
+    // NOTE: these tests are in the wrong place, since we defer test gen to later
+    val tests = Seq(
+      new TestExample("test1", LiteralStringTriple("AGGT12", "12TXAYB", "12XBA"), LiteralInt(2), LiteralString("AC")) // for now, leave solution as None
+    )
+
+    for {
+      assert_statements <- forEach(tests) { example =>
+
+        val input_value = example.inputType match {
+          case lt: LiteralStringTriple => (lt.string1, lt.string2, lt.string3)
+          case _ => ??? // error in all other circumstances
+        }
+
+        val sol_gen_value = example.answer match {
+          case lit:LiteralInt => paradigm.methodBodyCapabilities.reify(TypeRep.Int, lit.literal)
+          case _ => ???
+        }
+
+        for {
+          tslcsType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(implementation))
+          s1_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._1)
+          s2_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._2)
+          s3_value <- paradigm.methodBodyCapabilities.reify(TypeRep.String, input_value._3)
+
+          sol <- ooParadigm.methodBodyCapabilities.instantiateObject(tslcsType, Seq(s1_value, s2_value, s3_value))
+          computeMethod <- ooParadigm.methodBodyCapabilities.getMember(sol, computeName)
+
+          intType <- toTargetLanguageType(TypeRep.Int)
+          tslcs_actual <- apply(computeMethod, Seq.empty)
+          sol_value <- sol_gen_value
+          asserteq_tslcs <- asserts.assertionCapabilities.assertEquals(intType, tslcs_actual, sol_value)
+
+        } yield asserteq_tslcs
+      }
+    } yield assert_statements
+  }
+
+
+  override def makeTestCase(implementation:String): Generator[TestContext, Unit] = {
+    for {
+      _ <- paradigm.testCapabilities.addTestCase(makeTests(implementation), names.mangle("DP"))
+    } yield ()
+  }
+}
+
+object ThreeStringLCSProvider {
+  type WithParadigm[P <: AnyParadigm] = DPObjectOrientedProvider { val paradigm: P }
+  type WithSyntax[S <: AbstractSyntax] = WithParadigm[AnyParadigm.WithSyntax[S]]
+
+  def apply[S <: AbstractSyntax, P <: AnyParadigm.WithSyntax[S]]
+           (base: P)
+           (nameProvider: NameProvider[base.syntax.Name],
+            imp: Imperative.WithBase[base.MethodBodyContext, base.type],
+            ffiArithmetic: Arithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+            ffiRealArithmetic: RealArithmetic.WithBase[base.MethodBodyContext, base.type, Double],
+            con: Console.WithBase[base.MethodBodyContext, base.type],
+            arr: Arrays.WithBase[base.MethodBodyContext, base.type],
+            assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
+            stringsIn: Strings.WithBase[base.MethodBodyContext, base.type],
+            eqlsIn: Equality.WithBase[base.MethodBodyContext, base.type],
+            oo: ObjectOriented.WithBase[base.type],
+            parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
+            booleansIn: Booleans.WithBase[base.MethodBodyContext, base.type]
+           )
+           (generics: Generics.WithBase[base.type, oo.type, parametricPolymorphism.type]): ThreeStringLCSProvider.WithParadigm[base.type] =
+    new ThreeStringLCSProvider {
+      override val paradigm: base.type = base
+      val impParadigm: imp.type = imp
+      val arithmetic: ffiArithmetic.type = ffiArithmetic
+      val realArithmetic: ffiRealArithmetic.type = ffiRealArithmetic
+      override val names: NameProvider[paradigm.syntax.Name] = nameProvider
+      override val ooParadigm: oo.type = oo
+      override val polymorphics: parametricPolymorphism.type = parametricPolymorphism
+      override val genericsParadigm: generics.type = generics
+      override val console: Console.WithBase[base.MethodBodyContext, paradigm.type] = con
+      override val array: Arrays.WithBase[base.MethodBodyContext, paradigm.type] = arr
+      override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn
+      override val strings: Strings.WithBase[base.MethodBodyContext, paradigm.type] = stringsIn
+      override val eqls: Equality.WithBase[base.MethodBodyContext, paradigm.type] = eqlsIn
+      override val booleans: Booleans.WithBase[base.MethodBodyContext, paradigm.type] = booleansIn
+    }
+}

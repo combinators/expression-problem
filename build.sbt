@@ -6,10 +6,11 @@ import xerial.sbt.Sonatype.sonatypeCentralHost
 lazy val commonSettings = Seq(
   organization := "org.combinators",
 
-  scalaVersion := "3.7.4",
+  scalaVersion := "3.8.4",
   
   resolvers += Resolver.typesafeRepo("releases"),
-  resolvers ++= Resolver.sonatypeOssRepos("releases"),
+  //resolvers ++= Resolver.sonatypeOssRepos("releases"),
+  resolvers += Resolver.mavenCentral,
 
   Compile/scalacOptions ++= Seq(
     "-explain",

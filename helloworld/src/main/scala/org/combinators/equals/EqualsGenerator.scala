@@ -2,7 +2,7 @@ package org.combinators.equals
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.cogen.{NameProvider, TypeRep}
+import org.combinators.cogen.{Command, NameProvider, TypeRep}
 import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arrays, Booleans, Console, Equality}
@@ -20,6 +20,30 @@ trait EqualsGenerator[AP <: AnyParadigm] {
 
   import paradigm.syntax._
   import paradigm.MethodBodyContext
+
+  def createConstructor(domain:CompositeDataType): Generator[ooParadigm.ConstructorContext, Unit] = {
+    import ooParadigm.constructorCapabilities._
+
+    var mylist:Seq[(Name,Type)] = Seq.empty
+    for {
+
+      params <- forEach (domain.fields.toList) { (name,tpe)  =>
+        for {
+          pt <- convertToDomainInConstructor(tpe)
+          pName <- freshName(names.mangle(name))
+        } yield (pName, pt)
+      }
+
+      _ <- setParameters(params)
+
+      args <- getArguments()
+      _ <- forEach(args.zip(domain.fields.toList)) { case ((nm, tp, exp), original) => for {
+          _ <- initializeField(names.mangle(original._1), exp)   // make sure to restore fieldname from original
+        } yield ()
+      }
+
+    } yield ()
+  }
 
   /**
    * public boolean equals (Object o) {
@@ -49,6 +73,7 @@ trait EqualsGenerator[AP <: AnyParadigm] {
           } yield ()
         }
 
+        _ <- addConstructor(createConstructor(domain))
         _ <- addMethod(names.mangle("equals"), generateEquals(domain)) // HACK
       } yield ()
     }
@@ -88,6 +113,22 @@ trait EqualsGenerator[AP <: AnyParadigm] {
     }
   }
 
+  def convertToDomainInConstructor(dataType: DataType): Generator[ooParadigm.ConstructorContext, Type] = {
+    dataType match {
+      case cdt: CompositeDataType => for {
+        classType <- ooParadigm.constructorCapabilities.findClass(names.mangle(cdt.name))
+      } yield classType
+
+      case BuiltInDataType(tpeRep) => for {
+        classType <- ooParadigm.constructorCapabilities.toTargetLanguageType(tpeRep)
+      } yield classType
+
+      case ArrayDataType(tpeRep) => for {
+        classType <- ooParadigm.constructorCapabilities.toTargetLanguageType(TypeRep.Array(tpeRep))
+      } yield classType
+    }
+  }
+
   def ifBranch (domain:CompositeDataType, arg:Expression) : Generator[MethodBodyContext, Unit] = {
     import AnyParadigm.syntax._
 
@@ -117,7 +158,6 @@ trait EqualsGenerator[AP <: AnyParadigm] {
 
           eqlExpr <- eqls.equalityCapabilities.areEqual(domainType, selfFieldExpr, otherFieldExpr)
           notExpr <- booleans.booleanCapabilities.not(eqlExpr)
-
 
           failingIfExpr <- impParadigm.imperativeCapabilities.ifThenElse(notExpr, returnFalse, Seq.empty, None)
           _ <- paradigm.methodBodyCapabilities.addBlockDefinitions(Seq(failingIfExpr))

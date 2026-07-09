@@ -1,12 +1,12 @@
 package org.combinators.ep.language.java.paradigm.ffi    /*DI:LD:AI*/
 
-import com.github.javaparser.ast.expr.{BinaryExpr, BooleanLiteralExpr, UnaryExpr}
+import com.github.javaparser.ast.expr.{BinaryExpr, BooleanLiteralExpr, EnclosedExpr, UnaryExpr}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.Understands
 import org.combinators.ep.language.java.paradigm.AnyParadigm
 import org.combinators.ep.language.java.{ContextSpecificResolver, OperatorExprs, ProjectCtxt, Syntax}
 import org.combinators.ep.language.java.CodeGenerator.Enable
-import Syntax.default._
+import Syntax.default.*
 import com.github.javaparser.ast.`type`.PrimitiveType
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.Apply
@@ -22,7 +22,8 @@ class Booleans[Ctxt, AP <: AnyParadigm](val base: AP) extends Bools[Ctxt] {
       implicit val canOr: Understands[Ctxt, Apply[Or, base.syntax.Expression, base.syntax.Expression]] =
         OperatorExprs.shortCutInfixExprOp[Ctxt, Or](BinaryExpr.Operator.OR, BinaryExpr.Operator.BINARY_OR)
       implicit val canNot: Understands[Ctxt, Apply[Not, base.syntax.Expression, base.syntax.Expression]] =
-        OperatorExprs.prefixExprOp[Ctxt, Not](UnaryExpr.Operator.LOGICAL_COMPLEMENT)
+        OperatorExprs.notPrefixExprOp[Ctxt, Not](UnaryExpr.Operator.LOGICAL_COMPLEMENT)
+
       implicit val canTrue: Understands[Ctxt, True[base.syntax.Expression]] =
         new Understands[Ctxt, True[base.syntax.Expression]] {
           def perform(

@@ -3,7 +3,7 @@ package org.combinators.equals
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{AnyParadigm, FindClass, ObjectOriented}
 import org.combinators.cogen.paradigm.control.Imperative
-import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Console, Equality, Maps}
+import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, Maps}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, Understands}
 import org.combinators.equals.ffi.BaseType
@@ -17,6 +17,7 @@ trait EqualsObjectOrientedProvider extends EqualsProvider {
   val names: NameProvider[paradigm.syntax.Name]
   val impParadigm: Imperative.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Int]
+  val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val console : Console.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val array: Arrays.WithBase[paradigm.MethodBodyContext,paradigm.type]
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
@@ -42,37 +43,66 @@ trait EqualsObjectOrientedProvider extends EqualsProvider {
   def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import eqls.equalityCapabilities._
+    val eq2 = eqls.equalityCapabilities.canEquals
+    val  not2 = booleans.booleanCapabilities.canNot
 
     for {
       intType <- toTargetLanguageType(TypeRep.Int)
       stringType <- toTargetLanguageType(TypeRep.String)
-      worldType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("World"))
+      pointType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Point"))
+      rectangleType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Rectangle"))
+      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
+      two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
+      three <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 3)
 
-      msg <- paradigm.methodBodyCapabilities.reify(TypeRep.String, "Hey There!")
-      res <- ooParadigm.methodBodyCapabilities.instantiateObject(worldType, Seq(msg))
-      msgMethod <- ooParadigm.methodBodyCapabilities.getMember(res, names.mangle("getSomething"))
-      result <- apply(msgMethod, Seq.empty)
-      asserteq1 <- asserts.assertionCapabilities.assertEquals(stringType, result, msg)
+      pt1 <- ooParadigm.methodBodyCapabilities.instantiateObject(pointType, Seq(one, two))
+      pt2 <- ooParadigm.methodBodyCapabilities.instantiateObject(pointType, Seq(one, two))
+      pt3 <- ooParadigm.methodBodyCapabilities.instantiateObject(pointType, Seq(two, three))
 
-    } yield Seq(asserteq1)
+      rect1 <- ooParadigm.methodBodyCapabilities.instantiateObject(rectangleType, Seq(one, two, pt1))
+      rect2 <- ooParadigm.methodBodyCapabilities.instantiateObject(rectangleType, Seq(one, two, pt1))
+      rect3 <- ooParadigm.methodBodyCapabilities.instantiateObject(rectangleType, Seq(one, two, pt3))
+
+      asserteq1 <- asserts.assertionCapabilities.assertEquals(pointType, pt1, pt2)
+
+      // cannot get assertNotEquals to work without providing implicits
+      asserteq2 <- asserts.assertionCapabilities.assertNotEquals(pointType, pt1, pt3)(eq2, not2)
+
+      asserteq3 <- asserts.assertionCapabilities.assertEquals(rectangleType, rect1, rect2)
+
+      // cannot get assertNotEquals to work without providing implicits
+      asserteq4 <- asserts.assertionCapabilities.assertNotEquals(rectangleType, rect1, rect3)(eq2, not2)
+
+    } yield Seq(asserteq1, asserteq2, asserteq3, asserteq4)
   }
 
   def makeTestCase(clazzName:String): Generator[TestContext, Unit] = {
-    import ooParadigm.projectCapabilities._
     for {
-        _ <- paradigm.testCapabilities.addTestCase(makeTestCase(), names.mangle(clazzName))
-      } yield ()
+      _ <- paradigm.testCapabilities.addTestCase(makeTestCase(), names.mangle(clazzName))
+    } yield ()
   }
 
-  def implement(domain:CompositeDataType) : Generator[ProjectContext, Unit] = {
+  def implement(domains:Seq[DataType]) : Generator[ProjectContext, Unit] = {
+    import AnyParadigm.syntax._
+
+    // Just grab CompositeDataType
+    val composites = domains.collect {
+      case comp:CompositeDataType => comp
+    }
 
     for {
-      _ <- eqlGenerator.generateSkeleton(domain)
-      _ <- paradigm.projectCapabilities.addCompilationUnit(
-        paradigm.compilationUnitCapabilities.addTestSuite(
-          testName, makeTestCase(domain.name)
+      _ <- forEach(composites) { domain => for {
+          _ <- eqlGenerator.generateSkeleton(domain)
+        } yield ()
+      }
+
+      _ <- forEach(composites) { domain => for {
+        _ <- paradigm.projectCapabilities.addCompilationUnit(
+          paradigm.compilationUnitCapabilities.addTestSuite(
+            testName, makeTestCase(domain.name)
+          )
         )
-      )
+      } yield () }
     } yield ()
   }
 }
@@ -87,6 +117,7 @@ object EqualsObjectOrientedProvider {
    imp: Imperative.WithBase[base.MethodBodyContext, base.type],
    oo: ObjectOriented.WithBase[base.type],
    ffi1:  Arithmetic.WithBase[base.MethodBodyContext, base.type, Int],
+   booleansIn: Booleans.WithBase[ base.MethodBodyContext, base.type],
    con: Console.WithBase[base.MethodBodyContext, base.type],
    arr: Arrays.WithBase[base.MethodBodyContext, base.type],
    assertsIn: Assertions.WithBase[base.MethodBodyContext, base.type],
@@ -102,7 +133,7 @@ object EqualsObjectOrientedProvider {
       override val names: NameProvider[paradigm.syntax.Name] = nameProvider
       override val ooParadigm: oo.type = oo
       override val ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Int] = ffi1
-
+      override val booleans: Booleans.WithBase[paradigm.MethodBodyContext, paradigm.type] = booleansIn
       override val console: Console.WithBase[base.MethodBodyContext, paradigm.type] = con
       override val array: Arrays.WithBase[base.MethodBodyContext, paradigm.type] = arr
       override val asserts: Assertions.WithBase[base.MethodBodyContext, paradigm.type] = assertsIn

@@ -37,13 +37,14 @@ object OperatorExprs {
       }
     }
 
-  def prefixExprOp[Ctxt, Op](infixOp: UnaryExpr.Operator): Understands[Ctxt, Apply[Op, Expression, Expression]] =
+  // had to rework, to ensure that ! was properly using (..) enclosedExpr
+  def notPrefixExprOp[Ctxt, Op](infixOp: UnaryExpr.Operator): Understands[Ctxt, Apply[Op, Expression, Expression]] =
     new Understands[Ctxt, Apply[Op, Expression, Expression]] {
       def perform(
         context: Ctxt,
         command: Apply[Op, Expression, Expression]
       ): (Ctxt, Expression) = {
-        (context, new UnaryExpr(command.arguments(0), infixOp))
+        (context, new UnaryExpr(new EnclosedExpr(command.arguments(0)), UnaryExpr.Operator.LOGICAL_COMPLEMENT))
       }
     }
 }

@@ -4,7 +4,7 @@ import org.combinators.ep.language.inbetween.ffi.{ArraysAST => InbetweenArraysAS
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
 
 trait ArraysAST extends InbetweenArraysAST {
-  self: OperatorExpressionsAST & BaseAST =>
+  self: OperatorExpressionsAST & EqualsAST & BaseAST =>
   object scalaArraysOps {
     object arraysOpsOverride {
       trait FinalTypes extends arraysOps.FinalTypes {
@@ -18,10 +18,26 @@ trait ArraysAST extends InbetweenArraysAST {
         type SetArrayExpression <: arraysOpsOverride.SetArrayExpression
       }
 
-      trait Array extends arraysOps.Array with scalaBase.anyOverrides.Type {
+      trait Array extends arraysOps.Array with scalaBase.Util with scalaBase.anyOverrides.Type {
         override def toScala: String = "Array"
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): Array =
           this
+
+        override def equalityOverride(typeArgs:Seq[any.Type] = Seq.empty, left: any.Expression, right: any.Expression): Option[any.Expression] = {
+          import nameProviderFactory.*
+          
+          // xx.corresponds(xx2)((x, y) => x.corresponds(y)((x1, y1)=> x1 == y1))
+          val method = ooFactory.memberAccessExpression(left, nameProvider.mangle("corresponds"))
+          val correspondsExpr = factory.applyExpression(method, Seq(right))
+          val elementType = typeArgs.head
+          val xVar = getFreshName(nameProvider.mangle("x"))
+          val yVar = getFreshName(nameProvider.mangle("y"))
+          val vars = Seq((xVar, elementType), (yVar, elementType))
+          val body = equalsOpFactory.equals(elementType, factory.argumentExpression(xVar), factory.argumentExpression(yVar))
+          val lambdaExpr = functionalControlFactory.lambda(vars, body)
+          val lambdaApplication = factory.applyExpression(correspondsExpr, Seq(lambdaExpr))
+          Some(lambdaApplication)
+        }
         override def toImport: Seq[any.Import] = Seq.empty
       }
       
@@ -133,7 +149,7 @@ trait ArraysAST extends InbetweenArraysAST {
   override val arraysOpsFactory: scalaArraysOps.arraysOpsOverride.Factory
 }
 
-trait FinalArraysAST extends ArraysAST { self: FinalOperatorExpressionsAST & FinalBaseAST =>
+trait FinalArraysAST extends ArraysAST { self: FinalOperatorExpressionsAST & FinalEqualsAST & FinalBaseAST =>
   object finalArraysFinalTypes {
     trait ArraysFinalTypes extends scalaArraysOps.arraysOpsOverride.FinalTypes {
       type Array = scalaArraysOps.arraysOpsOverride.Array

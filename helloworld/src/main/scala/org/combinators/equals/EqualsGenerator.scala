@@ -2,8 +2,8 @@ package org.combinators.equals
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.cogen.{Command, NameProvider, TypeRep}
-import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
+import org.combinators.cogen.{Command, NameProvider, TypeRep, Understands}
+import org.combinators.cogen.paradigm.{AnyParadigm, FindClass, ObjectOriented, ToTargetLanguageType}
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arrays, Booleans, Console, Equality}
 import org.combinators.equals.ffi.BaseType
@@ -29,7 +29,7 @@ trait EqualsGenerator[AP <: AnyParadigm] {
 
       params <- forEach (domain.fields.toList) { (name,tpe)  =>
         for {
-          pt <- convertToDomainInConstructor(tpe)
+          pt <- convertToDomain[ooParadigm.ConstructorContext](tpe)
           pName <- freshName(names.mangle(name))
         } yield (pName, pt)
       }
@@ -68,7 +68,7 @@ trait EqualsGenerator[AP <: AnyParadigm] {
       for {
         _ <- forEach (domain.fields.toList) { case (name, tpe) =>
           for {
-            fieldType <- convertToDomainInClass(tpe)
+            fieldType <- convertToDomain[ooParadigm.ClassContext](tpe)
             _ <- addField(names.mangle(name), fieldType)
           } yield ()
         }
@@ -81,57 +81,59 @@ trait EqualsGenerator[AP <: AnyParadigm] {
     addClassToProject(makeClass, names.mangle(domain.name))
   }
 
-  def convertToDomain(dataType: DataType) : Generator[MethodBodyContext, Type] = {
+  def convertToDomain[Ctxt](dataType: DataType)(
+    implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]],
+    canToTargetLanguage: Understands[Ctxt, ToTargetLanguageType[Type]]
+  ) : Generator[Ctxt, Type] = {
     dataType match {
       case cdt: CompositeDataType =>  for {
-        classType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(cdt.name))
+        classType <- FindClass(Seq(names.mangle(cdt.name))).interpret(canFindClass)
       } yield classType
 
       case BuiltInDataType(tpeRep) => for {
-        classType <- paradigm.methodBodyCapabilities.toTargetLanguageType(tpeRep)
+        classType <- ToTargetLanguageType(tpeRep).interpret(canToTargetLanguage)
       } yield classType
 
-      case ArrayDataType(tpeRep) => for {
-        classType <- paradigm.methodBodyCapabilities.toTargetLanguageType(TypeRep.Array(tpeRep))
-      } yield classType
     }
   }
 
-  def convertToDomainInClass(dataType: DataType): Generator[ooParadigm.ClassContext, Type] = {
-    dataType match {
-      case cdt: CompositeDataType => for {
-        classType <- ooParadigm.classCapabilities.findClass(names.mangle(cdt.name))
-      } yield classType
-
-      case BuiltInDataType(tpeRep) => for {
-        classType <- ooParadigm.classCapabilities.toTargetLanguageType(tpeRep)
-      } yield classType
-
-      case ArrayDataType(tpeRep) => for {
-        classType <- ooParadigm.classCapabilities.toTargetLanguageType(TypeRep.Array(tpeRep))
-      } yield classType
-    }
-  }
-
-  def convertToDomainInConstructor(dataType: DataType): Generator[ooParadigm.ConstructorContext, Type] = {
-    dataType match {
-      case cdt: CompositeDataType => for {
-        classType <- ooParadigm.constructorCapabilities.findClass(names.mangle(cdt.name))
-      } yield classType
-
-      case BuiltInDataType(tpeRep) => for {
-        classType <- ooParadigm.constructorCapabilities.toTargetLanguageType(tpeRep)
-      } yield classType
-
-      case ArrayDataType(tpeRep) => for {
-        classType <- ooParadigm.constructorCapabilities.toTargetLanguageType(TypeRep.Array(tpeRep))
-      } yield classType
-    }
-  }
+//  def convertToDomainInClass(dataType: DataType): Generator[ooParadigm.ClassContext, Type] = {
+//    dataType match {
+//      case cdt: CompositeDataType => for {
+//        classType <- ooParadigm.classCapabilities.findClass(names.mangle(cdt.name))
+//      } yield classType
+//
+//      case BuiltInDataType(tpeRep) => for {
+//        classType <- ooParadigm.classCapabilities.toTargetLanguageType(tpeRep)
+//      } yield classType
+//
+//      case ArrayDataType(tpeRep) => for {
+//        classType <- ooParadigm.classCapabilities.toTargetLanguageType(TypeRep.Array(tpeRep))
+//      } yield classType
+//    }
+//  }
+//
+//  def convertToDomainInConstructor(dataType: DataType): Generator[ooParadigm.ConstructorContext, Type] = {
+//    dataType match {
+//      case cdt: CompositeDataType => for {
+//        classType <- ooParadigm.constructorCapabilities.findClass(names.mangle(cdt.name))
+//      } yield classType
+//
+//      case BuiltInDataType(tpeRep) => for {
+//        classType <- ooParadigm.constructorCapabilities.toTargetLanguageType(tpeRep)
+//      } yield classType
+//
+//      case ArrayDataType(tpeRep) => for {
+//        classType <- ooParadigm.constructorCapabilities.toTargetLanguageType(TypeRep.Array(tpeRep))
+//      } yield classType
+//    }
+//  }
 
   def ifBranch (domain:CompositeDataType, arg:Expression) : Generator[MethodBodyContext, Unit] = {
     import AnyParadigm.syntax._
-
+    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
+    import paradigm.methodBodyCapabilities.canTransformTypeInMethodBody
+    
     def returnFalse : Generator[MethodBodyContext, Unit] = {
       for {
         falseExpr <- booleans.booleanCapabilities.falseExp
@@ -141,7 +143,7 @@ trait EqualsGenerator[AP <: AnyParadigm] {
     }
 
     for {
-      classType <- convertToDomain(domain)
+      classType <- convertToDomain[MethodBodyContext](domain)
       castExpr <- ooParadigm.methodBodyCapabilities.castObject(classType, arg)
       freshName <- paradigm.methodBodyCapabilities.freshName(names.mangle("other"))
       declVar <- impParadigm.imperativeCapabilities.declareVar(freshName, classType, Some(castExpr))
@@ -152,7 +154,7 @@ trait EqualsGenerator[AP <: AnyParadigm] {
           selfExpr <- ooParadigm.methodBodyCapabilities.selfReference()
           selfFieldExpr <- ooParadigm.methodBodyCapabilities.getMember(selfExpr, names.mangle(name))
           otherFieldExpr <- ooParadigm.methodBodyCapabilities.getMember(declVar, names.mangle(name))
-          domainType <- convertToDomain(tpe)
+          domainType <- convertToDomain[MethodBodyContext](tpe)
 
           // must handle arrays specially, not with == but with arrays capability
 
@@ -172,6 +174,8 @@ trait EqualsGenerator[AP <: AnyParadigm] {
   }
 
   def generateEquals(domain:CompositeDataType) : Generator[MethodBodyContext, Option[Expression]] = {
+    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
+    import paradigm.methodBodyCapabilities.canTransformTypeInMethodBody
     for {
       boolType <- paradigm.methodBodyCapabilities.toTargetLanguageType(TypeRep.Boolean)
       _ <- paradigm.methodBodyCapabilities.setReturnType(boolType)
@@ -182,7 +186,7 @@ trait EqualsGenerator[AP <: AnyParadigm] {
       trueExpr <- booleans.booleanCapabilities.trueExp
       retFalse <- impParadigm.imperativeCapabilities.returnStmt(falseExpr)
       retTrue <- impParadigm.imperativeCapabilities.returnStmt(trueExpr)
-      classType <- convertToDomain(domain)
+      classType <- convertToDomain[MethodBodyContext](domain)
       args <- paradigm.methodBodyCapabilities.getArguments()
       instOf <- ooParadigm.methodBodyCapabilities.instanceOfType(classType, args.head._3)
 

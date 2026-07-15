@@ -346,6 +346,8 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
         def toScala: String
         def toImport: Seq[any.Import]
 
+        // [placed here to handle arrays]
+        def equalityOverride(typeArgs:Seq[any.Type] = Seq.empty, left:any.Expression, right:any.Expression): Option[any.Expression] = None
         def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): any.Type
       }
 
@@ -1035,6 +1037,10 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
           s"${function.toScala}[${arguments.map(_.toScala).mkString(", ")}]"
         }
 
+        override def equalityOverride(typeArgs: scala.Seq[any.Type], left: any.Expression, right: any.Expression): Option[any.Expression] = {
+          function.equalityOverride(arguments ++ typeArgs, left, right)
+        }
+        
         def toImport: Seq[any.Import] = function.toImport ++ arguments.flatMap(_.toImport)
 
         def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): polymorphism.TypeApplication = {

@@ -4,9 +4,9 @@ import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.ImportDeclaration
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, InstanceRep, TypeRep, Understands}
-import org.combinators.cogen.paradigm.{AddImport, InstantiateObject}
+import org.combinators.cogen.paradigm.{AddImport, FindClass, InstantiateObject, ToTargetLanguageType}
 import org.combinators.ep.language.java.CodeGenerator.Enable
-import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt, TestCtxt}
+import org.combinators.ep.language.java.{ContextSpecificResolver, JavaNameProvider, ProjectCtxt, TestCtxt}
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.equals.ffi.BaseType as BT
 
@@ -30,10 +30,10 @@ trait BaseType[Ctxt, AP <: AnyParadigm] extends BT[Ctxt] {
 
           def updateResolver(resolver: ContextSpecificResolver): ContextSpecificResolver = {
             def addResolutionType[Ctxt](
-                   toResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type]
-                 ): ContextSpecificResolver => TypeRep => Generator[Ctxt, Type] = k => {
+                   toResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
+                   canFindClass: Understands[Ctxt, FindClass[Name, Type]]): ContextSpecificResolver => TypeRep => Generator[Ctxt, Type] = k => {
               case BT.AnyTpe => Command.lift[Ctxt, Type](objectType)
-               
+              case BT.CompositeTpe(descriptor) => FindClass(Seq(JavaNameProvider.mangle(descriptor.name))).interpret(canFindClass)
               case other => toResolution(k)(other)
             }
 
@@ -47,17 +47,19 @@ trait BaseType[Ctxt, AP <: AnyParadigm] extends BT[Ctxt] {
                   for {
                     result <- InstantiateObject(objectType, Seq.empty).interpret(canConstructObject)
                   } yield result
+
+                case BT.CompositeTpe(descriptor) => ???   // inappropriate to reify 
                
                 case _ => reify(k)(rep)
               }
 
             resolver.copy(
               _methodTypeResolution =
-                addResolutionType(resolver._methodTypeResolution),
+                addResolutionType(resolver._methodTypeResolution, ooParadigm.methodBodyCapabilities.canFindClassInMethod),
               _constructorTypeResolution =
-                addResolutionType(resolver._constructorTypeResolution),
+                addResolutionType(resolver._constructorTypeResolution, ooParadigm.constructorCapabilities.canFindClassInConstructor),
               _classTypeResolution =
-                addResolutionType(resolver._classTypeResolution),
+                addResolutionType(resolver._classTypeResolution, ooParadigm.classCapabilities.canFindClassInClass),
               _reificationInConstructor =
                 addReification(resolver._reificationInConstructor, ooParadigm.constructorCapabilities.canInstantiateObjectInConstructor),
               _reificationInMethod =

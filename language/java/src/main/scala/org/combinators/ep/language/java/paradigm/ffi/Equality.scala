@@ -9,9 +9,10 @@ import org.combinators.cogen.paradigm.{Apply, GetMember}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.java.{ContextSpecificResolver, JavaNameProvider, ProjectCtxt}
-import org.combinators.ep.language.java.paradigm.AnyParadigm
-import org.combinators.ep.language.java.Syntax.default._
+import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
+import org.combinators.ep.language.java.Syntax.default.*
 import org.combinators.ep.language.java.CodeGenerator.Enable
+import org.combinators.templating.twirl.Java
 
 class Equality[Ctxt, AP <: AnyParadigm](
   val base: AP,
@@ -43,6 +44,9 @@ class Equality[Ctxt, AP <: AnyParadigm](
                 res <- Apply[Expression, Expression, Expression](equalsMethod, command.arguments.tail).interpret
               } yield res
               Command.runGenerator(gen, context)
+            } else if (command.functional.inType.isArrayType) {
+              (context, new MethodCallExpr(ObjectOriented.nameToExpression(ObjectOriented.fromComponents("java", "util", "Arrays")), "deepEquals", 
+                new NodeList[Expression](command.arguments*)))
             } else {
               (context, new BinaryExpr(command.arguments(0), command.arguments(1), BinaryExpr.Operator.EQUALS))
             }

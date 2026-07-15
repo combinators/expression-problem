@@ -8,7 +8,13 @@ trait EqualsAST extends InbetweenEqualsAST { self: BaseAST =>
     object equalsOpOverride {
       trait Equals extends equalsOp.Equals with scalaBase.anyOverrides.Expression {
         import factory.*
-        def toScala: String = s"${left.toScala} == ${right.toScala}"
+        
+        def toScala: String = {
+          tpe.equalityOverride(Seq.empty, left, right) match {
+            case None => s"${left.toScala} == ${right.toScala}"
+            case Some(expr) => s"${expr.toScala}"             
+          }
+        }
 
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): equalsOp.Equals =
           copy(

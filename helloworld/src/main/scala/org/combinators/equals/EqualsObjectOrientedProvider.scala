@@ -59,9 +59,12 @@ trait EqualsObjectOrientedProvider extends EqualsProvider {
       pt2 <- ooParadigm.methodBodyCapabilities.instantiateObject(pointType, Seq(one, two))
       pt3 <- ooParadigm.methodBodyCapabilities.instantiateObject(pointType, Seq(two, three))
 
-      rect1 <- ooParadigm.methodBodyCapabilities.instantiateObject(rectangleType, Seq(one, two, pt1))
-      rect2 <- ooParadigm.methodBodyCapabilities.instantiateObject(rectangleType, Seq(one, two, pt1))
-      rect3 <- ooParadigm.methodBodyCapabilities.instantiateObject(rectangleType, Seq(one, two, pt3))
+      ar1 <- array.arrayCapabilities.create(pointType, Seq(1), Seq(pt1))
+      ar2 <- array.arrayCapabilities.create(pointType, Seq(1), Seq(pt3))
+
+      rect1 <- ooParadigm.methodBodyCapabilities.instantiateObject(rectangleType, Seq(one, two, ar1))
+      rect2 <- ooParadigm.methodBodyCapabilities.instantiateObject(rectangleType, Seq(one, two, ar1))
+      rect3 <- ooParadigm.methodBodyCapabilities.instantiateObject(rectangleType, Seq(one, two, ar2))
 
       asserteq1 <- asserts.assertionCapabilities.assertEquals(pointType, pt1, pt2)
 

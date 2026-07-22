@@ -177,6 +177,7 @@ trait EqualsGenerator[AP <: AnyParadigm] {
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
     import paradigm.methodBodyCapabilities.canTransformTypeInMethodBody
     for {
+      _ <- ooParadigm.methodBodyCapabilities.setOverride()   // since this is default behavior in OO languages
       boolType <- paradigm.methodBodyCapabilities.toTargetLanguageType(TypeRep.Boolean)
       _ <- paradigm.methodBodyCapabilities.setReturnType(boolType)
       objType <- paradigm.methodBodyCapabilities.toTargetLanguageType(BaseType.AnyTpe)

@@ -64,7 +64,7 @@ trait OperatorExpressionsAST extends InbetweenOperatorExpressionOpsAST{ self: Ba
 
     trait PrefixOperator {
       def operator: String
-      def toScala(operands: any.Expression*): String = s"($operator${operands.head.getSelfExpression.toScala})"
+      def toScala(operands: any.Expression*): String = s"($operator(${operands.head.getSelfExpression.toScala}))"
     }
 
     trait MathFunctionOperator {

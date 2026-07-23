@@ -111,7 +111,8 @@ class EqualsMainScala {
 
   val persistable: Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
 
-  def directToDiskTransaction(targetDirectory: Path, domains:Seq[CompositeDataType]): IO[Unit] = {
+  def directToDiskTransaction(targetDirectory: Path, domains:Seq[CompositeDataType],
+                              testCases:Seq[EqualsTestCase]): IO[Unit] = {
 
     val files =
       () => generator.paradigm.runGenerator {
@@ -128,7 +129,7 @@ class EqualsMainScala {
           _ <- generator.booleans.booleansInMethodsInMethods.enable()
 
           _ <- baseTypeIn.enable()
-          _ <- equalsApproach.implement(domains)
+          _ <- equalsApproach.implement(domains, testCases)
         } yield ()
       }
 
@@ -147,9 +148,11 @@ class EqualsMainScala {
     }
   }
 
-  def runDirectToDisc(targetDirectory: Path, domains:Seq[CompositeDataType]): IO[ExitCode] = {
+  def runDirectToDisc(targetDirectory: Path,
+                      domains:Seq[CompositeDataType],
+                      testCases:Seq[EqualsTestCase]): IO[ExitCode] = {
     for {
-      _ <- directToDiskTransaction(targetDirectory, domains)
+      _ <- directToDiskTransaction(targetDirectory, domains, testCases)
     } yield ExitCode.Success
   }
 }
@@ -157,26 +160,14 @@ class EqualsMainScala {
 object EqualsScalaDirectToDiskMain extends IOApp {
   val targetDirectory = Paths.get("target", "eql")
 
-  val point: CompositeDataType = new CompositeDataType(
-    name = "Point",
-    fields = Map("x" -> BuiltInDataType(TypeRep.Int), "y" -> BuiltInDataType(TypeRep.Int))
-  )
-
-  // Not yet ready for "previous" -> ArrayDataType(TypeRep.Int))
-  val pointTypeRep: TypeRep.OfHostType[Map[String, Any]] = CompositeTpe(point)
-  val abc = TypeRep.Array[Map[String, Any]](CompositeTpe(point))
-  val domain: CompositeDataType = new CompositeDataType(
-    name = "Rectangle",
-    fields = Map("height" -> BuiltInDataType(TypeRep.Int), "width" -> BuiltInDataType(TypeRep.Int),
-      "anchor" -> BuiltInDataType(abc))
-  )
-
   def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new EqualsMainScala() }
       _ <- IO { println("[OK]") }
-      result <- main.runDirectToDisc(targetDirectory, Seq(domain, point))
+      result <- main.runDirectToDisc(targetDirectory,
+        Seq(ShapeDomain.rectangle, ShapeDomain.point),
+        ShapeDomain.testCases)
     } yield result
   }
 }

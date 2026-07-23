@@ -37,7 +37,8 @@ trait EqualsProvider {
   }
 
   /** Entry point into code generation. */
-  def implement(domain:Seq[DataType]): Generator[ProjectContext, Unit]
+  def implement(domain:Seq[DataType],
+                testCases:Seq[EqualsTestCase]): Generator[ProjectContext, Unit]
 
   /** Define standard test name. */
   def testCaseName:Name = {

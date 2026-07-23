@@ -74,7 +74,7 @@ trait EqualsGenerator[AP <: AnyParadigm] {
         }
 
         _ <- addConstructor(createConstructor(domain))
-        _ <- addMethod(names.mangle("equals"), generateEquals(domain)) // HACK
+        _ <- addMethod(names.mangle("equals"), generateEquals(domain)) 
       } yield ()
     }
 

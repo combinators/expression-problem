@@ -1,17 +1,13 @@
 package org.combinators.equals
 
 import org.combinators.cogen.TypeRep
-import org.combinators.cogen.paradigm.{AnyParadigm, FindClass, ObjectOriented}
+import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, Maps}
 import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.{AbstractSyntax, Command, NameProvider, Understands}
+import org.combinators.cogen.{AbstractSyntax, Command, NameProvider}
 import org.combinators.equals.ffi.BaseType
 
-/** Any OO approach will need to properly register type mappings and provide a default mechanism for finding a class
- * in a variety of contexts. This trait provides that capability
- *
- */
 trait EqualsObjectOrientedProvider extends EqualsProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
   val names: NameProvider[paradigm.syntax.Name]
@@ -23,15 +19,13 @@ trait EqualsObjectOrientedProvider extends EqualsProvider {
   val asserts: Assertions.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqls: Equality.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val maps: Maps.WithBase[paradigm.MethodBodyContext, paradigm.type]
-  val bases:  BaseType.WithBase[paradigm.MethodBodyContext, paradigm.type]   // .WithBase have the context
+  val bases:  BaseType.WithBase[paradigm.MethodBodyContext, paradigm.type]
   val eqlGenerator : EqualsGenerator.Aux[paradigm.type, ooParadigm.type]
 
   import paradigm._
   import syntax._
   import ooParadigm._
 
-  lazy val message:String = "message"
-  lazy val main:String = "main"
   lazy val testName = names.mangle("TestSuite")
 
   def makeTestMethod(): Generator[ClassContext, Unit] = {
@@ -40,52 +34,67 @@ trait EqualsObjectOrientedProvider extends EqualsProvider {
     } yield ()
   }
 
-  def makeTestCase(): Generator[MethodBodyContext, Seq[Expression]] = {
+  def makeTestCase(testCases:Seq[EqualsTestCase]): Generator[MethodBodyContext, Seq[Expression]] = {
     import paradigm.methodBodyCapabilities._
     import eqls.equalityCapabilities._
-    val eq2 = eqls.equalityCapabilities.canEquals
-    val  not2 = booleans.booleanCapabilities.canNot
+    import AnyParadigm.syntax._
+
+    def extract(ar:ArrayType) : Generator[MethodBodyContext, Expression] = {
+      for {
+        objectType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(ar.tpe))
+        exprs <- forEach(ar.values) (inner => construct(inner))
+        arr <- array.arrayCapabilities.create(objectType, ar.dimensions, exprs.toSeq)
+      } yield (arr)
+    }
+
+    def construct(in: BaseObjectType) : Generator[MethodBodyContext, Expression] = {
+      in match {
+        case obj:ObjectType => for {
+          params <- forEach(obj.fields.toSeq) { field =>
+            field._2 match {
+              case pi:PrimitiveInt => paradigm.methodBodyCapabilities.reify(TypeRep.Int, pi.value)
+              case ps:PrimitiveString => paradigm.methodBodyCapabilities.reify(TypeRep.String, ps.value)
+
+              case ar:ArrayType => extract(ar)
+              case _ => ???
+            }
+          }
+
+          objectType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(obj.name))
+          realObj <- ooParadigm.methodBodyCapabilities.instantiateObject(objectType, params.toSeq)
+          } yield realObj
+
+        case _ => ???
+      }
+    }
+
+    val eq2  = eqls.equalityCapabilities.canEquals
+    val not2 = booleans.booleanCapabilities.canNot
 
     for {
-      intType <- toTargetLanguageType(TypeRep.Int)
-      stringType <- toTargetLanguageType(TypeRep.String)
-      pointType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Point"))
-      rectangleType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle("Rectangle"))
-      one <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 1)
-      two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
-      three <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 3)
+      allTests <- forEach(testCases) { test => for {
+          obj1 <- construct(test.object1)
+          obj2 <- construct(test.object2)
+          objectType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(test.tpe))
+          assertion <- if (test.expected) {
+            asserts.assertionCapabilities.assertEquals(objectType, obj1, obj2)
+          } else {
+            asserts.assertionCapabilities.assertNotEquals(objectType, obj1, obj2)(eq2, not2)
+          }
 
-      pt1 <- ooParadigm.methodBodyCapabilities.instantiateObject(pointType, Seq(one, two))
-      pt2 <- ooParadigm.methodBodyCapabilities.instantiateObject(pointType, Seq(one, two))
-      pt3 <- ooParadigm.methodBodyCapabilities.instantiateObject(pointType, Seq(two, three))
-
-      ar1 <- array.arrayCapabilities.create(pointType, Seq(1), Seq(pt1))
-      ar2 <- array.arrayCapabilities.create(pointType, Seq(1), Seq(pt3))
-
-      rect1 <- ooParadigm.methodBodyCapabilities.instantiateObject(rectangleType, Seq(one, two, ar1))
-      rect2 <- ooParadigm.methodBodyCapabilities.instantiateObject(rectangleType, Seq(one, two, ar1))
-      rect3 <- ooParadigm.methodBodyCapabilities.instantiateObject(rectangleType, Seq(one, two, ar2))
-
-      asserteq1 <- asserts.assertionCapabilities.assertEquals(pointType, pt1, pt2)
-
-      // cannot get assertNotEquals to work without providing implicits
-      asserteq2 <- asserts.assertionCapabilities.assertNotEquals(pointType, pt1, pt3)(eq2, not2)
-
-      asserteq3 <- asserts.assertionCapabilities.assertEquals(rectangleType, rect1, rect2)
-
-      // cannot get assertNotEquals to work without providing implicits
-      asserteq4 <- asserts.assertionCapabilities.assertNotEquals(rectangleType, rect1, rect3)(eq2, not2)
-
-    } yield Seq(asserteq1, asserteq2, asserteq3, asserteq4)
+        } yield assertion
+      }
+    } yield allTests
   }
 
-  def makeTestCase(clazzName:String): Generator[TestContext, Unit] = {
+  def makeTestCase(clazzName:String, testCases:Seq[EqualsTestCase]): Generator[TestContext, Unit] = {
     for {
-      _ <- paradigm.testCapabilities.addTestCase(makeTestCase(), names.mangle(clazzName))
+      _ <- paradigm.testCapabilities.addTestCase(makeTestCase(testCases), names.mangle(clazzName))
     } yield ()
   }
 
-  def implement(domains:Seq[DataType]) : Generator[ProjectContext, Unit] = {
+  def implement(domains:Seq[DataType],
+                testCases:Seq[EqualsTestCase]) : Generator[ProjectContext, Unit] = {
     import AnyParadigm.syntax._
 
     // Just grab CompositeDataType
@@ -102,7 +111,7 @@ trait EqualsObjectOrientedProvider extends EqualsProvider {
       _ <- forEach(composites) { domain => for {
         _ <- paradigm.projectCapabilities.addCompilationUnit(
           paradigm.compilationUnitCapabilities.addTestSuite(
-            testName, makeTestCase(domain.name)
+            testName, makeTestCase(domain.name, testCases)
           )
         )
       } yield () }

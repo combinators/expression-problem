@@ -1,68 +1,57 @@
 package org.combinators.equals
 
-import org.combinators.cogen.TypeRep
-import ffi.BaseType.CompositeTpe
+import org.combinators.cogen.{InstanceRep, TypeRep}
+import org.combinators.equals.ffi.BaseType
 
-/** Represents a Scala model of an instance of the given domain specific data type. */
-
-trait DataType {
-  
-}
 
 /** Represents a composite data type, composed either from built-in data types, or other composite data types. */
-case class CompositeDataType(val name:String, fields:Map[String, DataType]) extends DataType {
-  
+case class CompositeDataType(val name:String, fields:Seq[(String, TypeRep)]) {
+  def inst(args: Seq[(String, InstanceRep)]): InstanceRep = InstanceRep(BaseType.CompositeTpe(this))(args)
 }
-
-/** Represents a standard built in data type (like Int or String). */
-case class BuiltInDataType(val typeRep:TypeRep) extends DataType {
-  
-}
-
-trait BaseObjectType { }
-case class PrimitiveInt(val value:Int) extends BaseObjectType { }
-case class PrimitiveString(val value:String) extends BaseObjectType { }
-
-case class ObjectType(val name: String, val fields: Map[String, BaseObjectType]) extends BaseObjectType { }
-
-case class ArrayType(val tpe:String, val dimensions: Seq[Int], val values:Seq[BaseObjectType]) extends BaseObjectType { }
-
-case class EqualsTestCase(val tpe:String, val object1:ObjectType, val object2:ObjectType, val expected:Boolean)
+case class EqualsTestCase(val object1:InstanceRep, val object2:InstanceRep, val expected:Boolean)
 
 /** Sample Domain. */
 object ShapeDomain {
-  val point: CompositeDataType = new CompositeDataType(
+   
+  val point: CompositeDataType = CompositeDataType(
     name = "Point",
-    fields = Map("x" -> BuiltInDataType(TypeRep.Int), "y" -> BuiltInDataType(TypeRep.Int))
+    fields = Seq("x" -> TypeRep.Int, "y" -> TypeRep.Int)
   )
 
-  val pt0 = ObjectType("Point", Map("x" -> PrimitiveInt(1), "y" -> PrimitiveInt(2)))
-  val pt1 = ObjectType("Point", Map("x" -> PrimitiveInt(1), "y" -> PrimitiveInt(2)))
-  val pt2 = ObjectType("Point", Map("x" -> PrimitiveInt(2), "y" -> PrimitiveInt(3)))
-  val pt3 = ObjectType("Point", Map("x" -> PrimitiveInt(1), "y" -> PrimitiveInt(3)))
+  val pointTypeRep: TypeRep.OfHostType[Seq[(String, InstanceRep)]] = BaseType.CompositeTpe(point)
+  val pt0 = Seq("x" -> InstanceRep(TypeRep.Int)(1), "y" -> InstanceRep(TypeRep.Int)(2))
+  val pt1 = Seq("x" -> InstanceRep(TypeRep.Int)(1), "y" -> InstanceRep(TypeRep.Int)(2))
+  val pt2 = Seq("x" -> InstanceRep(TypeRep.Int)(2), "y" -> InstanceRep(TypeRep.Int)(3))
+  val pt3 = Seq("x" -> InstanceRep(TypeRep.Int)(1), "y" -> InstanceRep(TypeRep.Int)(3))
 
-  val pointTypeRep: TypeRep.OfHostType[Map[String, Any]] = CompositeTpe(point)
-  val pointArray = TypeRep.Array[Map[String, Any]](CompositeTpe(point))
-
-  val rectangle: CompositeDataType = new CompositeDataType(
+  
+  val pointArray = TypeRep.Array[Seq[(String, InstanceRep)]](pointTypeRep)
+  val rectangle: CompositeDataType = CompositeDataType(
     name = "Rectangle",
-    fields = Map("height" -> BuiltInDataType(TypeRep.Int), "width" -> BuiltInDataType(TypeRep.Int),
-      "anchors" -> BuiltInDataType(pointArray))
+    fields = Seq(
+      "height" -> TypeRep.Int,
+      "width" -> TypeRep.Int,
+      "anchors" -> pointArray
+    )
   )
 
-  val ar1 = ArrayType("Point", Seq(1), Array(pt1, pt2))
-  val ar2 = ArrayType("Point", Seq(1), Array(pt2, pt3))
+  val ar1 = InstanceRep(pointArray)(Array(pt1, pt2))
+  val ar2 = InstanceRep(pointArray)(Array(pt2, pt3))
 
-  val rect0 = ObjectType("Rectangle", Map("height" -> PrimitiveInt(5), "width" -> PrimitiveInt(10), "anchors" -> ar1))  
-  val rect1 = ObjectType("Rectangle", Map("height" -> PrimitiveInt(5), "width" -> PrimitiveInt(10), "anchors" -> ar1))
-  val rect2 = ObjectType("Rectangle", Map("height" -> PrimitiveInt(5), "width" -> PrimitiveInt(15), "anchors" -> ar1))
-  val rect3 = ObjectType("Rectangle", Map("height" -> PrimitiveInt(5), "width" -> PrimitiveInt(10), "anchors" -> ar2))
+  val rect0 = Seq("height" -> InstanceRep(TypeRep.Int)(5), "width" -> InstanceRep(TypeRep.Int)(10), "anchors" -> ar1)
+  val rect1 = Seq("height" -> InstanceRep(TypeRep.Int)(5), "width" -> InstanceRep(TypeRep.Int)(10), "anchors" -> ar1)
+  val rect2 = Seq("height" -> InstanceRep(TypeRep.Int)(5), "width" -> InstanceRep(TypeRep.Int)(15), "anchors" -> ar1)
+  val rect3 = Seq("height" -> InstanceRep(TypeRep.Int)(5), "width" -> InstanceRep(TypeRep.Int)(10), "anchors" -> ar2)
   
   // test cases here
-  val testCases = Seq(EqualsTestCase("Point", pt0, pt1, true), 
-    EqualsTestCase("Rectangle", rect0, rect1, true),
-    EqualsTestCase("Point", pt1, pt2, false), 
-    EqualsTestCase("Rectangle", rect1, rect2, false))
+  val testCases = Seq(
+    EqualsTestCase(point.inst(pt0), point.inst(pt1), true),
+    EqualsTestCase(rectangle.inst(rect0), rectangle.inst(rect1), true),
+    EqualsTestCase(point.inst(pt1), point.inst(pt2), false),
+    EqualsTestCase(rectangle.inst(rect1), rectangle.inst(rect2), false),
+    EqualsTestCase(point.inst(pt1), rectangle.inst(rect1), false),
+    EqualsTestCase(rectangle.inst(rect1), point.inst(pt1), false),
+  )
 }
 
 // note: at no point do we need to discuss arrays, because: FFI CoGen handles array equality correctly.

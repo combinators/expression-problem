@@ -1,9 +1,11 @@
 package org.combinators.equals.ffi.scala    /*DI:LD:AI*/
 
+import org.combinators.cogen.{InstanceRep, TypeRep}
 import org.combinators.equals.ffi.inbetween.BaseTypeAST as InbetweenBaseTypeAST
 import org.combinators.ep.language.inbetween.oo.OOAST
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST, FinalNameProviderAST, NameProviderAST}
 import org.combinators.equals.CompositeDataType
+import org.combinators.equals.ffi.BaseType
 
 trait BaseTypeAST extends InbetweenBaseTypeAST { self: OOAST & NameProviderAST & BaseAST =>
   object scalaBaseTypeOps {
@@ -31,6 +33,19 @@ trait BaseTypeAST extends InbetweenBaseTypeAST { self: OOAST & NameProviderAST &
 
     def baseTypePrefixExcludes: Set[Seq[any.Name]] =
       Set(qualifiedClassNameAny)
+
+    def baseTypeReificationExtensions(tpe: TypeRep)(value: tpe.HostType): Option[String] = {
+      import baseTypeOpsFactory._
+      tpe match {
+        case BaseType.AnyTpe => Some(s"new java.lang.Object")
+        case BaseType.CompositeTpe(description) =>
+          val args = value.asInstanceOf[Seq[(String, InstanceRep)]].map({ (name, instRep) =>
+            s"${name} = ${scalaBaseFactory.reifiedScalaValue(instRep.tpe, instRep.inst).toScala}"
+          })
+          Some(s"new ${compositeType(description).toScala}${args.mkString("(", ", ", ")")}")
+        case _ => None
+      }
+    }
   }
 
   override val baseTypeOpsFinalTypes: scalaBaseTypeOps.baseTypeOpsOverride.FinalTypes

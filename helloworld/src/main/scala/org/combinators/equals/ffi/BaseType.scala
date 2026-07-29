@@ -2,7 +2,7 @@ package org.combinators.equals.ffi
 
 import org.combinators.cogen.paradigm.ffi.FFI
 import org.combinators.cogen.paradigm.AnyParadigm
-import org.combinators.cogen.TypeRep
+import org.combinators.cogen.{InstanceRep, TypeRep}
 import org.combinators.equals.CompositeDataType
 
 trait BaseType[Context] extends FFI {
@@ -17,6 +17,6 @@ object BaseType {
   }
 
   case class CompositeTpe(argument:CompositeDataType) extends TypeRep {
-    override type HostType = Map[String, Any]
+    override type HostType = Seq[(String, InstanceRep)]
   }
 }

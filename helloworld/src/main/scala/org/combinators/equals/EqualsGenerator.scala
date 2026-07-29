@@ -21,15 +21,25 @@ trait EqualsGenerator[AP <: AnyParadigm] {
   import paradigm.syntax._
   import paradigm.MethodBodyContext
 
+  
+  def addFields(domain:CompositeDataType): Generator[ooParadigm.ClassContext, Unit] = {
+    import ooParadigm.classCapabilities._
+    for {
+      _ <- forEach(domain.fields) { case (name, tpe) =>
+        for {
+          fieldType <- toTargetLanguageType(tpe)
+          _ <- addField(names.mangle(name), fieldType)
+        } yield ()
+      } 
+    } yield ()
+  }
+
   def createConstructor(domain:CompositeDataType): Generator[ooParadigm.ConstructorContext, Unit] = {
     import ooParadigm.constructorCapabilities._
-
-    var mylist:Seq[(Name,Type)] = Seq.empty
     for {
-
-      params <- forEach (domain.fields.toList) { (name,tpe)  =>
+      params <- forEach (domain.fields) { (name,tpe)  =>
         for {
-          pt <- convertToDomain[ooParadigm.ConstructorContext](tpe)
+          pt <- toTargetLanguageType(tpe)
           pName <- freshName(names.mangle(name))
         } yield (pName, pt)
       }
@@ -37,11 +47,10 @@ trait EqualsGenerator[AP <: AnyParadigm] {
       _ <- setParameters(params)
 
       args <- getArguments()
-      _ <- forEach(args.zip(domain.fields.toList)) { case ((nm, tp, exp), original) => for {
+      _ <- forEach(args.zip(domain.fields)) { case ((nm, tp, exp), original) => for {
           _ <- initializeField(names.mangle(original._1), exp)   // make sure to restore fieldname from original
         } yield ()
       }
-
     } yield ()
   }
 
@@ -66,13 +75,7 @@ trait EqualsGenerator[AP <: AnyParadigm] {
     val makeClass: Generator[ooParadigm.ClassContext, Unit] = {
       import ooParadigm.classCapabilities._
       for {
-        _ <- forEach (domain.fields.toList) { case (name, tpe) =>
-          for {
-            fieldType <- convertToDomain[ooParadigm.ClassContext](tpe)
-            _ <- addField(names.mangle(name), fieldType)
-          } yield ()
-        }
-
+        _ <- addFields(domain)
         _ <- addConstructor(createConstructor(domain))
         _ <- addMethod(names.mangle("equals"), generateEquals(domain)) 
       } yield ()
@@ -80,55 +83,7 @@ trait EqualsGenerator[AP <: AnyParadigm] {
 
     addClassToProject(makeClass, names.mangle(domain.name))
   }
-
-  def convertToDomain[Ctxt](dataType: DataType)(
-    implicit canFindClass: Understands[Ctxt, FindClass[Name, Type]],
-    canToTargetLanguage: Understands[Ctxt, ToTargetLanguageType[Type]]
-  ) : Generator[Ctxt, Type] = {
-    dataType match {
-      case cdt: CompositeDataType =>  for {
-        classType <- FindClass(Seq(names.mangle(cdt.name))).interpret(canFindClass)
-      } yield classType
-
-      case BuiltInDataType(tpeRep) => for {
-        classType <- ToTargetLanguageType(tpeRep).interpret(canToTargetLanguage)
-      } yield classType
-
-    }
-  }
-
-//  def convertToDomainInClass(dataType: DataType): Generator[ooParadigm.ClassContext, Type] = {
-//    dataType match {
-//      case cdt: CompositeDataType => for {
-//        classType <- ooParadigm.classCapabilities.findClass(names.mangle(cdt.name))
-//      } yield classType
-//
-//      case BuiltInDataType(tpeRep) => for {
-//        classType <- ooParadigm.classCapabilities.toTargetLanguageType(tpeRep)
-//      } yield classType
-//
-//      case ArrayDataType(tpeRep) => for {
-//        classType <- ooParadigm.classCapabilities.toTargetLanguageType(TypeRep.Array(tpeRep))
-//      } yield classType
-//    }
-//  }
-//
-//  def convertToDomainInConstructor(dataType: DataType): Generator[ooParadigm.ConstructorContext, Type] = {
-//    dataType match {
-//      case cdt: CompositeDataType => for {
-//        classType <- ooParadigm.constructorCapabilities.findClass(names.mangle(cdt.name))
-//      } yield classType
-//
-//      case BuiltInDataType(tpeRep) => for {
-//        classType <- ooParadigm.constructorCapabilities.toTargetLanguageType(tpeRep)
-//      } yield classType
-//
-//      case ArrayDataType(tpeRep) => for {
-//        classType <- ooParadigm.constructorCapabilities.toTargetLanguageType(TypeRep.Array(tpeRep))
-//      } yield classType
-//    }
-//  }
-
+  
   def ifBranch (domain:CompositeDataType, arg:Expression) : Generator[MethodBodyContext, Unit] = {
     import AnyParadigm.syntax._
     import ooParadigm.methodBodyCapabilities.canFindClassInMethod
@@ -143,18 +98,18 @@ trait EqualsGenerator[AP <: AnyParadigm] {
     }
 
     for {
-      classType <- convertToDomain[MethodBodyContext](domain)
+      classType <- paradigm.methodBodyCapabilities.toTargetLanguageType(BaseType.CompositeTpe(domain))
       castExpr <- ooParadigm.methodBodyCapabilities.castObject(classType, arg)
       freshName <- paradigm.methodBodyCapabilities.freshName(names.mangle("other"))
       declVar <- impParadigm.imperativeCapabilities.declareVar(freshName, classType, Some(castExpr))
 
       // now for each field, add if statement with NEG forcing return false
-      _ <- forEach (domain.fields.toList) { case (name,tpe) =>
+      _ <- forEach (domain.fields) { case (name,tpe) =>
         for {
           selfExpr <- ooParadigm.methodBodyCapabilities.selfReference()
           selfFieldExpr <- ooParadigm.methodBodyCapabilities.getMember(selfExpr, names.mangle(name))
           otherFieldExpr <- ooParadigm.methodBodyCapabilities.getMember(declVar, names.mangle(name))
-          domainType <- convertToDomain[MethodBodyContext](tpe)
+          domainType <- paradigm.methodBodyCapabilities.toTargetLanguageType(tpe)
 
           // must handle arrays specially, not with == but with arrays capability
 
@@ -187,7 +142,7 @@ trait EqualsGenerator[AP <: AnyParadigm] {
       trueExpr <- booleans.booleanCapabilities.trueExp
       retFalse <- impParadigm.imperativeCapabilities.returnStmt(falseExpr)
       retTrue <- impParadigm.imperativeCapabilities.returnStmt(trueExpr)
-      classType <- convertToDomain[MethodBodyContext](domain)
+      classType <- paradigm.methodBodyCapabilities.toTargetLanguageType(BaseType.CompositeTpe(domain))
       args <- paradigm.methodBodyCapabilities.getArguments()
       instOf <- ooParadigm.methodBodyCapabilities.instanceOfType(classType, args.head._3)
 

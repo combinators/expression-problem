@@ -7,6 +7,7 @@ import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Boole
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{AbstractSyntax, Command, NameProvider}
 import org.combinators.equals.ffi.BaseType
+import org.combinators.equals.ffi.BaseType.CompositeTpe
 
 trait EqualsObjectOrientedProvider extends EqualsProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -35,51 +36,20 @@ trait EqualsObjectOrientedProvider extends EqualsProvider {
   }
 
   def makeTestCase(testCases:Seq[EqualsTestCase]): Generator[MethodBodyContext, Seq[Expression]] = {
-    import paradigm.methodBodyCapabilities._
+    import paradigm.methodBodyCapabilities.{reify => _, _}
     import eqls.equalityCapabilities._
     import AnyParadigm.syntax._
-
-    def extract(ar:ArrayType) : Generator[MethodBodyContext, Expression] = {
-      for {
-        objectType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(ar.tpe))
-        exprs <- forEach(ar.values) (inner => construct(inner))
-        arr <- array.arrayCapabilities.create(objectType, ar.dimensions, exprs.toSeq)
-      } yield (arr)
-    }
-
-    def construct(in: BaseObjectType) : Generator[MethodBodyContext, Expression] = {
-      in match {
-        case obj:ObjectType => for {
-          params <- forEach(obj.fields.toSeq) { field =>
-            field._2 match {
-              case pi:PrimitiveInt => paradigm.methodBodyCapabilities.reify(TypeRep.Int, pi.value)
-              case ps:PrimitiveString => paradigm.methodBodyCapabilities.reify(TypeRep.String, ps.value)
-
-              case ar:ArrayType => extract(ar)
-              case _ => ???
-            }
-          }
-
-          objectType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(obj.name))
-          realObj <- ooParadigm.methodBodyCapabilities.instantiateObject(objectType, params.toSeq)
-          } yield realObj
-
-        case _ => ???
-      }
-    }
-
-    val eq2  = eqls.equalityCapabilities.canEquals
-    val not2 = booleans.booleanCapabilities.canNot
+    import booleans.booleanCapabilities.canNot
 
     for {
       allTests <- forEach(testCases) { test => for {
-          obj1 <- construct(test.object1)
-          obj2 <- construct(test.object2)
-          objectType <- ooParadigm.methodBodyCapabilities.findClass(names.mangle(test.tpe))
+          objectType <- toTargetLanguageType(test.object1.tpe)
+          obj1 <- reify(test.object1)
+          obj2 <- reify(test.object2)
           assertion <- if (test.expected) {
             asserts.assertionCapabilities.assertEquals(objectType, obj1, obj2)
           } else {
-            asserts.assertionCapabilities.assertNotEquals(objectType, obj1, obj2)(eq2, not2)
+            asserts.assertionCapabilities.assertNotEquals(objectType, obj1, obj2)
           }
 
         } yield assertion
@@ -93,22 +63,19 @@ trait EqualsObjectOrientedProvider extends EqualsProvider {
     } yield ()
   }
 
-  def implement(domains:Seq[DataType],
+  def implement(domains:Seq[CompositeDataType],
                 testCases:Seq[EqualsTestCase]) : Generator[ProjectContext, Unit] = {
     import AnyParadigm.syntax._
 
-    // Just grab CompositeDataType
-    val composites = domains.collect {
-      case comp:CompositeDataType => comp
-    }
+    
 
     for {
-      _ <- forEach(composites) { domain => for {
+      _ <- forEach(domains) { domain => for {
           _ <- eqlGenerator.generateSkeleton(domain)
         } yield ()
       }
 
-      _ <- forEach(composites) { domain => for {
+      _ <- forEach(domains) { domain => for {
         _ <- paradigm.projectCapabilities.addCompilationUnit(
           paradigm.compilationUnitCapabilities.addTestSuite(
             testName, makeTestCase(domain.name, testCases)

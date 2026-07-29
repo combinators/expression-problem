@@ -37,7 +37,7 @@ trait EqualsProvider {
   }
 
   /** Entry point into code generation. */
-  def implement(domain:Seq[DataType],
+  def implement(domain:Seq[CompositeDataType],
                 testCases:Seq[EqualsTestCase]): Generator[ProjectContext, Unit]
 
   /** Define standard test name. */

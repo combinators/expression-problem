@@ -87,7 +87,7 @@ class EqualsMainScala {
     with FinalRealArithmeticOpsAST
     with FinalBaseTypeAST
     with FinalStringAST {
-    val reificationExtensions = List.empty
+    val reificationExtensions = List(scalaBaseTypeOps.baseTypeReificationExtensions)
   }
   val generator: CodeGenerator[_ast.type] = CodeGenerator("eql", _ast, _ast.scalaBaseTypeOps.baseTypePrefixExcludes)
 

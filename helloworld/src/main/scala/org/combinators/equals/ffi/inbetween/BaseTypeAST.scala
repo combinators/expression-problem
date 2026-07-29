@@ -17,7 +17,7 @@ trait BaseTypeAST extends ParametricPolymorphismAST {
     trait CompositeType extends any.Type {
       def getSelfCompositeType: baseTypeOpsFinalTypes.CompositeType
       
-      def model:CompositeDataType
+      def model: CompositeDataType
       
       def copyAsCompositeType(model:CompositeDataType = this.model) = {
         baseTypeOpsFactory.compositeType(model)

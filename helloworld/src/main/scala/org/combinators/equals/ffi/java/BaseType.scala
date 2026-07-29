@@ -4,6 +4,7 @@ import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.ImportDeclaration
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, InstanceRep, TypeRep, Understands}
+import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.{AddImport, FindClass, InstantiateObject, ToTargetLanguageType}
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.ep.language.java.{ContextSpecificResolver, JavaNameProvider, ProjectCtxt, TestCtxt}
@@ -18,7 +19,7 @@ trait BaseType[Ctxt, AP <: AnyParadigm] extends BT[Ctxt] {
   import base.syntax._
   
   def enable(): Generator[base.ProjectContext, Unit] =
-    Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
+    Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
                    context: ProjectCtxt,
                    command: Enable.type
@@ -39,6 +40,8 @@ trait BaseType[Ctxt, AP <: AnyParadigm] extends BT[Ctxt] {
 
             def addReification[Ctxt](
                     reify: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
+                    projectReify: ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression],
+                    toTargetLanguageType: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
                     canConstructObject: Understands[Ctxt, InstantiateObject[Type, Expression, ooParadigm.ClassContext]]
                   ): ContextSpecificResolver => InstanceRep => Generator[Ctxt, Expression] =
               k => rep => rep.tpe match {
@@ -48,22 +51,27 @@ trait BaseType[Ctxt, AP <: AnyParadigm] extends BT[Ctxt] {
                     result <- InstantiateObject(objectType, Seq.empty).interpret(canConstructObject)
                   } yield result
 
-                case BT.CompositeTpe(descriptor) => ???   // inappropriate to reify 
+                case ct: BT.CompositeTpe =>
+                  for {
+                    translatedTpe <- toTargetLanguageType(k)(rep.tpe)
+                    translatedArgs <- forEach(rep.inst.asInstanceOf[Seq[(String, InstanceRep)]]){ case (name, fieldRep) =>
+                      projectReify(k)(fieldRep)
+                    }
+                    result <- InstantiateObject(translatedTpe, translatedArgs).interpret(canConstructObject)
+                  } yield result
                
                 case _ => reify(k)(rep)
               }
 
             resolver.copy(
-              _methodTypeResolution =
-                addResolutionType(resolver._methodTypeResolution, ooParadigm.methodBodyCapabilities.canFindClassInMethod),
-              _constructorTypeResolution =
-                addResolutionType(resolver._constructorTypeResolution, ooParadigm.constructorCapabilities.canFindClassInConstructor),
+              _methodTypeResolution = addResolutionType(resolver._methodTypeResolution, ooParadigm.methodBodyCapabilities.canFindClassInMethod),
+              _constructorTypeResolution = addResolutionType(resolver._constructorTypeResolution, ooParadigm.constructorCapabilities.canFindClassInConstructor),
               _classTypeResolution =
                 addResolutionType(resolver._classTypeResolution, ooParadigm.classCapabilities.canFindClassInClass),
               _reificationInConstructor =
-                addReification(resolver._reificationInConstructor, ooParadigm.constructorCapabilities.canInstantiateObjectInConstructor),
+                addReification(resolver._reificationInConstructor, _.reificationInConstructor, _.constructorTypeResolution, ooParadigm.constructorCapabilities.canInstantiateObjectInConstructor),
               _reificationInMethod =
-                addReification(resolver._reificationInMethod, ooParadigm.methodBodyCapabilities.canInstantiateObjectInMethod),
+                addReification(resolver._reificationInMethod, _.reificationInMethod, _.methodTypeResolution, ooParadigm.methodBodyCapabilities.canInstantiateObjectInMethod),
             ).addInfo(BaseTypeEnabled)
           }
 

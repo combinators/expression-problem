@@ -158,11 +158,7 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
                       }
 
                       // recursively translates innermost elements
-                      case _ => for {
-                        elems <- forEach(elem.asInstanceOf[Seq[elemTypeRep.HostType]]) { el =>
-                          reify(k)(InstanceRep(elemTypeRep)(el))
-                        }
-                      } yield elems
+                      case _ => projectReification(k)(InstanceRep(elemTypeRep)(elem)).map(Seq(_))
                     }
                   }
 
@@ -183,7 +179,7 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
                   def dimensions(elemTypeRep:TypeRep)(elem:elemTypeRep.HostType) : Seq[Int] = {
                     elemTypeRep match {
                       case TypeRep.Array(innerElemTypeRep) => {
-                        val outer = elem.asInstanceOf[Seq[elemTypeRep.HostType]].length
+                        val outer = elem.asInstanceOf[Array[elemTypeRep.HostType]].length
 
                         // inner arrays must be uniform length
                         val inner = dimensions(innerElemTypeRep)(elem.asInstanceOf[Array[innerElemTypeRep.HostType]].head)
@@ -191,7 +187,7 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
                       }
 
                       // recursively translates innermost elements
-                      case _ => Seq(elem.asInstanceOf[Seq[elemTypeRep.HostType]].length)
+                      case _ => Seq()
 
                     }
                   }
@@ -200,7 +196,7 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
                   for {
                     elems <- elements(rep.tpe)(rep.inst)
                     dims <- forEach(dimensions(rep.tpe)(rep.inst)) { dim =>
-                      reify(k)(InstanceRep(TypeRep.Int)(dim))
+                      projectReification(k)(InstanceRep(TypeRep.Int)(dim))
                     }
                     elemType <- elementType(rep.tpe)(rep.inst)
                     res <- CreateArray[Type,Expression](elemType, dims, Some(dimensions(rep.tpe)(rep.inst),elems)).interpret(using canCreateArray)

@@ -1,6 +1,7 @@
 package org.combinators.ep.language.scala.ast.ffi     /*DI:LD:AI*/
 
-import org.combinators.ep.language.inbetween.ffi.{ArraysAST => InbetweenArraysAST}
+import org.combinators.cogen.TypeRep
+import org.combinators.ep.language.inbetween.ffi.ArraysAST as InbetweenArraysAST
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
 
 trait ArraysAST extends InbetweenArraysAST {
@@ -143,10 +144,22 @@ trait ArraysAST extends InbetweenArraysAST {
 
       trait Factory extends arraysOps.Factory {}
     }
+    object scalaBaseOverride {
+      trait ReificationExtensions extends scalaBase.ReificationExtensions {
+        override def reifiyFunctions: List[(tpe: TypeRep) => (value: tpe.HostType) => Option[any.Expression]] = super.reifiyFunctions :+ { (tpe) => value => 
+            tpe match {
+              case TypeRep.Array(elemTpe) =>
+                Some(arraysOpsFactory.createArrayFromValues(value.asInstanceOf[Array[elemTpe.HostType]].map(v => scalaBaseFactory.reifiedScalaValue(elemTpe, v))))
+              case _ => None
+          }
+        }
+      }
+    }
   }
 
   override val arraysOpsFinalTypes: scalaArraysOps.arraysOpsOverride.FinalTypes
   override val arraysOpsFactory: scalaArraysOps.arraysOpsOverride.Factory
+  override val reificationExtensions: scalaArraysOps.scalaBaseOverride.ReificationExtensions
 }
 
 trait FinalArraysAST extends ArraysAST { self: FinalOperatorExpressionsAST & FinalEqualsAST & FinalBaseAST =>

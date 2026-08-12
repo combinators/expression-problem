@@ -1,6 +1,7 @@
 package org.combinators.ep.language.scala.ast.ffi     /*DI:LD:AI*/
 
-import org.combinators.ep.language.inbetween.ffi.{BooleanAST => InbetweenBooleanAST}
+import org.combinators.cogen.TypeRep
+import org.combinators.ep.language.inbetween.ffi.BooleanAST as InbetweenBooleanAST
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
 import org.combinators.ep.language.scala.ast.ffi.OperatorExpressionsAST
 
@@ -35,9 +36,21 @@ trait BooleanAST extends InbetweenBooleanAST { self: OperatorExpressionsAST & Ba
       
       trait Factory extends booleanOps.Factory {}
     }
+    
+    object scalaBaseOverride {
+      trait ReificationExtensions extends scalaBase.ReificationExtensions {
+        override def reifiyFunctions: List[(tpe: TypeRep) => (value: tpe.HostType) => Option[any.Expression]] = super.reifiyFunctions :+ { tpe => value =>
+          tpe match {
+            case TypeRep.Boolean => Some(if (value.asInstanceOf[Boolean]) booleanOpsFactory.trueExp() else  booleanOpsFactory.falseExp())
+            case _ => None
+          }
+        }
+      }
+    }
   }
 
   override val booleanOpsFactory: scalaBooleanOps.booleanOpsOverride.Factory
+  override val reificationExtensions: scalaBooleanOps.scalaBaseOverride.ReificationExtensions
 }
 
 trait FinalBooleanAST extends BooleanAST { self: FinalOperatorExpressionsAST & FinalBaseAST =>

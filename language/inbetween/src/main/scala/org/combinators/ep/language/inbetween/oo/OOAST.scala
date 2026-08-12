@@ -21,6 +21,10 @@ trait OOAST extends AnyAST {
         def constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = Map.empty
         def classTypeLookupMap: TypeRep => Generator[Class, any.Type] = Map.empty
 
+        def methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???
+        def constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Constructor, any.Expression] = tpe => ???
+        def classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Class, any.Expression] = tpe => ???
+
         override def addTypeLookupsForMethods(lookups: TypeRep => Option[Generator[any.Method, any.Type]]): any.Project =
           copyAsProjectWithTypeLookups(methodTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.methodTypeLookupMap(tpeRep)))
 
@@ -29,6 +33,15 @@ trait OOAST extends AnyAST {
 
         def addTypeLookupsForClasses(lookups: TypeRep => Option[Generator[oo.Class, any.Type]]): any.Project =
           copyAsProjectWithTypeLookups(classTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.classTypeLookupMap(tpeRep)))
+
+        override def addReifyLookupsForMethods(lookups: (tpe: TypeRep) => tpe.HostType => Option[Generator[any.Method, any.Expression]]): any.Project =
+          copyAsProjectWithTypeLookups(methodReifyLookupMap = (tpeRep: TypeRep) => value => lookups(tpeRep)(value).getOrElse(this.methodReifyLookupMap(tpeRep)(value)))
+
+        def addReifyLookupsForConstructors(lookups: (tpe: TypeRep) => tpe.HostType => Option[Generator[Constructor, any.Expression]]): any.Project =
+          copyAsProjectWithTypeLookups(constructorReifyLookupMap = (tpeRep: TypeRep) => value => lookups(tpeRep)(value).getOrElse(this.constructorReifyLookupMap(tpeRep)(value)))
+
+        def addReifyLookupsForClasses(lookups: (tpe: TypeRep) => tpe.HostType => Option[Generator[Class, any.Expression]]): any.Project =
+          copyAsProjectWithTypeLookups(classReifyLookupMap = (tpeRep: TypeRep) => value => lookups(tpeRep)(value).getOrElse(this.classReifyLookupMap(tpeRep)(value)))
 
         override def copy(
           compilationUnits: Set[any.CompilationUnit],
@@ -40,8 +53,20 @@ trait OOAST extends AnyAST {
           customFiles: Seq[FileWithPath] = this.customFiles,
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
           constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = this.constructorTypeLookupMap,
-          classTypeLookupMap: TypeRep => Generator[Class, any.Type] = this.classTypeLookupMap
-        ): Project = ooFactory.ooProject(compilationUnits, customFiles, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap)
+          classTypeLookupMap: TypeRep => Generator[Class, any.Type] = this.classTypeLookupMap,
+          methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.methodReifyLookupMap,
+          constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Constructor, any.Expression] = this.constructorReifyLookupMap,
+          classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Class, any.Expression] = this.classReifyLookupMap,
+        ): Project = ooFactory.ooProject(
+          compilationUnits,
+          customFiles,
+          methodTypeLookupMap,
+          constructorTypeLookupMap,
+          classTypeLookupMap,
+          methodReifyLookupMap,
+          constructorReifyLookupMap,
+          classReifyLookupMap,
+        )
       }
 
       trait CompilationUnit extends any.CompilationUnit {
@@ -49,6 +74,9 @@ trait OOAST extends AnyAST {
         def methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty
         def constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = Map.empty
         def classTypeLookupMap: TypeRep => Generator[Class, any.Type] = Map.empty
+        def methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???
+        def constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Constructor, any.Expression] = tpe => ???
+        def classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Class, any.Expression] = tpe => ???
 
         def addTypeLookupsForMethods(lookups: TypeRep => Option[Generator[any.Method, any.Type]]): any.CompilationUnit =
           copyAsCompilationUnitWithClasses(methodTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.methodTypeLookupMap(tpeRep)))
@@ -59,11 +87,24 @@ trait OOAST extends AnyAST {
         def addTypeLookupsForClasses(lookups: TypeRep => Option[Generator[oo.Class, any.Type]]): any.CompilationUnit =
           copyAsCompilationUnitWithClasses(classTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.classTypeLookupMap(tpeRep)))
 
+        def addReifyLookupsForMethods(lookups: (tpe: TypeRep) => tpe.HostType => Option[Generator[any.Method, any.Expression]]): any.CompilationUnit =
+          copyAsCompilationUnitWithClasses(methodReifyLookupMap = (tpeRep: TypeRep) => value => lookups(tpeRep)(value).getOrElse(this.methodReifyLookupMap(tpeRep)(value)))
+
+        def addReifyLookupsForConstructors(lookups: (tpe: TypeRep) => tpe.HostType => Option[Generator[Constructor, any.Expression]]): any.CompilationUnit =
+          copyAsCompilationUnitWithClasses(constructorReifyLookupMap = (tpeRep: TypeRep) => value => lookups(tpeRep)(value).getOrElse(this.constructorReifyLookupMap(tpeRep)(value)))
+
+        def addReifyLookupsForClasses(lookups: (tpe: TypeRep) => tpe.HostType => Option[Generator[Class, any.Expression]]): any.CompilationUnit =
+          copyAsCompilationUnitWithClasses(classReifyLookupMap = (tpeRep: TypeRep) => value => lookups(tpeRep)(value).getOrElse(this.classReifyLookupMap(tpeRep)(value)))
+
         override def initializeInProject(project: any.Project): any.CompilationUnit = {
           import factory.convert
-          val withLookups = copyAsCompilationUnitWithClasses(classTypeLookupMap = project.classTypeLookupMap,
+          val withLookups = copyAsCompilationUnitWithClasses(
+            classTypeLookupMap = project.classTypeLookupMap,
             constructorTypeLookupMap = project.constructorTypeLookupMap,
-            methodTypeLookupMap = project.methodTypeLookupMap
+            methodTypeLookupMap = project.methodTypeLookupMap,
+            methodReifyLookupMap = project.methodReifyLookupMap,
+            constructorReifyLookupMap = project.constructorReifyLookupMap,
+            classReifyLookupMap = project.classReifyLookupMap,
           )
           withLookups.copyAsCompilationUnitWithClasses(
             tests = withLookups.tests.map(_.initializeInCompilationUnit(withLookups))
@@ -82,9 +123,12 @@ trait OOAST extends AnyAST {
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
           constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = this.constructorTypeLookupMap,
           classTypeLookupMap: TypeRep => Generator[Class, any.Type] = this.classTypeLookupMap,
+          methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.methodReifyLookupMap,
+          constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Constructor, any.Expression] = this.constructorReifyLookupMap,
+          classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Class, any.Expression] = this.classReifyLookupMap,
           classes: Seq[Class] = this.classes,
           tests: Seq[any.TestSuite] = this.tests,
-        ): CompilationUnit = ooFactory.ooCompilationUnit(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, classes, tests)
+        ): CompilationUnit = ooFactory.ooCompilationUnit(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, methodReifyLookupMap, constructorReifyLookupMap, classReifyLookupMap, classes, tests)
       }
 
       trait TestSuite extends any.TestSuite {
@@ -94,6 +138,7 @@ trait OOAST extends AnyAST {
         override def name: any.Name = underlyingClass.name
         override def tests: Seq[any.Method] = underlyingClass.methods.zip(testMarkers).filter { case (m, isTest) => isTest }.map(_._1)
         override def methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = underlyingClass.methodTypeLookupMap
+        override def methodReifyLookupMap: (tpe:TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = underlyingClass.methodReifyLookupMap
 
         override def initializeInCompilationUnit(compilationUnit: any.CompilationUnit): any.TestSuite = {
           import factory.convert
@@ -102,6 +147,8 @@ trait OOAST extends AnyAST {
               constructorTypeLookupMap = compilationUnit.constructorTypeLookupMap,
               methodTypeLookupMap = compilationUnit.methodTypeLookupMap,
               typeLookupMap = compilationUnit.classTypeLookupMap,
+              methodReifyLookupMap = compilationUnit.methodReifyLookupMap,
+              reifyLookupMap = compilationUnit.classReifyLookupMap,
             ),
             testMarkers
           )
@@ -111,6 +158,7 @@ trait OOAST extends AnyAST {
           name: any.Name = this.name,
           tests: Seq[any.Method] = this.tests,
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
+          methodReifyLookupMap: (tpe:TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.methodReifyLookupMap,
         ): any.TestSuite = {
           val helpers = underlyingClass.methods.zip(this.testMarkers).filter { case (m, isTest) => !isTest }.map(_._1)
           val testMarkers = Seq.fill(helpers.size)(false) ++ Seq.fill(tests.size)(true)
@@ -119,7 +167,8 @@ trait OOAST extends AnyAST {
             underlyingClass = this.underlyingClass.copy(
               name = name,
               methods = helpers ++ tests,
-              methodTypeLookupMap = methodTypeLookupMap
+              methodTypeLookupMap = methodTypeLookupMap,
+              methodReifyLookupMap = methodReifyLookupMap,
             ),
             testMarkers
           )
@@ -148,8 +197,9 @@ trait OOAST extends AnyAST {
           statements: Seq[any.Statement] = this.statements,
           returnType: Option[any.Type] = this.returnType,
           parameters: Seq[(any.Name, any.Type)] = this.parameters,
-          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap
-        ): any.Method = ooFactory.clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, isAbstract, isStatic, isPublic, isOverride)
+          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.reifyLookupMap
+        ): any.Method = ooFactory.clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, reifyLookupMap, isAbstract, isStatic, isPublic, isOverride)
 
         def copyAsClsMethod(
           name: any.Name = this.name,
@@ -158,11 +208,12 @@ trait OOAST extends AnyAST {
           returnType: Option[any.Type] = this.returnType,
           parameters: Seq[(any.Name, any.Type)] = this.parameters,
           typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.reifyLookupMap,
           isAbstract: Boolean = this.isAbstract,
           isStatic: Boolean = this.isStatic,
           isPublic: Boolean = this.isPublic,
           isOverride: Boolean = this.isOverride,
-        ): Method = ooFactory.clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, isAbstract, isStatic, isPublic, isOverride)
+        ): Method = ooFactory.clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, reifyLookupMap, isAbstract, isStatic, isPublic, isOverride)
       }
 
       trait Expression extends any.Expression {
@@ -219,6 +270,9 @@ trait OOAST extends AnyAST {
       def methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty
       def constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = Map.empty
       def typeLookupMap: TypeRep => Generator[Class, any.Type] = Map.empty
+      def methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???
+      def constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Constructor, any.Expression] = tpe => ???
+      def reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Class, any.Expression] = tpe => ???
       def isAbstract: Boolean = false
       def isInterface: Boolean = false
       def isStatic: Boolean = false
@@ -234,6 +288,15 @@ trait OOAST extends AnyAST {
       def addTypeLookupsForClasses(lookups: TypeRep => Option[Generator[Class, any.Type]]): oo.Class = {
         copy(typeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.typeLookupMap(tpeRep)))
       }
+
+      def addReifyLookupsForMethods(lookups: (tpe: TypeRep) => tpe.HostType => Option[Generator[any.Method, any.Expression]]): Class =
+        copy(methodReifyLookupMap = (tpeRep: TypeRep) => value => lookups(tpeRep)(value).getOrElse(this.methodReifyLookupMap(tpeRep)(value)))
+
+      def addReifyLookupsForConstructors(lookups: (tpe: TypeRep) => tpe.HostType => Option[Generator[Constructor, any.Expression]]): Class =
+        copy(constructorReifyLookupMap = (tpeRep: TypeRep) => value => lookups(tpeRep)(value).getOrElse(this.constructorReifyLookupMap(tpeRep)(value)))
+
+      def addReifyLookupsForClasses(lookups: (tpe: TypeRep) => tpe.HostType => Option[Generator[Class, any.Expression]]): Class =
+        copy(reifyLookupMap = (tpeRep: TypeRep) => value => lookups(tpeRep)(value).getOrElse(this.reifyLookupMap(tpeRep)(value)))
 
       def addParent(parent: any.Type): Class =
         copy(parents = (this.parents :+ parent).distinct)
@@ -268,6 +331,9 @@ trait OOAST extends AnyAST {
         methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
         constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = this.constructorTypeLookupMap,
         typeLookupMap: TypeRep => Generator[Class, any.Type] = this.typeLookupMap,
+        methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.methodReifyLookupMap,
+        constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Constructor, any.Expression] = this.constructorReifyLookupMap,
+        reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Class, any.Expression] = this.reifyLookupMap,
         isAbstract: Boolean = this.isAbstract,
         isInterface: Boolean = this.isInterface,
         isStatic: Boolean = this.isStatic,
@@ -282,6 +348,9 @@ trait OOAST extends AnyAST {
         methodTypeLookupMap = methodTypeLookupMap,
         constructorTypeLookupMap = constructorTypeLookupMap,
         typeLookupMap = typeLookupMap,
+        methodReifyLookupMap = methodReifyLookupMap,
+        constructorReifyLookupMap = constructorReifyLookupMap,
+        reifyLookupMap = reifyLookupMap,
         isAbstract = isAbstract,
         isInterface = isInterface,
         isStatic = isStatic,
@@ -354,6 +423,7 @@ trait OOAST extends AnyAST {
 
     trait Constructor extends anyOverrides.Method {
       def constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = Map.empty
+      def constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Constructor, any.Expression] = tpe => ???
       def getSelfConstructor: ooFinalTypes.Constructor
 
       override def isAbstract: Boolean = false
@@ -367,6 +437,7 @@ trait OOAST extends AnyAST {
         copyAsConstructor(constructorTypeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.constructorTypeLookupMap(tpeRep)))
       }
       def toTargetLanguageTypeInConstructor(tpe: TypeRep): Generator[Constructor, any.Type] = constructorTypeLookupMap(tpe)
+      def reifyInConstructor[T](tpe: TypeRep.OfHostType[T], value: T): Generator[Constructor, any.Expression] = constructorReifyLookupMap(tpe)(value)
 
       override def copyAsClsMethod(
         name: any.Name = this.name,
@@ -375,11 +446,12 @@ trait OOAST extends AnyAST {
         returnType: Option[any.Type] = this.returnType,
         parameters: Seq[(any.Name, any.Type)] = this.parameters,
         typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap,
+        reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.reifyLookupMap,
         isAbstract: Boolean = this.isAbstract,
         isStatic: Boolean = this.isStatic,
         isPublic: Boolean = this.isPublic,
         isOverride: Boolean = this.isOverride,
-      ): anyOverrides.Method = copyAsConstructor(this.constructedType, imports, statements, parameters, typeLookupMap)
+      ): anyOverrides.Method = copyAsConstructor(this.constructedType, imports, statements, parameters, typeLookupMap, this.constructorTypeLookupMap, reifyLookupMap)
 
       def copyAsConstructor(
         constructedType: Option[any.Type] = this.constructedType,
@@ -388,9 +460,11 @@ trait OOAST extends AnyAST {
         parameters: Seq[(any.Name, any.Type)] = this.parameters,
         typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap,
         constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = this.constructorTypeLookupMap,
+        reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.reifyLookupMap,
+        constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Constructor, any.Expression] = this.constructorReifyLookupMap,
         superInitialization: Option[(any.Type, Seq[any.Expression])] = this.superInitialization,
         fieldInitializers: Seq[(any.Name, any.Expression)] = this.fieldInitializers,
-      ): Constructor = ooFactory.constructor(constructedType, imports, statements, parameters, typeLookupMap, constructorTypeLookupMap, superInitialization, fieldInitializers)
+      ): Constructor = ooFactory.constructor(constructedType, imports, statements, parameters, typeLookupMap, constructorTypeLookupMap, reifyLookupMap, constructorReifyLookupMap, superInitialization, fieldInitializers)
     }
 
     trait Field  {
@@ -424,7 +498,10 @@ trait OOAST extends AnyAST {
         customFiles: Seq[FileWithPath] = Seq.empty,
         methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
         constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = Map.empty,
-        classTypeLookupMap: TypeRep => Generator[Class, any.Type] = Map.empty
+        classTypeLookupMap: TypeRep => Generator[Class, any.Type] = Map.empty,
+        methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
+        constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Constructor, any.Expression] = tpe => ???,
+        classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Class, any.Expression] = tpe => ???,
       ): anyOverrides.Project
 
       def ooCompilationUnit(
@@ -433,6 +510,9 @@ trait OOAST extends AnyAST {
         methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
         constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = Map.empty,
         classTypeLookupMap: TypeRep => Generator[Class, any.Type] = Map.empty,
+        methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
+        constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Constructor, any.Expression] = tpe => ???,
+        classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Class, any.Expression] = tpe => ???,
         classes: Seq[Class] = Seq.empty,
         tests: Seq[any.TestSuite] = Seq.empty
       ): anyOverrides.CompilationUnit
@@ -444,6 +524,7 @@ trait OOAST extends AnyAST {
         returnType: Option[any.Type] = Option.empty,
         parameters: Seq[(any.Name, any.Type)] = Seq.empty,
         typeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
+        reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
         isAbstract: Boolean = false,
         isStatic: Boolean = false,
         isPublic: Boolean = false,
@@ -461,6 +542,9 @@ trait OOAST extends AnyAST {
         methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
         constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = Map.empty,
         typeLookupMap: TypeRep => Generator[Class, any.Type] = Map.empty,
+        methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
+        constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Constructor, any.Expression] = tpe => ???,
+        reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Class, any.Expression] = tpe => ???,
         isAbstract: Boolean = false,
         isInterface: Boolean = false,
         isStatic: Boolean = false,
@@ -475,6 +559,8 @@ trait OOAST extends AnyAST {
         parameters: Seq[(any.Name, any.Type)] = Seq.empty,
         typeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
         constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = Map.empty,
+        reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
+        constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Constructor, any.Expression] = tpe => ???,
         superInitialization: Option[(any.Type, Seq[any.Expression])] = Option.empty,
         fieldInitializers: Seq[(any.Name, any.Expression)] = Seq.empty,
       ): Constructor

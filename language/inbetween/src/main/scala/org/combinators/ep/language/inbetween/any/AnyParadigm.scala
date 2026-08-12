@@ -100,7 +100,7 @@ trait AnyParadigm[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax.Abstract
     }
     implicit def canReifyInMethodBody[T]: Understands[MethodBodyContext, Reify[T, syntax.Expression]] = new Understands[MethodBodyContext, Reify[T, syntax.Expression]] {
       def perform(context: Method, command: Reify[T, Expression]): (Method, Expression) = {
-        (context, context.reify(command.tpe, command.value))
+        Command.runGenerator(context.reify(command.tpe, command.value), context)
       }
     }
     implicit val canResolveImportInMethod: Understands[MethodBodyContext, ResolveImport[syntax.Import, syntax.Type]] = new Understands[MethodBodyContext, ResolveImport[syntax.Import, syntax.Type]] {

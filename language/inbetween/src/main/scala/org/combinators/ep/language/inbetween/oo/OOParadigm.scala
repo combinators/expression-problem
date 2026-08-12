@@ -66,7 +66,8 @@ trait OOParadigm[AST <: OOAST, B](val base: AnyParadigm.WithAST[AST] & B) extend
           name = command.name,
           isPublic = command.isPublic,
           isOverride = command.isOverride,
-          typeLookupMap = context.methodTypeLookupMap
+          typeLookupMap = context.methodTypeLookupMap,
+          reifyLookupMap = context.methodReifyLookupMap,
         )
         var (generatedMethod, result) = Command.runGenerator(command.spec, emptyMethod)
         if (result.isDefined) {
@@ -81,7 +82,10 @@ trait OOParadigm[AST <: OOAST, B](val base: AnyParadigm.WithAST[AST] & B) extend
         val emptyConstructor = ooFactory.constructor(
           constructedType = Some(ooFactory.classReferenceType(context.name)),
           constructorTypeLookupMap = context.constructorTypeLookupMap,
-          typeLookupMap = context.methodTypeLookupMap)
+          typeLookupMap = context.methodTypeLookupMap,
+          reifyLookupMap = context.methodReifyLookupMap,
+          constructorReifyLookupMap = context.constructorReifyLookupMap,
+        )
         val (generatedConstructor, ()) = Command.runGenerator(command.ctor, emptyConstructor)
         (context.copy(constructors = context.constructors :+ generatedConstructor), ())
       }
@@ -195,7 +199,7 @@ trait OOParadigm[AST <: OOAST, B](val base: AnyParadigm.WithAST[AST] & B) extend
     }
     implicit def canReifyInConstructor[T]: Understands[Constructor, Reify[T, Expression]] = new Understands[Constructor, Reify[T, Expression]] {
       def perform(context: Constructor, command: Reify[T, Expression]): (Constructor, Expression) = {
-        (context, context.reify(command.tpe, command.value))
+        Command.runGenerator(context.reifyInConstructor(command.tpe, command.value), context)
       }
     }
     implicit val canSetParametersInConstructor: Understands[Constructor, SetParameters[Name, Type]] = new Understands[Constructor, SetParameters[Name, Type]] {
@@ -284,7 +288,11 @@ trait OOParadigm[AST <: OOAST, B](val base: AnyParadigm.WithAST[AST] & B) extend
           name = command.name,
           methodTypeLookupMap = converted.methodTypeLookupMap,
           constructorTypeLookupMap = converted.constructorTypeLookupMap,
-          typeLookupMap = converted.classTypeLookupMap)
+          typeLookupMap = converted.classTypeLookupMap,
+          methodReifyLookupMap = converted.methodReifyLookupMap,
+          constructorReifyLookupMap = converted.constructorReifyLookupMap,
+          reifyLookupMap = converted.classReifyLookupMap,
+        )
         var (generatedClass, result) = Command.runGenerator(command.cls, emptyCls)
         (converted.copyAsCompilationUnitWithClasses(classes = converted.classes :+ generatedClass), ())
       }

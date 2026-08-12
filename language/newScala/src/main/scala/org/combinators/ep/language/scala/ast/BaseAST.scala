@@ -1210,17 +1210,22 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
       }
     }
 
+
+    trait ReificationExtensions {
+      def reifiyFunctions: List[(tpe: TypeRep) => (value: tpe.HostType) => Option[any.Expression]] = List.empty
+    }
+
     trait ReifiedScalaValue[T] extends anyOverrides.Expression {
       import scalaBaseFactory.*
       
       def getSelfAsReifiedScalaValue: scalaBaseFinalTypes.ReifiedScalaValue[T]
       val ofHostType: OfHostType[T]
       val value: T
-
-      def toScala: String = {
-        reificationExtensions.collectFirst(Function.unlift(ext => ext(ofHostType)(value))).getOrElse( 
+      
+      def reifiedViaExtesion: Option[any.Expression] = {
+        reificationExtensions.reifiyFunctions.collectFirst(Function.unlift(ext => ext(ofHostType)(value)))/*.getOrElse(
           ofHostType match {
-            case t: TypeRep.String.type => s""""$value""""
+            case t: TypeRep.String.type => 
             case t: TypeRep.Sequence[_] =>
               value.asInstanceOf[Seq[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Seq(", ", ", ")")
             case t: TypeRep.Array[_] =>
@@ -1229,8 +1234,12 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
 
             case _ =>
               value.toString
-          }
-        )
+          }*/
+      }
+
+      def toScala: String = {
+        import factory.convert
+        reifiedViaExtesion.map(_.toScala).getOrElse(value.toString)
       }
 
       override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): ReifiedScalaValue[T] =
@@ -1334,7 +1343,9 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
   override val functionalControlFactory: scalaBase.functionalControlOverrides.Factory
   override val polymorphismFactory: scalaBase.polymorphismOverrides.Factory
   override val imperativeFactory: scalaBase.imperativeOverrides.Factory
-  val reificationExtensions: List[(tpe: TypeRep) => (value: tpe.HostType) => Option[String]]
+  
+  val reificationExtensions: scalaBase.ReificationExtensions
+  
   val scalaBaseFactory: scalaBase.Factory
 }
 

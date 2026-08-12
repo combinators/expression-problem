@@ -40,6 +40,7 @@ trait AnyAST {
       def returnType: Option[Type] = Option.empty
       def parameters: Seq[(Name, Type)] = Seq.empty
       def typeLookupMap: TypeRep => Generator[Method, Type] = Map.empty
+      def reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Method, Expression] = tpe => ???
 
       def addTypeLookups(lookups: TypeRep => Option[Generator[Method, Type]]): Method = {
         copy(typeLookupMap = (tpeRep: TypeRep) => lookups(tpeRep).getOrElse(this.typeLookupMap(tpeRep)))
@@ -51,7 +52,7 @@ trait AnyAST {
 
       def toTargetLanguageType(tpe: TypeRep): Generator[Method, Type] = typeLookupMap(tpe)
 
-      def reify[T](tpe: TypeRep.OfHostType[T], value: T): Expression
+      def reify[T](tpe: TypeRep.OfHostType[T], value: T): Generator[Method, Expression] = reifyLookupMap(tpe)(value)
       def resolveImport(tpe: Type): Seq[Import]
       def getFreshName(basedOn: Name): Name
 
@@ -62,7 +63,8 @@ trait AnyAST {
         returnType: Option[Type] = this.returnType,
         parameters: Seq[(Name, Type)] = this.parameters,
         typeLookupMap: TypeRep => Generator[Method, Type] = this.typeLookupMap,
-      ): Method = factory.method(name, imports, statements, returnType, parameters, typeLookupMap)
+        reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Method, Expression] = this.reifyLookupMap,
+      ): Method = factory.method(name, imports, statements, returnType, parameters, typeLookupMap, reifyLookupMap)
     }
 
     trait Name  {
@@ -112,14 +114,16 @@ trait AnyAST {
       def tests: Seq[Method]
 
       def methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty
+      def methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Method, Expression] = tpe => ???
 
       def initializeInCompilationUnit(compilationUnit: any.CompilationUnit): TestSuite
 
       def copy(
         name: Name = this.name,
         tests: Seq[Method] = this.tests,
-        methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap
-      ): TestSuite = factory.testSuite(name, tests, methodTypeLookupMap)
+        methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
+        methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Method, Expression] = this.methodReifyLookupMap,
+      ): TestSuite = factory.testSuite(name, tests, methodTypeLookupMap, methodReifyLookupMap)
     }
 
     trait CompilationUnit {
@@ -149,6 +153,8 @@ trait AnyAST {
       def customFiles: Seq[FileWithPath] = Seq.empty
 
       def addTypeLookupsForMethods(lookups: TypeRep => Option[Generator[Method, Type]]): Project
+      
+      def addReifyLookupsForMethods(lookups: (tpe: TypeRep) => tpe.HostType => Option[Generator[Method, Expression]]): Project
 
       def copy(
         compilationUnits: Set[CompilationUnit] = this.compilationUnits,
@@ -161,7 +167,12 @@ trait AnyAST {
 
       def compilationUnit(name: Seq[Name], imports: Seq[Import], tests: Seq[TestSuite]): CompilationUnit
 
-      def testSuite(name: Name, tests: Seq[Method], methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty): TestSuite
+      def testSuite(
+        name: Name,
+        tests: Seq[Method],
+        methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
+        methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Method, Expression] = tpe => ???,
+      ): TestSuite
       def method(
         name: Name,
         imports: Set[Import] = Set.empty,
@@ -169,6 +180,7 @@ trait AnyAST {
         returnType: Option[Type] = Option.empty,
         parameters: Seq[(Name, Type)] = Seq.empty,
         typeLookupMap: TypeRep => Generator[Method, Type] = Map.empty,
+        reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[Method, Expression] = tpe => ???,
       ): Method
       def returnExpression(expression: Expression): Return
       def applyExpression(function: Expression, arguments: Seq[Expression]): ApplyExpression

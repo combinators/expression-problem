@@ -1,5 +1,6 @@
 package org.combinators.ep.language.scala.ast.ffi     /*DI:LD:AI*/
 
+import org.combinators.cogen.TypeRep
 import org.combinators.ep.language.inbetween.ffi.ListsAST as InbetweenListsAST
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
 
@@ -32,6 +33,16 @@ trait ListsAST extends InbetweenListsAST { self: OperatorExpressionsAST & BaseAS
       }
       
       trait Factory extends listsOps.Factory {}
+    }
+    
+    object scalaBaseOverride {
+      trait ReificationExtensions extends scalaBase.ReificationExtensions {
+        override def reifiyFunctions: List[(tpe: TypeRep) => (value: tpe.HostType) => Option[any.Expression]] = super.reifiyFunctions :+ { tpe => value =>
+          tpe match {
+            case TypeRep.Sequence(elemTpe) => Some(listsOpsFactory.createList(, value.asInstanceOf[Seq[elemTpe.HostType]].map(scalaBaseFactory.reifiedScalaValue(elemTpe, _)))
+          }          
+        }
+      }
     }
   }
 

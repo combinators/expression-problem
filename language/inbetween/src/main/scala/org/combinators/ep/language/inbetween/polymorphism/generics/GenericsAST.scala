@@ -19,7 +19,8 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
           statements: Seq[any.Statement] = this.statements,
           returnType: Option[any.Type] = this.returnType,
           parameters: Seq[(any.Name, any.Type)] = this.parameters,
-          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap
+          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.reifyLookupMap,
         ): any.Method =
           copyAsGenericMethod(
             name = name,
@@ -27,7 +28,9 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
             statements = statements,
             returnType = returnType,
             parameters = parameters,
-            typeLookupMap = typeLookupMap)
+            typeLookupMap = typeLookupMap,
+            reifyLookupMap = reifyLookupMap,
+          )
 
         override def copyAsTypeParamMethod(
           name: any.Name = this.name,
@@ -36,7 +39,8 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
           returnType: Option[any.Type] = this.returnType,
           typeParameters: Seq[polymorphism.TypeParameter] = this.typeParameters,
           parameters: Seq[(any.Name, any.Type)] = this.parameters,
-          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap
+          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.reifyLookupMap,
         ): polymorphism.anyOverrides.Method =
           copyAsGenericMethod(
             name = name,
@@ -45,7 +49,9 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
             returnType = returnType,
             typeParameters = typeParameters,
             parameters = parameters,
-            typeLookupMap = typeLookupMap)
+            typeLookupMap = typeLookupMap,
+            reifyLookupMap = reifyLookupMap,
+          )
 
         override def copyAsClsMethod(
           name: any.Name = this.name,
@@ -54,6 +60,7 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
           returnType: Option[any.Type] = this.returnType,
           parameters: Seq[(any.Name, any.Type)] = this.parameters,
           typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.reifyLookupMap,
           isAbstract: Boolean = this.isAbstract,
           isStatic: Boolean = this.isStatic,
           isPublic: Boolean = this.isPublic,
@@ -65,6 +72,7 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
             returnType = returnType,
             parameters = parameters,
             typeLookupMap = typeLookupMap,
+            reifyLookupMap = reifyLookupMap,
             isAbstract = isAbstract,
             isStatic = isStatic,
             isPublic = isPublic,
@@ -78,12 +86,13 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
           typeParameters: Seq[polymorphism.TypeParameter] = this.typeParameters,
           parameters: Seq[(any.Name, any.Type)] = this.parameters,
           typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.reifyLookupMap,
           isAbstract: Boolean = this.isAbstract,
           isStatic: Boolean = this.isStatic,
           isPublic: Boolean = this.isPublic,
           isOverride: Boolean = this.isOverride,
         ): Method =
-          genericsFactory.genericMethod(name, imports, statements, returnType, typeParameters, parameters, typeLookupMap, isAbstract, isStatic, isPublic, isOverride)
+          genericsFactory.genericMethod(name, imports, statements, returnType, typeParameters, parameters, typeLookupMap, reifyLookupMap, isAbstract, isStatic, isPublic, isOverride)
       }
       
       trait Factory extends oo.anyOverrides.Factory with polymorphism.anyOverrides.Factory {
@@ -108,6 +117,9 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
           constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = this.constructorTypeLookupMap,
           typeLookupMap: TypeRep => Generator[oo.Class, any.Type] = this.typeLookupMap,
+          methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.methodReifyLookupMap,
+          constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression] = this.constructorReifyLookupMap,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression] = this.reifyLookupMap,
           isAbstract: Boolean = this.isAbstract,
           isInterface: Boolean = this.isInterface,
           isStatic: Boolean = this.isStatic,
@@ -122,6 +134,9 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
           methodTypeLookupMap = methodTypeLookupMap,
           constructorTypeLookupMap = constructorTypeLookupMap,
           typeLookupMap = typeLookupMap,
+          methodReifyLookupMap = methodReifyLookupMap,
+          constructorReifyLookupMap = constructorReifyLookupMap,
+          reifyLookupMap = reifyLookupMap,
           isAbstract = isAbstract,
           isInterface = isInterface,
           isStatic = isStatic,
@@ -139,6 +154,9 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
           constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = this.constructorTypeLookupMap,
           typeLookupMap: TypeRep => Generator[oo.Class, any.Type] = this.typeLookupMap,
+          methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.methodReifyLookupMap,
+          constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression] = this.constructorReifyLookupMap,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression] = this.reifyLookupMap,
           isAbstract: Boolean = this.isAbstract,
           isInterface: Boolean = this.isInterface,
           isStatic: Boolean = this.isStatic,
@@ -154,6 +172,9 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
           methodTypeLookupMap = methodTypeLookupMap,
           constructorTypeLookupMap = constructorTypeLookupMap,
           typeLookupMap = typeLookupMap,
+          methodReifyLookupMap = methodReifyLookupMap,
+          constructorReifyLookupMap = constructorReifyLookupMap,
+          reifyLookupMap = reifyLookupMap,
           isAbstract = isAbstract,
           isInterface = isInterface,
           isStatic = isStatic,
@@ -172,6 +193,9 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
           constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = Map.empty,
           typeLookupMap: TypeRep => Generator[oo.Class, any.Type] = Map.empty,
+          methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
+          constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression] = tpe => ???,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression] = tpe => ???,
           isAbstract: Boolean = false,
           isInterface: Boolean = false,
           isStatic: Boolean = false,
@@ -188,6 +212,9 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
             methodTypeLookupMap,
             constructorTypeLookupMap,
             typeLookupMap,
+            methodReifyLookupMap,
+            constructorReifyLookupMap,
+            reifyLookupMap,
             isAbstract,
             isInterface,
             isStatic,
@@ -199,12 +226,13 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
             returnType: Option[any.Type] = Option.empty,
             parameters: Seq[(any.Name, any.Type)] = Seq.empty,
             typeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
+            reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
             isAbstract: Boolean = false,
             isStatic: Boolean = false,
             isPublic: Boolean = false,
             isOverride: Boolean = false
           ): oo.anyOverrides.Method =
-            genericsFactory.genericMethod(name, imports, statements, returnType, Seq.empty, parameters, typeLookupMap, isAbstract, isStatic, isPublic, isOverride)
+            genericsFactory.genericMethod(name, imports, statements, returnType, Seq.empty, parameters, typeLookupMap, reifyLookupMap, isAbstract, isStatic, isPublic, isOverride)
           
       }
 
@@ -236,9 +264,10 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
           returnType: Option[any.Type] = Option.empty,
           typeParameters: Seq[polymorphism.TypeParameter] = Seq.empty,
           parameters: Seq[(any.Name, any.Type)] = Seq.empty,
-          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty
+          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
         ): polymorphism.anyOverrides.Method =
-          genericsFactory.genericMethod(name, imports, statements, returnType, typeParameters, parameters, typeLookupMap)
+          genericsFactory.genericMethod(name, imports, statements, returnType, typeParameters, parameters, typeLookupMap, reifyLookupMap)
         override def typeParameter(name: any.Name): polymorphism.TypeParameter = genericsFactory.typeParameterWithBounds(name)
       }
     }
@@ -256,6 +285,9 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
         methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
         constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = Map.empty,
         typeLookupMap: TypeRep => Generator[oo.Class, any.Type] = Map.empty,
+        methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
+        constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression] = tpe => ???,
+        reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression] = tpe => ???,
         isAbstract: Boolean = false,
         isInterface: Boolean = false,
         isStatic: Boolean = false,
@@ -269,6 +301,7 @@ trait GenericsAST extends ParametricPolymorphismAST with OOAST {
         typeParameters: Seq[polymorphism.TypeParameter] = Seq.empty,
         parameters: Seq[(any.Name, any.Type)] = Seq.empty,
         typeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
+        reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
         isAbstract: Boolean = false,
         isStatic: Boolean = false,
         isPublic: Boolean = false,

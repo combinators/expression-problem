@@ -34,16 +34,6 @@ trait ListsAST extends InbetweenListsAST { self: OperatorExpressionsAST & BaseAS
       
       trait Factory extends listsOps.Factory {}
     }
-    
-    object scalaBaseOverride {
-      trait ReificationExtensions extends scalaBase.ReificationExtensions {
-        override def reifiyFunctions: List[(tpe: TypeRep) => (value: tpe.HostType) => Option[any.Expression]] = super.reifiyFunctions :+ { tpe => value =>
-          tpe match {
-            case TypeRep.Sequence(elemTpe) => Some(listsOpsFactory.createList(, value.asInstanceOf[Seq[elemTpe.HostType]].map(scalaBaseFactory.reifiedScalaValue(elemTpe, _)))
-          }          
-        }
-      }
-    }
   }
 
   override val listsOpsFactory: scalaListsOps.listsOpsOverride.Factory

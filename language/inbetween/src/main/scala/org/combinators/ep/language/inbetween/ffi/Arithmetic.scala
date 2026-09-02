@@ -2,66 +2,63 @@ package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{Add, Div, LE, LT, Mod, Mult, Sub, Arithmetic as Arith}
-import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.{Command, TypeRep, Understands}
 import org.combinators.cogen.Command.Generator
+import org.combinators.ep.language.inbetween.ContextRegistry
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 
 trait Arithmetic[AST <: ArithmeticAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait ArithmeticInMethods extends Arith[_base.ast.any.Method, T] {
-    override val base: _base.type = _base
-
+  trait ArithmeticIn[Ctxt] extends Arith[Ctxt, T] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.arithmeticOpsFactory
+    override val base: _base.type = _base
 
     val arithmeticCapabilities: ArithmeticCapabilities = new ArithmeticCapabilities {
-      implicit val canLT: Understands[any.Method, Apply[LT[T], any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[LT[T], any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[LT[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canLT: Understands[Ctxt, Apply[LT[T], any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[LT[T], any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[LT[T], any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, arithmeticOpsFactory.lt(command.arguments(0), command.arguments(1)))
           }
         }
-      implicit val canLE: Understands[any.Method, Apply[LE[T], any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[LE[T], any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[LE[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canLE: Understands[Ctxt, Apply[LE[T], any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[LE[T], any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[LE[T], any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, arithmeticOpsFactory.le(command.arguments(0), command.arguments(1)))
           }
         }
-      implicit val canAdd: Understands[any.Method, Apply[Add[T], any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[Add[T], any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[Add[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canAdd: Understands[Ctxt, Apply[Add[T], any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[Add[T], any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[Add[T], any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, arithmeticOpsFactory.add(command.arguments(0), command.arguments(1)))
           }
         }
-      implicit val canSub: Understands[any.Method, Apply[Sub[T], any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[Sub[T], any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[Sub[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canSub: Understands[Ctxt, Apply[Sub[T], any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[Sub[T], any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[Sub[T], any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, arithmeticOpsFactory.sub(command.arguments(0), command.arguments(1)))
           }
         }
-      implicit val canMult: Understands[any.Method, Apply[Mult[T], any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[Mult[T], any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[Mult[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canMult: Understands[Ctxt, Apply[Mult[T], any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[Mult[T], any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[Mult[T], any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, arithmeticOpsFactory.mult(command.arguments(0), command.arguments(1)))
           }
         }
-      implicit val canDiv: Understands[any.Method, Apply[Div[T], any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[Div[T], any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[Div[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canDiv: Understands[Ctxt, Apply[Div[T], any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[Div[T], any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[Div[T], any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, arithmeticOpsFactory.div(command.arguments(0), command.arguments(1)))
           }
         }
-      implicit val canMod: Understands[any.Method, Apply[Mod[T], any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[Mod[T], any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[Mod[T], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canMod: Understands[Ctxt, Apply[Mod[T], any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[Mod[T], any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[Mod[T], any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, arithmeticOpsFactory.mod(command.arguments(0), command.arguments(1)))
           }
         }
     }
-    def enable(): Generator[any.Project, Unit] = Command.skip[any.Project]
   }
-
-  val arithmeticInMethods: ArithmeticInMethods = new ArithmeticInMethods {}
 }
 object Arithmetic {
   type WithBase[T, AST <: ArithmeticAST, B <: AnyParadigm.WithAST[AST]] = Arithmetic[AST, B, T] {}

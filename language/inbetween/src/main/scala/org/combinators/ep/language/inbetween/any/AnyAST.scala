@@ -2,6 +2,7 @@ package org.combinators.ep.language.inbetween.any    /*DI:LI:AI*/
 
 import org.combinators.cogen.{FileWithPath, TypeRep}
 import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.ffi.FFI
 
 trait AnyAST {
   object any {
@@ -155,15 +156,19 @@ trait AnyAST {
       def addTypeLookupsForMethods(lookups: TypeRep => Option[Generator[Method, Type]]): Project
       
       def addReifyLookupsForMethods(lookups: (tpe: TypeRep) => tpe.HostType => Option[Generator[Method, Expression]]): Project
-
+      
+      def enabledFFIs: Set[FFI]
+      def markEnabledFFI(ffi: FFI): Project = copy(enabledFFIs = enabledFFIs + ffi)
+      
       def copy(
         compilationUnits: Set[CompilationUnit] = this.compilationUnits,
-        customFiles: Seq[FileWithPath] = this.customFiles
-      ): Project = factory.project(compilationUnits, customFiles)
+        customFiles: Seq[FileWithPath] = this.customFiles,
+        enabledFFIs: Set[FFI] = this.enabledFFIs,
+      ): Project = factory.project(compilationUnits, customFiles, enabledFFIs)
     }
 
     trait Factory {
-      def project(compilationUnits: Set[CompilationUnit] = Set.empty, customFiles: Seq[FileWithPath] = Seq.empty): Project
+      def project(compilationUnits: Set[CompilationUnit] = Set.empty, customFiles: Seq[FileWithPath] = Seq.empty, enabledFFIs: Set[FFI]): Project
 
       def compilationUnit(name: Seq[Name], imports: Seq[Import], tests: Seq[TestSuite]): CompilationUnit
 

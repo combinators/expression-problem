@@ -41,13 +41,7 @@ trait Maps[AST <: MapsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
           }
         }
     }
-    override def enable(): Generator[any.Project, Unit] = Command.skip[any.Project]
   }
-
-  // TODO: These are only for methods. What about constructors? Which are based on OO concept? And so might not be part of inBetween?
-  
-  def mapsIn[Ctxt]: MapsIn[Ctxt] = new MapsIn[Ctxt] {}
-  val mapsInMethods:MapsIn[_base.ast.any.Method] = mapsIn[_base.ast.any.Method]
 }
 
 object Maps {

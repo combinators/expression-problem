@@ -7,52 +7,49 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 trait Strings[AST <: StringAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait StringsInMethods extends Strs[_base.ast.any.Method] {
+  trait StringsIn[Ctxt] extends Strs[Ctxt] {
     override val base: _base.type = _base
 
     import base.ast.any
     import base.ast.stringOpsFactory
 
     val stringCapabilities: StringCapabilities = new StringCapabilities {
-      implicit val canAppend: Understands[any.Method, Apply[StringAppend, any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[StringAppend, any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[StringAppend, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canAppend: Understands[Ctxt, Apply[StringAppend, any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[StringAppend, any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[StringAppend, any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, command.arguments.tail.foldLeft(command.arguments.head) { case (r, l) => stringOpsFactory.appendString(r, l) })
           }
         }
 
-      implicit val canGetCharAt: Understands[any.Method, Apply[GetCharAt, any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[GetCharAt, any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[GetCharAt, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canGetCharAt: Understands[Ctxt, Apply[GetCharAt, any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[GetCharAt, any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[GetCharAt, any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, stringOpsFactory.getCharAt(command.arguments.head, command.arguments.tail.head))
           }
         }
       
-      implicit val canGetStringLength: Understands[any.Method, Apply[GetStringLength, any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[GetStringLength, any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[GetStringLength, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canGetStringLength: Understands[Ctxt, Apply[GetStringLength, any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[GetStringLength, any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[GetStringLength, any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, stringOpsFactory.stringLength(command.arguments.head))
           }
         }
 
-      implicit val canSubString: Understands[any.Method, Apply[SubString, any.Expression, any.Expression]] =
-          new Understands[any.Method, Apply[SubString, any.Expression, any.Expression]] {
-            def perform(context: any.Method, command: Apply[SubString, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canSubString: Understands[Ctxt, Apply[SubString, any.Expression, any.Expression]] =
+          new Understands[Ctxt, Apply[SubString, any.Expression, any.Expression]] {
+            def perform(context: Ctxt, command: Apply[SubString, any.Expression, any.Expression]): (Ctxt, any.Expression) = {
               (context, stringOpsFactory.subString(command.arguments.head, command.arguments.tail.head, command.arguments.tail.tail.head))
             }
           }
           
-      implicit val canToStringInCtxt: Understands[any.Method, Apply[ToString[any.Type], any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[ToString[any.Type], any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[ToString[any.Type], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canToStringInCtxt: Understands[Ctxt, Apply[ToString[any.Type], any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[ToString[any.Type], any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[ToString[any.Type], any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, stringOpsFactory.toString(command.arguments.head))
           }
         }
     }
-    def enable(): Generator[any.Project, Unit] = Command.skip[any.Project]
   }
-
-  val stringsInMethods: StringsInMethods = new StringsInMethods {}
 }
 
 object Strings {

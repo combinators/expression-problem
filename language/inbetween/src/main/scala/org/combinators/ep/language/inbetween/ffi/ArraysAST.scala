@@ -73,11 +73,7 @@ trait ArraysAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST 
                 value: any.Expression = value
               ): SetArrayExpression = arraysOpsFactory.setArrayExpression(base, indices, value)
     }
-
-//    trait GetArrayOp extends operatorExpressions.Operator
-//
-//    trait SetArrayOp extends operatorExpressions.Operator
-//
+    
     trait LengthArrayExpression  extends any.Expression {
       def getSelfLengthArrayExpression: arraysOpsFinalTypes.LengthArrayExpression
         def base: any.Expression
@@ -127,10 +123,7 @@ trait ArraysAST extends OperatorExpressionOpsAST with ParametricPolymorphismAST 
       def arrayExpression(base: any.Expression, indices: Seq[any.Expression]): ArrayExpression
       def setArrayExpression(base: any.Expression, indices: Seq[any.Expression], value: any.Expression): SetArrayExpression
       def lengthArrayExpression(base: any.Expression, indices: Seq[any.Expression]): LengthArrayExpression
-
-//      def getArrayOp(): GetArrayOp
-//      def setArrayOp(): SetArrayOp
-//      def lengthArrayOp(): LengthArrayOp
+      
 
       def getArrayOp(ar: any.Expression, indices: Seq[any.Expression]): arraysOpsFinalTypes.ArrayExpression =
         arraysOpsFactory.arrayExpression(ar, indices)

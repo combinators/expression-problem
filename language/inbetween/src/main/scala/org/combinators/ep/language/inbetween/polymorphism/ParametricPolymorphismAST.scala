@@ -20,7 +20,8 @@ trait ParametricPolymorphismAST extends AnyAST {
           statements: Seq[any.Statement] = this.statements,
           returnType: Option[any.Type] = this.returnType,
           parameters: Seq[(any.Name, any.Type)] = this.parameters,
-          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap
+          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.reifyLookupMap,
         ): any.Method =
           copyAsTypeParamMethod(
             name = name,
@@ -28,7 +29,9 @@ trait ParametricPolymorphismAST extends AnyAST {
             statements = statements,
             returnType = returnType,
             parameters = parameters,
-            typeLookupMap = typeLookupMap)
+            typeLookupMap = typeLookupMap,
+            reifyLookupMap = reifyLookupMap,
+          )
 
         def copyAsTypeParamMethod(
           name: any.Name = this.name,
@@ -37,9 +40,10 @@ trait ParametricPolymorphismAST extends AnyAST {
           returnType: Option[any.Type] = this.returnType,
           typeParameters: Seq[TypeParameter] = this.typeParameters,
           parameters: Seq[(any.Name, any.Type)] = this.parameters,
-          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap
+          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.typeLookupMap,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.reifyLookupMap,
         ): Method =
-          polymorphismFactory.typeParamMethod(name, imports, statements, returnType, typeParameters, parameters, typeLookupMap)
+          polymorphismFactory.typeParamMethod(name, imports, statements, returnType, typeParameters, parameters, typeLookupMap, reifyLookupMap)
       }
       
       trait Factory extends any.Factory {
@@ -49,8 +53,9 @@ trait ParametricPolymorphismAST extends AnyAST {
           statements: Seq[any.Statement] = Seq.empty,
           returnType: Option[any.Type] = Option.empty,
           parameters: Seq[(any.Name, any.Type)] = Seq.empty,
-          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty
-        ): any.Method = polymorphismFactory.typeParamMethod(name, imports, statements, returnType, Seq.empty, parameters, typeLookupMap)
+          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
+        ): any.Method = polymorphismFactory.typeParamMethod(name, imports, statements, returnType, Seq.empty, parameters, typeLookupMap, reifyLookupMap)
       }
     }
     
@@ -113,7 +118,8 @@ trait ParametricPolymorphismAST extends AnyAST {
         returnType: Option[any.Type] = Option.empty,
         typeParameters: Seq[TypeParameter] = Seq.empty,
         parameters: Seq[(any.Name, any.Type)] = Seq.empty,
-        typeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty
+        typeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
+        reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
       ): anyOverrides.Method
       def typeReferenceExpression(tpe: any.Type): TypeReferenceExpression
       

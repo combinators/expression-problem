@@ -2,6 +2,7 @@ package org.combinators.ep.language.inbetween.oo    /*DI:LI:AI*/
 
 import org.combinators.cogen.{FileWithPath, TypeRep}
 import org.combinators.cogen.Command.Generator
+import org.combinators.cogen.paradigm.ffi.FFI
 import org.combinators.ep.language.inbetween.any.AnyAST
 
 trait OOAST extends AnyAST {
@@ -45,12 +46,14 @@ trait OOAST extends AnyAST {
 
         override def copy(
           compilationUnits: Set[any.CompilationUnit],
-          customFiles: Seq[FileWithPath]
-        ): any.Project = copyAsProjectWithTypeLookups(compilationUnits, customFiles)
+          customFiles: Seq[FileWithPath],
+          enabledFFIs: Set[FFI],
+        ): any.Project = copyAsProjectWithTypeLookups(compilationUnits, customFiles, enabledFFIs)
 
         def copyAsProjectWithTypeLookups(
           compilationUnits: Set[any.CompilationUnit] = this.compilationUnits,
           customFiles: Seq[FileWithPath] = this.customFiles,
+          enabledFFIs: Set[FFI] = this.enabledFFIs,
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
           constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = this.constructorTypeLookupMap,
           classTypeLookupMap: TypeRep => Generator[Class, any.Type] = this.classTypeLookupMap,
@@ -60,6 +63,7 @@ trait OOAST extends AnyAST {
         ): Project = ooFactory.ooProject(
           compilationUnits,
           customFiles,
+          enabledFFIs,
           methodTypeLookupMap,
           constructorTypeLookupMap,
           classTypeLookupMap,
@@ -223,8 +227,15 @@ trait OOAST extends AnyAST {
       trait Factory extends any.Factory {
         import ooFactory.*
 
-        override def project(compilationUnits: Set[any.CompilationUnit], customFiles: Seq[FileWithPath]): any.Project =
-          ooProject(compilationUnits = compilationUnits, customFiles = customFiles, methodTypeLookupMap = Map.empty, constructorTypeLookupMap = Map.empty, classTypeLookupMap = Map.empty)
+        override def project(compilationUnits: Set[any.CompilationUnit], customFiles: Seq[FileWithPath], enabledFFIs: Set[FFI]): any.Project =
+          ooProject(
+            compilationUnits = compilationUnits,
+            customFiles = customFiles,
+            enabledFFIs = enabledFFIs,
+            methodTypeLookupMap = Map.empty,
+            constructorTypeLookupMap = Map.empty,
+            classTypeLookupMap = Map.empty
+          )
 
         override def compilationUnit(name: Seq[any.Name], imports: Seq[any.Import], tests: Seq[any.TestSuite]): any.CompilationUnit =
           ooCompilationUnit(name, imports, methodTypeLookupMap = Map.empty, constructorTypeLookupMap = Map.empty, classTypeLookupMap = Map.empty, classes = Seq.empty, tests = tests)
@@ -235,11 +246,17 @@ trait OOAST extends AnyAST {
           statements: Seq[any.Statement] = Seq.empty,
           returnType: Option[any.Type] = Option.empty,
           parameters: Seq[(any.Name, any.Type)] = Seq.empty,
-          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty
-        ): any.Method = clsMethod(name, imports, statements, returnType, parameters, typeLookupMap)
+          typeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
+        ): any.Method = clsMethod(name, imports, statements, returnType, parameters, typeLookupMap, reifyLookupMap)
 
-        override def testSuite(name: any.Name, tests: Seq[any.Method], methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty): any.TestSuite =
-          classBasedTestSuite(cls(name = name, methods = tests, methodTypeLookupMap = methodTypeLookupMap), Seq.fill(tests.size)(true))
+        override def testSuite(
+          name: any.Name,
+          tests: Seq[any.Method],
+          methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
+        ): any.TestSuite =
+          classBasedTestSuite(cls(name = name, methods = tests, methodTypeLookupMap = methodTypeLookupMap, methodReifyLookupMap = reifyLookupMap), Seq.fill(tests.size)(true))
       }
 
     }
@@ -496,6 +513,7 @@ trait OOAST extends AnyAST {
       def ooProject(
         compilationUnits: Set[any.CompilationUnit] = Set.empty,
         customFiles: Seq[FileWithPath] = Seq.empty,
+        enabledFFIs: Set[FFI] = Set.empty,
         methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
         constructorTypeLookupMap: TypeRep => Generator[Constructor, any.Type] = Map.empty,
         classTypeLookupMap: TypeRep => Generator[Class, any.Type] = Map.empty,

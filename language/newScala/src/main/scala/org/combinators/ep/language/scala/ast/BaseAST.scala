@@ -2,6 +2,7 @@ package org.combinators.ep.language.scala.ast     /*DI:LD:AI*/
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.TypeRep.OfHostType
+import org.combinators.cogen.paradigm.ffi.FFI
 import org.combinators.cogen.{FileWithPath, NameProvider, TypeRep}
 import org.combinators.ep.language.inbetween.functional.FunctionalAST
 import org.combinators.ep.language.inbetween.functional.control.FunctionalControlAST
@@ -38,50 +39,79 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
           super.addTypeLookupsForMethods(lookups).addTypeLookupsForFunctions(lookups)
         }
 
+        override def addReifyLookupsForMethods(lookups: (tpeRep: TypeRep) => tpeRep.HostType => Option[Generator[any.Method, any.Expression]]): any.Project = {
+          super.addReifyLookupsForMethods(lookups).addReifyLookupsForFunctions(lookups)
+        }
+
         def copyAsScalaProject(
           compilationUnits: Set[any.CompilationUnit] = this.compilationUnits,
           customFiles: Seq[FileWithPath] = this.customFiles,
+          enabledFFIs: Set[FFI] = this.enabledFFIs,
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
           constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = this.constructorTypeLookupMap,
           classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type] = this.classTypeLookupMap,
           adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type] = this.adtTypeLookupMap,
           functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.functionTypeLookupMap,
+          methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.methodReifyLookupMap,
+          constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression] = this.constructorReifyLookupMap,
+          classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression] = this.classReifyLookupMap,
+          adtReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression] = this.adtReifyLookupMap,
+          functionReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.functionReifyLookupMap,
         ): anyOverrides.Project = scalaBaseFactory.scalaProject(
           compilationUnits,
           customFiles,
+          enabledFFIs,
           methodTypeLookupMap,
           constructorTypeLookupMap,
           classTypeLookupMap,
           adtTypeLookupMap,
-          functionTypeLookupMap
+          functionTypeLookupMap,
+          methodReifyLookupMap,
+          constructorReifyLookupMap,
+          classReifyLookupMap,
+          adtReifyLookupMap,
+          functionReifyLookupMap,
         )
 
         override def copyAsProjectWithTypeLookups(
           compilationUnits: Set[any.CompilationUnit] = this.compilationUnits,
           customFiles: Seq[FileWithPath] = this.customFiles,
+          enabledFFIs: Set[FFI] = this.enabledFFIs,
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
           constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = this.constructorTypeLookupMap,
-          classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type] = this.classTypeLookupMap
+          classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type] = this.classTypeLookupMap,
+          methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.methodReifyLookupMap,
+          constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression] = this.constructorReifyLookupMap,
+          classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression] = this.classReifyLookupMap,
         ): anyOverrides.Project =
           copyAsScalaProject(
             compilationUnits = compilationUnits,
             customFiles = customFiles,
+            enabledFFIs = enabledFFIs,
             methodTypeLookupMap = methodTypeLookupMap,
             constructorTypeLookupMap = constructorTypeLookupMap,
-            classTypeLookupMap = classTypeLookupMap
+            classTypeLookupMap = classTypeLookupMap,
+            methodReifyLookupMap = methodReifyLookupMap,
+            constructorReifyLookupMap = constructorReifyLookupMap,
+            classReifyLookupMap = classReifyLookupMap,
           )
 
         override def copyAsFunctionalProject(
           compilationUnits: Set[any.CompilationUnit] = this.compilationUnits,
           customFiles: Seq[FileWithPath] = this.customFiles,
+          enabledFFIs: Set[FFI] = this.enabledFFIs,
           adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type] = this.adtTypeLookupMap,
           functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.functionTypeLookupMap,
+          adtReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression] = this.adtReifyLookupMap,
+          functionReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.functionReifyLookupMap,
         ): anyOverrides.Project =
           copyAsScalaProject(
             compilationUnits = compilationUnits,
             customFiles = customFiles,
             adtTypeLookupMap = adtTypeLookupMap,
             functionTypeLookupMap = functionTypeLookupMap,
+            adtReifyLookupMap = adtReifyLookupMap,
+            functionReifyLookupMap = functionReifyLookupMap,
           )
 
         def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): any.Project =
@@ -92,6 +122,11 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             classTypeLookupMap = tpeRep => classTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             adtTypeLookupMap = tpeRep => adtTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             functionTypeLookupMap = tpeRep => functionTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            methodReifyLookupMap = tpeRep => value => methodReifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            constructorReifyLookupMap = tpeRep => value => constructorReifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            classReifyLookupMap = tpeRep => value => classReifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            functionReifyLookupMap = tpeRep => value => functionReifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            adtReifyLookupMap = tpeRep => value => adtReifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
           )
       }
 
@@ -129,6 +164,11 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             classTypeLookupMap = tpeRep => classTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             adtTypeLookupMap = tpeRep => adtTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             functionTypeLookupMap = tpeRep => functionTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            methodReifyLookupMap = tpeRep => value => methodReifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            constructorReifyLookupMap = tpeRep => value => constructorReifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            classReifyLookupMap = tpeRep => value => classReifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            functionReifyLookupMap = tpeRep => value => functionReifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            adtReifyLookupMap = tpeRep => value => adtReifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             classes = classes.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             adts = adts.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             functions = functions.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
@@ -144,6 +184,11 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
           classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type] = this.classTypeLookupMap,
           adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type] = this.adtTypeLookupMap,
           functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.functionTypeLookupMap,
+          methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.methodReifyLookupMap,
+          constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression] = this.constructorReifyLookupMap,
+          classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression] = this.classReifyLookupMap,
+          adtReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression] = this.adtReifyLookupMap,
+          functionReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.functionReifyLookupMap,
           classes: Seq[oo.Class] = this.classes,
           adts: Seq[functional.AlgebraicDataType] = this.adts,
           functions: Seq[any.Method] = this.functions,
@@ -157,6 +202,11 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             classTypeLookupMap,
             adtTypeLookupMap,
             functionTypeLookupMap,
+            methodReifyLookupMap,
+            constructorReifyLookupMap,
+            classReifyLookupMap,
+            adtReifyLookupMap,
+            functionReifyLookupMap,
             classes,
             adts,
             functions,
@@ -168,6 +218,9 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.methodTypeLookupMap,
           constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = this.constructorTypeLookupMap,
           classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type] = this.classTypeLookupMap,
+          methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.methodReifyLookupMap,
+          constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression] = this.constructorReifyLookupMap,
+          classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression] = this.classReifyLookupMap,
           classes: Seq[oo.Class] = this.classes,
           tests: Seq[any.TestSuite] = this.tests,
         ): anyOverrides.CompilationUnit =
@@ -177,6 +230,9 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             methodTypeLookupMap = methodTypeLookupMap,
             constructorTypeLookupMap = constructorTypeLookupMap,
             classTypeLookupMap = classTypeLookupMap,
+            methodReifyLookupMap = methodReifyLookupMap,
+            constructorReifyLookupMap = constructorReifyLookupMap,
+            classReifyLookupMap = classReifyLookupMap,
             classes = classes,
             tests = tests)
 
@@ -185,6 +241,8 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
           imports: Seq[any.Import] = this.imports,
           adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type] = this.adtTypeLookupMap,
           functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = this.functionTypeLookupMap,
+          adtReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression] = this.adtReifyLookupMap,
+          functionReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = this.functionReifyLookupMap,
           adts: Seq[functional.AlgebraicDataType] = this.adts,
           functions: Seq[any.Method] = this.functions,
           tests: Seq[any.TestSuite] = this.tests,
@@ -193,6 +251,8 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
           imports = imports,
           adtTypeLookupMap = adtTypeLookupMap,
           functionTypeLookupMap = functionTypeLookupMap,
+          adtReifyLookupMap = adtReifyLookupMap,
+          functionReifyLookupMap = functionReifyLookupMap,
           adts = adts,
           functions = functions,
           tests = tests)
@@ -204,6 +264,11 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             methodTypeLookupMap = project.methodTypeLookupMap,
             constructorTypeLookupMap = project.constructorTypeLookupMap,
             classTypeLookupMap = project.classTypeLookupMap,
+            methodReifyLookupMap = project.methodReifyLookupMap,
+            constructorReifyLookupMap = project.constructorReifyLookupMap,
+            classReifyLookupMap = project.classReifyLookupMap,
+            functionReifyLookupMap = project.functionReifyLookupMap,
+            adtReifyLookupMap = project.adtReifyLookupMap,
           )
           withLookups.copyAsScalaCompilationUnit(
             tests = withLookups.tests.map(_.initializeInCompilationUnit(withLookups))
@@ -259,7 +324,8 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             returnType = returnType.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             typeParameters = typeParameters.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             parameters = parameters.map { case (name, tpe) => (name, tpe.prefixRootPackage(rootPackageName, excludedTypeNames)) },
-            typeLookupMap = tpeRep => typeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
+            typeLookupMap = tpeRep => typeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            reifyLookupMap = tpeRep => value => reifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
           )
         }
       }
@@ -290,7 +356,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             liftExpression(applyExpression(
               applyExpression(
                 memberAccessExpression(selfReferenceExpression, nameProvider.mangle("test")),
-                Seq(reifiedScalaValue(TypeRep.String, m.name.component))
+                Seq(scalaBaseFactory.reifiedScalaValue(TypeRep.String, m.name.toString, None))
               ),
               Seq(blockExpression(m.statements))
             ))
@@ -433,6 +499,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             imports = imports.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             typeConstructors = typeConstructors.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             typeLookupMap = tpeRep => typeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            reifyLookupMap = tpeRep => value => reifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
           )
       }
 
@@ -485,16 +552,22 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
         override def functionalProject(
           compilationUnits: Set[any.CompilationUnit],
           customFiles: Seq[FileWithPath] = Seq.empty,
+          enabledFFIs: Set[FFI] = Set.empty,
           adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type] = Map.empty,
           functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
+          adtReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression] = tpe => ???,
+          functionReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
         ): anyOverrides.Project = scalaBaseFactory.scalaProject(
           compilationUnits = compilationUnits,
           customFiles = customFiles,
+          enabledFFIs = enabledFFIs,
           adtTypeLookupMap = adtTypeLookupMap,
           functionTypeLookupMap = functionTypeLookupMap,
           methodTypeLookupMap = Map.empty,
           constructorTypeLookupMap = Map.empty,
           classTypeLookupMap = Map.empty,
+          adtReifyLookupMap = adtReifyLookupMap,
+          functionReifyLookupMap = functionReifyLookupMap,
         )
 
         override def funCompilationUnit(
@@ -502,6 +575,8 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
           imports: Seq[any.Import],
           adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type] = Map.empty,
           functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
+          adtReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression] = tpe => ???,
+          functionReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
           adts: Seq[functional.AlgebraicDataType] = Seq.empty,
           functions: Seq[any.Method] = Seq.empty,
           tests: Seq[any.TestSuite] = Seq.empty,
@@ -513,6 +588,8 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
           classTypeLookupMap = Map.empty,
           adtTypeLookupMap = adtTypeLookupMap,
           functionTypeLookupMap = functionTypeLookupMap,
+          adtReifyLookupMap = adtReifyLookupMap,
+          functionReifyLookupMap = functionReifyLookupMap,
           classes = Seq.empty,
           adts = adts,
           functions = functions,
@@ -595,7 +672,10 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             constructors = constructors.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             methodTypeLookupMap = tpeRep => methodTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             constructorTypeLookupMap = tpeRep => constructorTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
-            typeLookupMap = tpeRep => typeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
+            typeLookupMap = tpeRep => typeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            reifyLookupMap = tpeRep => value => reifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            methodReifyLookupMap = tpeRep => value => methodReifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            constructorReifyLookupMap = tpeRep => value => constructorReifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
           )
         }
       }
@@ -692,6 +772,8 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             parameters = parameters.map { case (name, tpe) => (name, tpe.prefixRootPackage(rootPackageName, excludedTypeNames)) },
             typeLookupMap = tpeRep => typeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             constructorTypeLookupMap = tpeRep => constructorTypeLookupMap(tpeRep).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            reifyLookupMap = tpeRep => value => reifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
+            constructorReifyLookupMap = tpeRep => value => constructorReifyLookupMap(tpeRep)(value).map(_.prefixRootPackage(rootPackageName, excludedTypeNames)),
             superInitialization = superInitialization.map { case (tpe, exps) =>
               (tpe.prefixRootPackage(rootPackageName, excludedTypeNames),
                 exps.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)))
@@ -811,9 +893,13 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
         override def ooProject(
           compilationUnits: Set[any.CompilationUnit],
           customFiles: Seq[FileWithPath],
+          enabledFFIs: Set[FFI],
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
           constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = Map.empty,
           classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type] = Map.empty,
+          methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
+          constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression] = tpe => ???,
+          classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression] = tpe => ???,
         ): anyOverrides.Project = scalaBaseFactory.scalaProject(
           compilationUnits = compilationUnits,
           customFiles = customFiles,
@@ -822,6 +908,9 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
           methodTypeLookupMap = methodTypeLookupMap,
           constructorTypeLookupMap = constructorTypeLookupMap,
           classTypeLookupMap = classTypeLookupMap,
+          methodReifyLookupMap = methodReifyLookupMap,
+          constructorReifyLookupMap = constructorReifyLookupMap,
+          classReifyLookupMap = classReifyLookupMap,
         )
 
         override def ooCompilationUnit(
@@ -830,6 +919,9 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
           methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
           constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = Map.empty,
           classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type] = Map.empty,
+          methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
+          constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression] = tpe => ???,
+          classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression] = tpe => ???,
           classes: Seq[oo.Class] = Seq.empty,
           tests: Seq[any.TestSuite] = Seq.empty,
         ): anyOverrides.CompilationUnit = scalaBaseFactory.scalaCompilationUnit(
@@ -838,6 +930,9 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
           methodTypeLookupMap = methodTypeLookupMap,
           constructorTypeLookupMap = constructorTypeLookupMap,
           classTypeLookupMap = classTypeLookupMap,
+          methodReifyLookupMap = methodReifyLookupMap,
+          constructorReifyLookupMap = constructorReifyLookupMap,
+          classReifyLookupMap = classReifyLookupMap,
           adtTypeLookupMap = Map.empty,
           functionTypeLookupMap = Map.empty,
           classes = classes,
@@ -1198,8 +1293,6 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
       import factory.*
       
       def nameProvider: NameProvider[any.Name] = nameProviderFactory.scalaNameProvider
-      def reify[T](tpe: OfHostType[T], value: T): any.Expression = scalaBaseFactory.reifiedScalaValue(tpe, value)
-
       def findType(name: Seq[any.Name]): any.Type = functionalFactory.adtReferenceType(name *)
 
       def resolveImport(tpe: any.Type): Seq[any.Import] = tpe.toImport
@@ -1210,40 +1303,29 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
       }
     }
 
-
-    trait ReificationExtensions {
-      def reifiyFunctions: List[(tpe: TypeRep) => (value: tpe.HostType) => Option[any.Expression]] = List.empty
-    }
-
     trait ReifiedScalaValue[T] extends anyOverrides.Expression {
       import scalaBaseFactory.*
       
       def getSelfAsReifiedScalaValue: scalaBaseFinalTypes.ReifiedScalaValue[T]
       val ofHostType: OfHostType[T]
       val value: T
-      
-      def reifiedViaExtesion: Option[any.Expression] = {
-        reificationExtensions.reifiyFunctions.collectFirst(Function.unlift(ext => ext(ofHostType)(value)))/*.getOrElse(
-          ofHostType match {
-            case t: TypeRep.String.type => 
-            case t: TypeRep.Sequence[_] =>
-              value.asInstanceOf[Seq[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Seq(", ", ", ")")
-            case t: TypeRep.Array[_] =>
-              value.asInstanceOf[Array[t.elemTpe.HostType]].map(v => reifiedScalaValue(t.elemTpe, v).toScala).mkString("Array(", ", ", ")")
-            case t: TypeRep.Char.type => s"""'$value'"""
-
-            case _ =>
-              value.toString
-          }*/
-      }
+      val exp: Option[any.Expression]
 
       def toScala: String = {
         import factory.convert
-        reifiedViaExtesion.map(_.toScala).getOrElse(value.toString)
+        exp.map(_.toScala).getOrElse(value.toString)
       }
 
-      override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): ReifiedScalaValue[T] =
-        this
+      override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): ReifiedScalaValue[T] = {
+        import factory._
+        copyAsReifiedScalaValue(exp = exp.map(_.prefixRootPackage(rootPackageName, excludedTypeNames)))
+      }
+      
+      def copyAsReifiedScalaValue(
+        ofHostType: OfHostType[T] = this.ofHostType,
+        value: T = this.value,
+        exp: Option[any.Expression] = this.exp): ReifiedScalaValue[T] =
+        scalaBaseFactory.reifiedScalaValue[T](ofHostType, value, exp)
     }
 
     trait MethodReferenceExpression extends anyOverrides.Expression {
@@ -1296,11 +1378,17 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
       def scalaProject(
         compilationUnits: Set[any.CompilationUnit],
         customFiles: Seq[FileWithPath] = Seq.empty,
+        enabledFFIs: Set[FFI] = Set.empty,
         methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
         constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type] = Map.empty,
         classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type] = Map.empty,
         adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type] = Map.empty,
         functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
+        methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
+        constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression] = tpe => ???,
+        classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression] = tpe => ???,
+        adtReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression] = tpe => ???,
+        functionReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
       ): anyOverrides.Project
 
       def scalaCompilationUnit(
@@ -1311,6 +1399,11 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
         classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type] = Map.empty,
         adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type] = Map.empty,
         functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type] = Map.empty,
+        methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
+        constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression] = tpe => ???,
+        classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression] = tpe => ???,
+        adtReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression] = tpe => ???,
+        functionReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression] = tpe => ???,
         classes: Seq[oo.Class] = Seq.empty,
         adts: Seq[functional.AlgebraicDataType] = Seq.empty,
         functions: Seq[any.Method] = Seq.empty,
@@ -1319,10 +1412,11 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
 
       def importStatement(components: Seq[any.Name]): anyOverrides.Import
 
-      def reifiedScalaValue[T](ofHostType: OfHostType[T], value: T): scalaBase.ReifiedScalaValue[T]
       def methodReferenceExpression(qualifiedMethodName: Seq[any.Name]): scalaBase.MethodReferenceExpression
       def blockExpression(statements: Seq[any.Statement]): scalaBase.BlockExpression
-      
+
+      def reifiedScalaValue[T](ofHostType: OfHostType[T], value: T, exp: Option[any.Expression]): scalaBase.ReifiedScalaValue[T]
+
       implicit def convert[T](other: scalaBase.ReifiedScalaValue[T]): scalaBaseFinalTypes.ReifiedScalaValue[T] = other.getSelfAsReifiedScalaValue
       implicit def convert(other: scalaBase.MethodReferenceExpression): scalaBaseFinalTypes.MethodReferenceExpression = other.getSelfAsMethodReferenceExpression
       implicit def convert(other: scalaBase.BlockExpression): scalaBaseFinalTypes.BlockExpression = other.getSelfBlockExpression
@@ -1343,8 +1437,6 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
   override val functionalControlFactory: scalaBase.functionalControlOverrides.Factory
   override val polymorphismFactory: scalaBase.polymorphismOverrides.Factory
   override val imperativeFactory: scalaBase.imperativeOverrides.Factory
-  
-  val reificationExtensions: scalaBase.ReificationExtensions
   
   val scalaBaseFactory: scalaBase.Factory
 }
@@ -1907,13 +1999,13 @@ trait FinalBaseAST extends BaseAST {
         }
         ImportStatement(components)
       }
-      def reifiedScalaValue[T](ofHostType: OfHostType[T], value: T): scalaBase.ReifiedScalaValue[T] = {
-        case class ReifiedScalaValue(override val ofHostType: OfHostType[T], override val value: T)
+      def reifiedScalaValue[T](ofHostType: OfHostType[T], value: T, exp: Option[any.Expression]): scalaBase.ReifiedScalaValue[T] = {
+        case class ReifiedScalaValue(override val ofHostType: OfHostType[T], override val value: T, override val exp: Option[any.Expression])
           extends scalaBase.ReifiedScalaValue[T]
           with finalBaseAST.anyOverrides.FinalExpression {
           def getSelfAsReifiedScalaValue: scalaBaseFinalTypes.ReifiedScalaValue[T] = this
         }
-        ReifiedScalaValue(ofHostType, value)
+        ReifiedScalaValue(ofHostType, value, exp)
       }
       def methodReferenceExpression(qualifiedMethodName: Seq[any.Name]): scalaBase.MethodReferenceExpression = {
         case class MethodReferenceExpression(override val qualifiedMethodName: Seq[any.Name])

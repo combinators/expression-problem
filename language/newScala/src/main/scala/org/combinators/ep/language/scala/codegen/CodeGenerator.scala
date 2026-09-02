@@ -1,9 +1,11 @@
 package org.combinators.ep.language.scala.codegen     /*DI:LD:AI*/
 
 import cats.Apply as _
+import org.combinators.cogen
 import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.paradigm.{Apply, ToTargetLanguageType}
+import org.combinators.cogen.paradigm.{Apply, ToTargetLanguageType, ffi}
 import org.combinators.cogen.{Command, FileWithPath, TypeRep, Understands}
+import org.combinators.ep.language.inbetween.ContextRegistry
 import org.combinators.ep.language.inbetween.any.*
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithSyntax
 import org.combinators.ep.language.inbetween.ffi.*
@@ -13,7 +15,7 @@ import org.combinators.ep.language.inbetween.imperative.Imperative
 import org.combinators.ep.language.inbetween.oo.OOParadigm
 import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
 import org.combinators.ep.language.inbetween.polymorphism.{ParametricPolymorphism, ParametricPolymorphismInADTContexts}
-import org.combinators.ep.language.scala.ast.ffi.ArithmeticAST
+import org.combinators.ep.language.scala.ast.ffi.{Arithmetic, ArithmeticAST}
 import org.combinators.ep.language.scala.ast.{BaseAST, NameProviderAST}
 
 import java.nio.file.{Path, Paths}
@@ -41,7 +43,9 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
   val syntax: AbstractSyntax.AbstractSyntax[ast.type] = AbstractSyntax(ast)
   val nameProvider: ast.nameProvider.ScalaNameProvider = ast.nameProviderFactory.scalaNameProvider
 
-  def toLookup[Ctxt](name: String*): Option[Generator[Ctxt, ast.any.Type]] = {
+  
+
+  /*def toLookup[Ctxt](name: String*): Option[Generator[Ctxt, ast.any.Type]] = {
     Some(Command.lift(ast.ooFactory.classReferenceType(name.map(nameProvider.mangle)*)))
   }
 
@@ -60,44 +64,44 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
       case TypeRep.Array(elemTpe) =>
         Some(
           for {
-            elemTpe <- ToTargetLanguageType[ast.any.Type](elemTpe).interpret(canToTargetLanguage)
+            elemTpe <- ToTargetLanguageType[ast.any.Type](elemTpe).interpret(using canToTargetLanguage)
             arrayTpe <- Command.lift(ast.arraysOpsFactory.array())
             tpe <- Apply[
               ast.any.Type,
               ast.any.Type,
-              ast.any.Type](arrayTpe, Seq(elemTpe)).interpret(canApplyType)
+              ast.any.Type](arrayTpe, Seq(elemTpe)).interpret(using canApplyType)
           } yield tpe)
       case TypeRep.Map(keyTpe, elemTpe) =>
         Some(
           for {
-            keyTpe <- ToTargetLanguageType[ast.any.Type](keyTpe).interpret(canToTargetLanguage)
-            elemTpe <- ToTargetLanguageType[ast.any.Type](elemTpe).interpret(canToTargetLanguage)
+            keyTpe <- ToTargetLanguageType[ast.any.Type](keyTpe).interpret(using canToTargetLanguage)
+            elemTpe <- ToTargetLanguageType[ast.any.Type](elemTpe).interpret(using canToTargetLanguage)
             mapTpe <- Command.lift(ast.mapsOpsFactory.map())
             tpe <- Apply[
               ast.any.Type,
               ast.any.Type,
-              ast.any.Type](mapTpe, Seq(keyTpe, elemTpe)).interpret(canApplyType)
+              ast.any.Type](mapTpe, Seq(keyTpe, elemTpe)).interpret(using canApplyType)
           } yield tpe)
       case TypeRep.Sequence(elemTpeRep) =>
         Some(
           for {
-            elemTpe <- ToTargetLanguageType[ast.any.Type](elemTpeRep).interpret(canToTargetLanguage)
+            elemTpe <- ToTargetLanguageType[ast.any.Type](elemTpeRep).interpret(using canToTargetLanguage)
             seqTpe <- Command.lift(ast.ooFactory.classReferenceType(nameProvider.mangle("Seq")))
             tpe <- Apply[
               ast.any.Type,
               ast.any.Type,
-              ast.any.Type](seqTpe, Seq(elemTpe)).interpret(canApplyType)
+              ast.any.Type](seqTpe, Seq(elemTpe)).interpret(using canApplyType)
           } yield tpe)
       case TypeRep.Arrow(src, tgt) =>
         Some(
           for {
-            srcTpe <- ToTargetLanguageType[ast.any.Type](src).interpret(canToTargetLanguage)
-            tgtTpe <- ToTargetLanguageType[ast.any.Type](tgt).interpret(canToTargetLanguage)
+            srcTpe <- ToTargetLanguageType[ast.any.Type](src).interpret(using canToTargetLanguage)
+            tgtTpe <- ToTargetLanguageType[ast.any.Type](tgt).interpret(using canToTargetLanguage)
             funTpe <- Command.lift(ast.ooFactory.classReferenceType(nameProvider.mangle("Function")))
             tpe <- Apply[
               ast.any.Type,
               ast.any.Type,
-              ast.any.Type](funTpe, Seq(srcTpe, tgtTpe)).interpret(canApplyType)
+              ast.any.Type](funTpe, Seq(srcTpe, tgtTpe)).interpret(using canApplyType)
           } yield tpe)
       case _ => None
     })
@@ -115,7 +119,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
       Seq("Seq"),
       Seq("Function"),
     ).map(qname => qname.map(nameProvider.mangle)) ++ additionalPrefixExcludedTypes
-  }
+  } */
 
   def runGenerator(generator: Generator[ast.any.Project, Unit]): Seq[FileWithPath] = {
     var projectWithLookups: ast.any.Project = ast.scalaBaseFactory.scalaProject(Set.empty)
@@ -168,31 +172,31 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
       addLookupsForImplementedGenerators[ast.any.Method](
         ast.factory.convert(projectWithLookups),
         { case (project, lookup) => ast.factory.convert(project).addTypeLookupsForMethods(lookup) }
-      )(paradigm.methodBodyCapabilities.canTransformTypeInMethodBody,
+      )(using paradigm.methodBodyCapabilities.canTransformTypeInMethodBody,
         parametricPolymorphism.methodBodyCapabilities.canApplyTypeInMethod)
     projectWithLookups =
       addLookupsForImplementedGenerators[ast.any.Method](
         ast.factory.convert(projectWithLookups),
         { case (project, lookup) => ast.factory.convert(project).addTypeLookupsForFunctions(lookup) }
-      )(paradigm.methodBodyCapabilities.canTransformTypeInMethodBody,
+      )(using paradigm.methodBodyCapabilities.canTransformTypeInMethodBody,
         parametricPolymorphism.methodBodyCapabilities.canApplyTypeInMethod)
     projectWithLookups =
       addLookupsForImplementedGenerators[ast.oo.Class](
         ast.factory.convert(projectWithLookups),
         { case (project, lookup) => ast.factory.convert(project).addTypeLookupsForClasses(lookup) }
-      )(ooParadigm.classCapabilities.canTranslateTypeInClass,
+      )(using ooParadigm.classCapabilities.canTranslateTypeInClass,
         generics.classCapabilities.canApplyTypeInClass)
     projectWithLookups =
       addLookupsForImplementedGenerators[ast.oo.Constructor](
         ast.factory.convert(projectWithLookups),
         { case (project, lookup) => ast.factory.convert(project).addTypeLookupsForConstructors(lookup) }
-      )(ooParadigm.constructorCapabilities.canTranslateTypeInConstructor,
+      )(using ooParadigm.constructorCapabilities.canTranslateTypeInConstructor,
         generics.constructorCapabilities.canApplyTypeInConstructor)
     projectWithLookups =
       addLookupsForImplementedGenerators[ast.functional.AlgebraicDataType](
         ast.factory.convert(projectWithLookups),
         { case (project, lookup) => ast.factory.convert(project).addTypeLookupsForAlgebraicDataTypes(lookup) }
-      )(functional.typeCapabilities.canTranslateTypeInType,
+      )(using functional.typeCapabilities.canTranslateTypeInType,
         parametricPolymorphismInADTContexts.algebraicDataTypeCapabilities.canApplyTypeInADT)
 
     val (generatedProject, _) = Command.runGenerator(generator, projectWithLookups)
@@ -229,6 +233,60 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
   }
 
   val paradigm: WithSyntax[ast.type, syntax.type] = AnyParadigm[ast.type, syntax.type](ast, runGenerator, syntax)
+
+  val methodRegistry: ContextRegistry[paradigm.type, paradigm.MethodBodyContext] = new ContextRegistry[paradigm.type, paradigm.MethodBodyContext](paradigm) {
+    override def enable(
+      ffi: org.combinators.cogen.paradigm.ffi.FFI,
+      tpeLookup: TypeRep => Option[Generator[paradigm.MethodBodyContext, paradigm.syntax.Type]],
+      reifylookup: (tpe:TypeRep) => tpe.HostType => Option[Generator[paradigm.MethodBodyContext, this.base.syntax.Expression]],
+    ): Generator[paradigm.ProjectContext, Unit] = {
+      object Enable extends cogen.Command {
+        type Result = Unit
+      }
+      val canEnable = new Understands[paradigm.ProjectContext, Enable.type] {
+        override def perform(context: paradigm.ast.any.Project, command: Enable.type): (paradigm.ast.any.Project, Unit) = {
+          (context.addTypeLookupsForMethods(tpeLookup).addReifyLookupsForMethods(reifylookup), ())
+        }
+      }
+      cogen.paradigm.AnyParadigm.capability[paradigm.ProjectContext, Unit, Enable.type](Enable)(using canEnable)
+    }
+  }
+  val constructorRegistry: ContextRegistry[paradigm.type, paradigm.ast.oo.Constructor] = new ContextRegistry[paradigm.type, paradigm.ast.oo.Constructor](paradigm) {
+    override def enable(
+      ffi: org.combinators.cogen.paradigm.ffi.FFI,
+      tpeLookup: TypeRep => Option[Generator[paradigm.ast.oo.Constructor, paradigm.syntax.Type]],
+      reifylookup: (tpe:TypeRep) => tpe.HostType => Option[Generator[paradigm.ast.oo.Constructor, this.base.syntax.Expression]],
+    ): Generator[paradigm.ProjectContext, Unit] = {
+      import paradigm.ast.factory._
+      object Enable extends cogen.Command {
+        type Result = Unit
+      }
+      val canEnable = new Understands[paradigm.ProjectContext, Enable.type] {
+        override def perform(context: paradigm.ast.any.Project, command: Enable.type): (paradigm.ast.any.Project, Unit) = {
+          (context.addTypeLookupsForConstructors(tpeLookup).addReifyLookupsForConstructors(reifylookup), ())
+        }
+      }
+      cogen.paradigm.AnyParadigm.capability[paradigm.ProjectContext, Unit, Enable.type](Enable)(using canEnable)
+    }
+  }
+  val classRegistry: ContextRegistry[paradigm.type, paradigm.ast.oo.Class] = new ContextRegistry[paradigm.type, paradigm.ast.oo.Class](paradigm) {
+    override def enable(
+      ffi: org.combinators.cogen.paradigm.ffi.FFI,
+      tpeLookup: TypeRep => Option[Generator[paradigm.ast.oo.Class, paradigm.syntax.Type]],
+      reifylookup: (tpe:TypeRep) => tpe.HostType => Option[Generator[paradigm.ast.oo.Class, this.base.syntax.Expression]],
+    ): Generator[paradigm.ProjectContext, Unit] = {
+      import paradigm.ast.factory._
+      object Enable extends cogen.Command {
+        type Result = Unit
+      }
+      val canEnable = new Understands[paradigm.ProjectContext, Enable.type] {
+        override def perform(context: paradigm.ast.any.Project, command: Enable.type): (paradigm.ast.any.Project, Unit) = {
+          (context.addTypeLookupsForClasses(tpeLookup).addReifyLookupsForClasses(reifylookup), ())
+        }
+      }
+      cogen.paradigm.AnyParadigm.capability[paradigm.ProjectContext, Unit, Enable.type](Enable)(using canEnable)
+    }
+  }  
   val ooParadigm: OOParadigm.WithBase[ast.type, paradigm.type] = OOParadigm[ast.type, paradigm.type](paradigm)
   val imperative: Imperative.WithBase[ast.type, paradigm.type] = Imperative[ast.type, paradigm.type](paradigm)
   val functional: FunctionalParadigm.WithBase[ast.type, paradigm.type] = FunctionalParadigm[ast.type, paradigm.type](paradigm)
@@ -241,7 +299,13 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
   val arrays: Arrays.WithBase[ast.type, paradigm.type] = Arrays[ast.type, paradigm.type](paradigm)
   val booleans: Booleans.WithBase[ast.type, paradigm.type] = Booleans[ast.type, paradigm.type](paradigm)
 
-  val doubles: Arithmetic.WithBase[Double, ast.type, paradigm.type] = Arithmetic[Double, ast.type, paradigm.type](paradigm)
+  val doubles: Arithmetic.WithBase[Double, ast.type, paradigm.type] = Arithmetic[Double, ast.type, paradigm.type](
+    paradigm,
+    TypeRep.Double,
+    methodRegistry,
+    constructorRegistry,
+    classRegistry,
+  )
   val console: Console.WithBase[ast.type, paradigm.type] = Console[ast.type, paradigm.type](paradigm)
   val realDoubles: RealArithmetic.WithBase[Double, ast.type, paradigm.type] = RealArithmetic[Double, ast.type, paradigm.type](paradigm)
 

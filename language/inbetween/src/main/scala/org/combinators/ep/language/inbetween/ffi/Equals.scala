@@ -7,21 +7,20 @@ import org.combinators.cogen.paradigm.{Apply, ffi}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 trait Equals[AST <: EqualsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait BooleansInMethods extends Eqls[_base.ast.any.Method] {
+  trait BooleansIn[Ctxt] extends Eqls[Ctxt] {
     override val base: _base.type = _base
 
     import base.ast.{any, equalsOpFactory}
 
     val equalityCapabilities: EqualityCapabilities = new EqualityCapabilities {
-      implicit val canEquals: Understands[any.Method, Apply[ffi.Equals[any.Type], any.Expression, any.Expression]] = new Understands[any.Method, Apply[ffi.Equals[any.Type], any.Expression, any.Expression]] {
-        def perform(context: any.Method, command: Apply[ffi.Equals[any.Type], any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canEquals: Understands[Ctxt, Apply[ffi.Equals[any.Type], any.Expression, any.Expression]] = new Understands[Ctxt, Apply[ffi.Equals[any.Type], any.Expression, any.Expression]] {
+        def perform(context: Ctxt, command: Apply[ffi.Equals[any.Type], any.Expression, any.Expression]): (Ctxt, any.Expression) = {
           (context, equalsOpFactory.equals(command.functional.inType, command.arguments.head, command.arguments.tail.head))
         }
       }
     }
     def enable(): Generator[any.Project, Unit] = Command.skip[any.Project]
   }
-  val equalsInMethods: BooleansInMethods = new BooleansInMethods {} 
 }
 
 object Equals {

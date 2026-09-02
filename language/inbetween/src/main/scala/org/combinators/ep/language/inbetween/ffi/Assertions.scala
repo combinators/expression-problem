@@ -7,22 +7,21 @@ import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 trait Assertions[AST <: AssertionsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait AssertionsInMethods extends Asrts[_base.ast.any.Method] {
+  trait AssertionsIn[Ctxt] extends Asrts[Ctxt] {
     val base: _base.type = _base
     import base.ast.assertionOpsFactory
     import base.ast.any
 
     val assertionCapabilities: AssertionCapabilities = new AssertionCapabilities {
-      implicit val canAssert: Understands[any.Method, Apply[Assert, any.Expression, any.Expression]] =
-        new Understands[any.Method, Apply[Assert, any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[Assert, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+      implicit val canAssert: Understands[Ctxt, Apply[Assert, any.Expression, any.Expression]] =
+        new Understands[Ctxt, Apply[Assert, any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[Assert, any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, assertionOpsFactory.assertTrue(command.arguments.head))
           }
         }
     }
     def enable(): Generator[any.Project, Unit] = Command.skip[any.Project]
   }
-  val assertionsInMethods: AssertionsInMethods = new AssertionsInMethods {}
 }
 
 object Assertions {

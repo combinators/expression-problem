@@ -8,7 +8,7 @@ import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.cogen.Command
 
 trait Booleans[AST <: BooleanAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait BooleansInMethods extends Bools[_base.ast.any.Method] {
+  trait BooleansIn[Ctxt] extends Bools[Ctxt] {
     override val base: _base.type = _base
 
     import base.ast.any
@@ -16,8 +16,8 @@ trait Booleans[AST <: BooleanAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
 
     val booleanCapabilities: BooleanCapabilities =
       new BooleanCapabilities {
-        implicit val canAnd: Understands[any.Method, Apply[And, any.Expression, any.Expression]] = new Understands[any.Method, Apply[And, any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[And, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+        implicit val canAnd: Understands[Ctxt, Apply[And, any.Expression, any.Expression]] = new Understands[Ctxt, Apply[And, any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[And, any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             val andExp = if (command.arguments.isEmpty) {
               booleanOpsFactory.falseExp()
             } else {
@@ -26,8 +26,8 @@ trait Booleans[AST <: BooleanAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
             (context, andExp)
           }
         }
-        implicit val canOr: Understands[any.Method, Apply[Or, any.Expression, any.Expression]] = new Understands[any.Method, Apply[Or, any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[Or, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+        implicit val canOr: Understands[Ctxt, Apply[Or, any.Expression, any.Expression]] = new Understands[Ctxt, Apply[Or, any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[Or, any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             val orExp = if (command.arguments.isEmpty) {
               booleanOpsFactory.trueExp()
             } else {
@@ -36,26 +36,23 @@ trait Booleans[AST <: BooleanAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
             (context, orExp)
           }
         }
-        implicit val canNot: Understands[any.Method, Apply[Not, any.Expression, any.Expression]] = new Understands[any.Method, Apply[Not, any.Expression, any.Expression]] {
-          def perform(context: any.Method, command: Apply[Not, any.Expression, any.Expression]): (any.Method, any.Expression) = {
+        implicit val canNot: Understands[Ctxt, Apply[Not, any.Expression, any.Expression]] = new Understands[Ctxt, Apply[Not, any.Expression, any.Expression]] {
+          def perform(context: Ctxt, command: Apply[Not, any.Expression, any.Expression]): (Ctxt, any.Expression) = {
             (context, booleanOpsFactory.not(command.arguments.head))
           }
         }
-        implicit val canTrue: Understands[any.Method, True[any.Expression]] = new Understands[any.Method, True[any.Expression]] {
-          def perform(context: any.Method, command: True[any.Expression]): (any.Method, any.Expression) = {
+        implicit val canTrue: Understands[Ctxt, True[any.Expression]] = new Understands[Ctxt, True[any.Expression]] {
+          def perform(context: Ctxt, command: True[any.Expression]): (Ctxt, any.Expression) = {
             (context, booleanOpsFactory.trueExp())
           }
         }
-        implicit val canFalse: Understands[any.Method, False[any.Expression]] = new Understands[any.Method, False[any.Expression]] {
-          def perform(context: any.Method, command: False[any.Expression]): (any.Method, any.Expression) = {
+        implicit val canFalse: Understands[Ctxt, False[any.Expression]] = new Understands[Ctxt, False[any.Expression]] {
+          def perform(context: Ctxt, command: False[any.Expression]): (Ctxt, any.Expression) = {
             (context, booleanOpsFactory.falseExp())
           }
         }
       }
-    override def enable(): Generator[any.Project, Unit] = Command.skip[any.Project]
   }
-  
-  val booleansInMethodsInMethods: BooleansInMethods = new BooleansInMethods {}
 }
 
 object Booleans {

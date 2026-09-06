@@ -5,21 +5,21 @@ import org.combinators.cogen.{Command, TypeRep}
 import org.combinators.ep.language.inbetween.ContextRegistry
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.scala.ast.BaseAST
-import org.combinators.ep.language.inbetween.ffi.Arithmetic as Arith
+import org.combinators.ep.language.inbetween.ffi.Arrays as Ar
 
 import scala.reflect.{ClassTag, classTag}
 
-trait Arithmetic[AST <: ArithmeticAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm, T: ClassTag](
+trait Arrays[AST <: ArraysAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm, T: ClassTag](
   val _base: AnyParadigm.WithAST[AST] & B,
   matchingTpeRep: TypeRep.OfHostType[T],
   methodRegistry: ContextRegistry[B, _base.ast.any.Method],
   constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor],
   classRegistry: ContextRegistry[B, _base.ast.oo.Class]
-) extends Arith[AST, B, T] {
+) extends Ar[AST, B, T] {
   
   val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
   
-  trait ScalaArithmeticIn[Ctxt](val registry: ContextRegistry[B, Ctxt]) extends super.ArithmeticIn[Ctxt] {
+  trait ScalaArraysIn[Ctxt](val registry: ContextRegistry[B, Ctxt]) extends super.ArraysIn[Ctxt] {
     override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] =
       tpeRep => if (tpeRep == matchingTpeRep) {
         Some(Command.lift(_base.ast.ooFactory.classReferenceType(nameProvider.mangle(classTag[T].runtimeClass.getName))))
@@ -31,18 +31,18 @@ trait Arithmetic[AST <: ArithmeticAST & BaseAST, B <: org.combinators.cogen.para
     }
   }
   
-  val arithmeticInMethods: ScalaArithmeticIn[_base.ast.any.Method] = new ScalaArithmeticIn(methodRegistry) {}
-  val arithmeticInConstructors: ScalaArithmeticIn[_base.ast.oo.Constructor] = new ScalaArithmeticIn(constructorRegistry) {}
-  val arithmeticInClasses: ScalaArithmeticIn[_base.ast.oo.Class] = new ScalaArithmeticIn(classRegistry) {}
+  val arraysInMethods: ScalaArraysIn[_base.ast.any.Method] = new ScalaArraysIn(methodRegistry) {}
+  val arrraysInConstructors: ScalaArraysIn[_base.ast.oo.Constructor] = new ScalaArraysIn(constructorRegistry) {}
+  val arrraysInClasses: ScalaArraysIn[_base.ast.oo.Class] = new ScalaArraysIn(classRegistry) {}
 }
 
-object Arithmetic {
-  type WithBase[T, AST <: ArithmeticAST & BaseAST, B <: AnyParadigm.WithAST[AST]] = Arithmetic[AST, B, T] {}
-  def apply[T: ClassTag, AST <: ArithmeticAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
+object Arrays {
+  type WithBase[T, AST <: ArraysAST & BaseAST, B <: AnyParadigm.WithAST[AST]] = Arrays[AST, B, T] {}
+  def apply[T: ClassTag, AST <: ArraysAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
     _base: B,
     matchingTpeRep: TypeRep.OfHostType[T],
     methodRegistry: ContextRegistry[B, _base.ast.any.Method],
     constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor],
     classRegistry: ContextRegistry[B, _base.ast.oo.Class],
-  ): WithBase[T, AST, B] = new Arithmetic[AST, B, T](_base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry) with Arith[AST, B, T](_base) {}
+  ): WithBase[T, AST, B] = new Arrays[AST, B, T](_base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry) with Ar[AST, B, T](_base) {}
 }

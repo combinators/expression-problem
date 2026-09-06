@@ -108,6 +108,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
           copyAsScalaProject(
             compilationUnits = compilationUnits,
             customFiles = customFiles,
+            enabledFFIs = enabledFFIs,
             adtTypeLookupMap = adtTypeLookupMap,
             functionTypeLookupMap = functionTypeLookupMap,
             adtReifyLookupMap = adtReifyLookupMap,
@@ -903,6 +904,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
         ): anyOverrides.Project = scalaBaseFactory.scalaProject(
           compilationUnits = compilationUnits,
           customFiles = customFiles,
+          enabledFFIs = enabledFFIs,
           adtTypeLookupMap = Map.empty,
           functionTypeLookupMap = Map.empty,
           methodTypeLookupMap = methodTypeLookupMap,
@@ -1045,6 +1047,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
       }
 
       trait PatternContext extends funcontrol.PatternContext with Util {
+       
       }
 
       trait PatternVariable extends funcontrol.PatternVariable with anyOverrides.Expression {
@@ -1576,8 +1579,18 @@ trait FinalBaseAST extends BaseAST {
         }
         ClassBasedTestSuite(underlyingClass, testMarkers)
       }
-
-      def constructor(constructedType: Option[any.Type], imports: Set[any.Import], statements: Seq[any.Statement], parameters: Seq[(any.Name, any.Type)], typeLookupMap: TypeRep => Generator[any.Method, any.Type], constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type], superInitialization: Option[(any.Type, Seq[any.Expression])], fieldInitializers: Seq[(any.Name, any.Expression)]): oo.Constructor = {
+      
+      def constructor(
+         constructedType: Option[any.Type], 
+         imports: Set[any.Import], 
+         statements: Seq[any.Statement], 
+         parameters: Seq[(any.Name, any.Type)], 
+         typeLookupMap: TypeRep => Generator[any.Method, any.Type], 
+         constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type],
+         reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression],
+         constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression],
+         superInitialization: Option[(any.Type, Seq[any.Expression])], 
+         fieldInitializers: Seq[(any.Name, any.Expression)]): oo.Constructor = {
         class Constructor(
           override val constructedType: Option[any.Type],
           override val imports: Set[any.Import],
@@ -1585,13 +1598,16 @@ trait FinalBaseAST extends BaseAST {
           override val parameters: Seq[(any.Name, any.Type)],
           override val typeLookupMap: TypeRep => Generator[any.Method, any.Type],
           override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type],
+          override val reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression],
+          override val constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression],
           override val superInitialization: Option[(any.Type, Seq[any.Expression])],
           override val fieldInitializers: Seq[(any.Name, any.Expression)])
         extends scalaBase.ooOverrides.Constructor {
           override def getSelfMethod: scalaBase.anyOverrides.Method = this
           override def getSelfConstructor: scalaBase.ooOverrides.Constructor = this
         }
-        Constructor(constructedType, imports, statements, parameters, typeLookupMap, constructorTypeLookupMap, superInitialization, fieldInitializers)
+        
+        Constructor(constructedType, imports, statements, parameters, typeLookupMap, constructorTypeLookupMap, reifyLookupMap, constructorReifyLookupMap, superInitialization, fieldInitializers)
       }
 
       def field(name: any.Name, tpe: any.Type, init: Option[any.Expression]): oo.Field = {
@@ -1677,16 +1693,19 @@ trait FinalBaseAST extends BaseAST {
       def adt(name: any.Name,
         imports: Seq[any.Import],
         typeConstructors: Seq[functional.TypeConstructor],
-        typeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type]): functional.AlgebraicDataType = {
-        case class ADT(override val name: any.Name,
+        typeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type],
+        reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression]): functional.AlgebraicDataType = {
+        // HEINEMAN had been case class, but removed because of multiple overloaded methods with default args
+        class ADT(override val name: any.Name,
           override val imports: Seq[any.Import],
           override val typeConstructors: Seq[functional.TypeConstructor],
-          override val typeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type])
+          override val typeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type],
+          override val reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression])
         extends scalaBase.functionalOverrides.AlgebraicDataType {
           def getSelfAlgebraicDataType: functionalFinalTypes.AlgebraicDataType = this
           def getSelfType: scalaBase.anyOverrides.Type = this
         }
-        ADT(name, imports, typeConstructors, typeLookupMap)
+        ADT(name, imports, typeConstructors, typeLookupMap, reifyLookupMap)
       }
       def typeConstructor(name: any.Name, parameters: Seq[(any.Name, any.Type)]): functional.TypeConstructor = {
         case class TypeConstructor(override val name: any.Name,
@@ -1819,7 +1838,24 @@ trait FinalBaseAST extends BaseAST {
     }
 
     trait GenericsFactory extends generics.Factory {
-      def genericClass(name: any.Name, imports: Seq[any.Import], typeParameters: Seq[polymorphism.TypeParameter], parents: Seq[any.Type], implemented: Seq[any.Type], fields: Seq[oo.Field], methods: Seq[any.Method], constructors: Seq[oo.Constructor], methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type], constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type], typeLookupMap: TypeRep => Generator[oo.Class, any.Type], isAbstract: Boolean, isInterface: Boolean, isStatic: Boolean): generics.ooOverrides.Class = {
+      def genericClass(
+          name: any.Name, 
+          imports: Seq[any.Import], 
+          typeParameters: Seq[polymorphism.TypeParameter], 
+          parents: Seq[any.Type], 
+          implemented: Seq[any.Type], 
+          fields: Seq[oo.Field], 
+          methods: Seq[any.Method], 
+          constructors: Seq[oo.Constructor], 
+          methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type], 
+          constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type], 
+          typeLookupMap: TypeRep => Generator[oo.Class, any.Type],
+          methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression],
+          constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression],
+          reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression],
+          isAbstract: Boolean, 
+          isInterface: Boolean, 
+          isStatic: Boolean): generics.ooOverrides.Class = {
         class GenericClass(
           override val name: any.Name,
           override val imports: Seq[any.Import],
@@ -1832,15 +1868,30 @@ trait FinalBaseAST extends BaseAST {
           override val methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
           override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type],
           override val typeLookupMap: TypeRep => Generator[oo.Class, any.Type],
+          override val methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression],
+          override val constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression],
+          override val reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression],                          
           override val isAbstract: Boolean,
           override val isInterface: Boolean,
           override val isStatic: Boolean
         ) extends scalaBase.ooOverrides.Class {
           override def getSelfClass: scalaBase.ooOverrides.Class = this
         }
-        GenericClass(name, imports, typeParameters, parents, implemented, fields, methods, constructors, methodTypeLookupMap, constructorTypeLookupMap, typeLookupMap, isAbstract, isInterface, isStatic)
+        GenericClass(name, imports, typeParameters, parents, implemented, fields, methods, constructors, methodTypeLookupMap, constructorTypeLookupMap, typeLookupMap, methodReifyLookupMap, constructorReifyLookupMap, reifyLookupMap, isAbstract, isInterface, isStatic)
       }
-      def genericMethod(name: any.Name, imports: Set[any.Import], statements: Seq[any.Statement], returnType: Option[any.Type], typeParameters: Seq[polymorphism.TypeParameter], parameters: Seq[(any.Name, any.Type)], typeLookupMap: TypeRep => Generator[any.Method, any.Type], isAbstract: Boolean, isStatic: Boolean, isPublic: Boolean, isOverride: Boolean): generics.anyOverrides.Method = {
+      def genericMethod(
+            name: any.Name, 
+            imports: Set[any.Import], 
+            statements: Seq[any.Statement], 
+            returnType: Option[any.Type], 
+            typeParameters: Seq[polymorphism.TypeParameter], 
+            parameters: Seq[(any.Name, any.Type)], 
+            typeLookupMap: TypeRep => Generator[any.Method, any.Type],
+            reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression],
+            isAbstract: Boolean, 
+            isStatic: Boolean, 
+            isPublic: Boolean, 
+            isOverride: Boolean): generics.anyOverrides.Method = {
         class GenericMethod(override val name: any.Name,
           override val imports: Set[any.Import],
           override val statements: Seq[any.Statement],
@@ -1848,18 +1899,19 @@ trait FinalBaseAST extends BaseAST {
           override val typeParameters: Seq[polymorphism.TypeParameter],
           override val parameters: Seq[(any.Name, any.Type)],
           override val typeLookupMap: TypeRep => Generator[any.Method, any.Type],
+          override val reifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression],
           override val isAbstract: Boolean, isStatic: Boolean,
           override val isPublic: Boolean,
           override val isOverride: Boolean) extends scalaBase.anyOverrides.Method {
           override def getSelfMethod: scalaBase.anyOverrides.Method = this
         }
-        GenericMethod(name, imports, statements, returnType, typeParameters, parameters, typeLookupMap, isAbstract, isStatic, isPublic, isOverride)
+        GenericMethod(name, imports, statements, returnType, typeParameters, parameters, typeLookupMap, reifyLookupMap, isAbstract, isStatic, isPublic, isOverride)
       }
       def typeParameterWithBounds(name: any.Name, upperBounds: Seq[any.Type], lowerBounds: Seq[any.Type]): generics.polymorphismOverrides.TypeParameter = {
         class TypeParameterWithBounds(
           override val name: any.Name,
           override val upperBounds: Seq[any.Type],
-          override val  lowerBounds: Seq[any.Type]
+          override val lowerBounds: Seq[any.Type]
         ) extends scalaBase.polymorphismOverrides.TypeParameter {
           override def getSelfTypeParameter: polymorphismFinalTypes.TypeParameter = this
         }
@@ -1951,47 +2003,77 @@ trait FinalBaseAST extends BaseAST {
         }
         Name(name, mangled)
       }
-      def scalaProject(compilationUnits: Set[any.CompilationUnit], customFiles: Seq[FileWithPath], methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type], constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type], classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type], adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type], functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type]): scalaBase.anyOverrides.Project = {
+      def scalaProject(
+          compilationUnits: Set[any.CompilationUnit], 
+          customFiles: Seq[FileWithPath],
+          enabledFFIs: Set[FFI],
+          methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type], 
+          constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type],
+          classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type], 
+          adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type], 
+          functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
+          methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression],
+          constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression],
+          classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression],
+          adtReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression],
+          functionReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression]
+        ): scalaBase.anyOverrides.Project = {
         // removed case class to avoid multiple copy implementations
         class ScalaProject(
           override val compilationUnits: Set[any.CompilationUnit],
           override val customFiles: Seq[FileWithPath],
+          override val enabledFFIs: Set[FFI],
           override val methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
           override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type],
           override val classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type],
           override val adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type],
-          override val functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type]
+          override val functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
+          override val methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression],
+          override val constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression],
+          override val classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression],
+          override val adtReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression],
+          override val functionReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression]
         ) extends scalaBase.anyOverrides.Project {
           def getSelfProject: scalaBase.anyOverrides.Project = this
         }
-        ScalaProject(compilationUnits, customFiles, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, adtTypeLookupMap, functionTypeLookupMap)
+        ScalaProject(compilationUnits, customFiles, enabledFFIs, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, adtTypeLookupMap, functionTypeLookupMap, methodReifyLookupMap, constructorReifyLookupMap, classReifyLookupMap, adtReifyLookupMap, functionReifyLookupMap)
       }
       def scalaCompilationUnit(name: Seq[any.Name],
-                               imports: Seq[any.Import],
-                               methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
-                               constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type],
-                               classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type],
-                               adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type],
-                               functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
-                               classes: Seq[oo.Class],
-                               adts: Seq[functional.AlgebraicDataType],
-                               functions: Seq[any.Method],
-                               tests: Seq[any.TestSuite]):  scalaBase.anyOverrides.CompilationUnit = {
+               imports: Seq[any.Import],
+               methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
+               constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type],
+               classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type],
+               adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type],
+               functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
+               methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression],
+               constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression],
+               classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression],
+               adtReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression],
+               functionReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression],
+               classes: Seq[oo.Class],
+               adts: Seq[functional.AlgebraicDataType],
+               functions: Seq[any.Method],
+               tests: Seq[any.TestSuite]):  scalaBase.anyOverrides.CompilationUnit = {
         class ScalaCompilationUnit(override val name: Seq[any.Name],
-                                        override val imports: Seq[any.Import],
-                                        override val methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
-                                        override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type],
-                                        override val classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type],
-                                        override val adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type],
-                                        override val functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
-                                        override val classes: Seq[oo.Class],
-                                        override val adts: Seq[functional.AlgebraicDataType],
-                                        override val functions: Seq[any.Method],
-                                        override val tests: Seq[any.TestSuite])
+               override val imports: Seq[any.Import],
+               override val methodTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
+               override val constructorTypeLookupMap: TypeRep => Generator[oo.Constructor, any.Type],
+               override val classTypeLookupMap: TypeRep => Generator[oo.Class, any.Type],
+               override val adtTypeLookupMap: TypeRep => Generator[functional.AlgebraicDataType, any.Type],
+               override val functionTypeLookupMap: TypeRep => Generator[any.Method, any.Type],
+               override val methodReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression],
+               override val constructorReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Constructor, any.Expression],
+               override val classReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[oo.Class, any.Expression],
+               override val adtReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[functional.AlgebraicDataType, any.Expression],
+               override val functionReifyLookupMap: (tpe: TypeRep) => tpe.HostType => Generator[any.Method, any.Expression],
+               override val classes: Seq[oo.Class],
+               override val adts: Seq[functional.AlgebraicDataType],
+               override val functions: Seq[any.Method],
+               override val tests: Seq[any.TestSuite])
           extends scalaBase.anyOverrides.CompilationUnit {
           def getSelfCompilationUnit: scalaBase.anyOverrides.CompilationUnit = this
         }
-        ScalaCompilationUnit(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, adtTypeLookupMap, functionTypeLookupMap, classes, adts, functions, tests)
+        ScalaCompilationUnit(name, imports, methodTypeLookupMap, constructorTypeLookupMap, classTypeLookupMap, adtTypeLookupMap, functionTypeLookupMap, methodReifyLookupMap, constructorReifyLookupMap, classReifyLookupMap, adtReifyLookupMap, functionReifyLookupMap, classes, adts, functions, tests)
       }
       def importStatement(components: Seq[any.Name]): scalaBase.anyOverrides.Import = {
         case class ImportStatement(override val components: Seq[any.Name]) extends scalaBase.anyOverrides.Import {

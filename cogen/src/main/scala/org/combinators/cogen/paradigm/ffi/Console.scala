@@ -6,7 +6,7 @@ import Command.Generator
 
 case object Print
 
-trait Console[Context] extends FFI {
+trait Console[Context, T] extends FFI {
   import base.syntax._
 
   trait ConsoleCapabilities {
@@ -20,5 +20,5 @@ trait Console[Context] extends FFI {
 }
 
 object Console {
-  type WithBase[Ctxt, B <: AnyParadigm] = Console[Ctxt] { val base: B }
+  type WithBase[Ctxt, B <: AnyParadigm, T] = Console[Ctxt, T] { val base: B }
 }

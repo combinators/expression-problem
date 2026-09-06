@@ -14,11 +14,11 @@ import org.combinators.ep.language.java.Syntax.default.*
 import org.combinators.ep.language.java.CodeGenerator.Enable
 import org.combinators.templating.twirl.Java
 
-class Equality[Ctxt, AP <: AnyParadigm](
+class Equality[Ctxt, T, AP <: AnyParadigm](
   val base: AP,
   getMember: Understands[Ctxt, GetMember[Expression, Name]],
   applyMethod: Understands[Ctxt, Apply[Expression, Expression, Expression]]
-) extends Eql[Ctxt] {
+) extends Eql[Ctxt, T] {
   case object EqualityEnabled
 
   val equalityCapabilities: EqualityCapabilities =

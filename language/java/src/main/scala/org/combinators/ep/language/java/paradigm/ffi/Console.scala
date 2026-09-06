@@ -9,10 +9,10 @@ import org.combinators.cogen.Understands
 import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.language.java.paradigm.AnyParadigm
 
-class Console[Ctxt, AP <: AnyParadigm](
+class Console[Ctxt, T, AP <: AnyParadigm](
   val base: AP,
-  strings: Strings.WithBase[Ctxt, AP]
-) extends Con[Ctxt] {
+  strings: Strings.WithBase[Ctxt, AP, T]
+) extends Con[Ctxt, T] {
 
   val consoleCapabilities: ConsoleCapabilities =
     new ConsoleCapabilities {

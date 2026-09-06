@@ -6,12 +6,11 @@ import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait Strings[AST <: StringAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait StringsIn[Ctxt] extends Strs[Ctxt] {
-    override val base: _base.type = _base
-
+trait Strings[AST <: StringAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
+  trait StringsIn[Ctxt] extends Strs[Ctxt, T] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.stringOpsFactory
+    override val base: _base.type = _base
 
     val stringCapabilities: StringCapabilities = new StringCapabilities {
       implicit val canAppend: Understands[Ctxt, Apply[StringAppend, any.Expression, any.Expression]] =
@@ -53,7 +52,7 @@ trait Strings[AST <: StringAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
 }
 
 object Strings {
-  type WithBase[AST <: StringAST, B <: AnyParadigm.WithAST[AST]] = Strings[AST, B] {}
-  def apply[AST <: StringAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new Strings[AST, B](_base) {}
+  type WithBase[T, AST <: StringAST, B <: AnyParadigm.WithAST[AST]] = Strings[AST, B, T] {}
+  def apply[T, AST <: StringAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Strings[AST, B, T](_base) {}
 }
 

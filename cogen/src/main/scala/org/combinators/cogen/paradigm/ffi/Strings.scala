@@ -12,7 +12,7 @@ case class GetCharAt()
 case class SubString()
 case class ToString[Type](sourceType: Type)
 
-trait Strings[Context] extends FFI {
+trait Strings[Context, T] extends FFI {
   import base.syntax._
 
   trait StringCapabilities {
@@ -63,5 +63,5 @@ trait Strings[Context] extends FFI {
 }
 
 object Strings {
-  type WithBase[Ctxt, B <: AnyParadigm] = Strings[Ctxt] { val base: B }
+  type WithBase[Ctxt, B <: AnyParadigm, T] = Strings[Ctxt, T] { val base: B }
 }

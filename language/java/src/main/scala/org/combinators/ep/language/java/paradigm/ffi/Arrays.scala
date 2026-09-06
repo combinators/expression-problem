@@ -13,7 +13,7 @@ import org.combinators.ep.language.java.Syntax.default.*
 import org.combinators.ep.language.java.paradigm.AnyParadigm
 import org.combinators.ep.language.java.{ContextSpecificResolver, ProjectCtxt}
 
-class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
+class Arrays[Ctxt, T, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt, T] {
   case object ArraysEnabled
 
   def arrayCreation[Ctxt](): Understands[Ctxt, CreateArray[Type,Expression]] =

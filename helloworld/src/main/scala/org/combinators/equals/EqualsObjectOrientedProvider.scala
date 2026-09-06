@@ -1,13 +1,11 @@
 package org.combinators.equals
 
-import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.cogen.paradigm.control.Imperative
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Arrays, Assertions, Booleans, Console, Equality, Maps}
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{AbstractSyntax, Command, NameProvider}
 import org.combinators.equals.ffi.BaseType
-import org.combinators.equals.ffi.BaseType.CompositeTpe
 
 trait EqualsObjectOrientedProvider extends EqualsProvider {
   val ooParadigm: ObjectOriented.WithBase[paradigm.type]
@@ -66,8 +64,6 @@ trait EqualsObjectOrientedProvider extends EqualsProvider {
   def implement(domains:Seq[CompositeDataType],
                 testCases:Seq[EqualsTestCase]) : Generator[ProjectContext, Unit] = {
     import AnyParadigm.syntax._
-
-    
 
     for {
       _ <- forEach(domains) { domain => for {

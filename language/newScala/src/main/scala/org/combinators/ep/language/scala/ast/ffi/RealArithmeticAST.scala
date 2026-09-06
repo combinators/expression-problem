@@ -4,7 +4,8 @@ import org.combinators.ep.language.inbetween.ffi.RealArithmeticAST as InbetweenR
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
 import org.combinators.ep.language.scala.ast.ffi.OperatorExpressionsAST
 
-trait RealArithmeticOpsAST extends InbetweenRealArithmeticAST { self: OperatorExpressionsAST & BaseAST =>
+trait RealArithmeticAST extends InbetweenRealArithmeticAST { 
+  self: OperatorExpressionsAST & BaseAST =>
   object scalaRealArithmeticOps {
     object realArithmeticOpsOverride {
 
@@ -96,7 +97,7 @@ trait RealArithmeticOpsAST extends InbetweenRealArithmeticAST { self: OperatorEx
   val realArithmeticOpsFactory: scalaRealArithmeticOps.realArithmeticOpsOverride.Factory
 }
 
-trait FinalRealArithmeticOpsAST extends RealArithmeticOpsAST { self: FinalOperatorExpressionsAST & FinalBaseAST =>
+trait FinalRealArithmeticOpsAST extends RealArithmeticAST { self: FinalOperatorExpressionsAST & FinalBaseAST =>
   object finalRealArithmeticFactoryTypes {
     trait FinalRealArithmeticFactory extends scalaRealArithmeticOps.realArithmeticOpsOverride.Factory {
       def sqrtOp(): realArithmeticOps.SqrtOp = {

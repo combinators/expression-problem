@@ -76,11 +76,14 @@ trait Functional[AST <: FunctionalControlAST, B](val _base: AnyParadigm.WithAST[
           (context.copy(context.variables :+ command.name), functionalControlFactory.patternVariable(command.name))
         }
       }
-      implicit def canReifyInPattern[T]: Understands[PatternContext, Reify[T, any.Expression]] = new Understands[PatternContext, Reify[T, any.Expression]] {
-        def perform(context: PatternContext, command: Reify[T, any.Expression]): (PatternContext, any.Expression) = {
-          (context, context.reify(command.tpe, command.value))
+      implicit def canReifyInPattern[T]: Understands[PatternContext, Reify[T, any.Expression]] =
+        new Understands[PatternContext, Reify[T, any.Expression]] {
+          def perform(context: PatternContext, command: Reify[T, any.Expression]): (PatternContext, any.Expression) = {
+            //(context, context.reify(command.tpe, command.value))
+            ???  // HEINEMAN FIX
+            //Command.runGenerator(context.resolver.reificationInMethod(InstanceRep(command.tpe)(command.value)), context)
+          }
         }
-      }
 
       implicit val canApplyConstructorPattern: Understands[PatternContext, Apply[ConstructorPattern[any.Type, any.Name], Generator[PatternContext, any.Expression], any.Expression]] = new Understands[PatternContext, Apply[ConstructorPattern[any.Type, any.Name], Generator[PatternContext, any.Expression], any.Expression]] {
         override def perform(context: PatternContext, command: Apply[ConstructorPattern[any.Type, any.Name], Generator[PatternContext, any.Expression], any.Expression]): (PatternContext, any.Expression) = {

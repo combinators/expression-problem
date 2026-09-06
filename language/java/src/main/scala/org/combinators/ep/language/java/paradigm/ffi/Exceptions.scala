@@ -12,7 +12,7 @@ import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.ep.language.java.{MethodBodyCtxt, ProjectCtxt}
 
-class Exceptions[AP <: AnyParadigm](val base: AP) extends Excptns[MethodBodyCtxt] {
+class Exceptions[T, AP <: AnyParadigm](val base: AP) extends Excptns[MethodBodyCtxt, T] {
 
   val exceptionsCapabilities: ExceptionsCapabilities =
     new ExceptionsCapabilities {

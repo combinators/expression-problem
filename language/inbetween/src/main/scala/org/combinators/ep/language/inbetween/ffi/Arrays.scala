@@ -2,17 +2,14 @@ package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{CreateArray, Get, Length, Set, Arrays as Arys}
-import org.combinators.cogen.{Command, TypeRep, Understands}
-import org.combinators.cogen.Command.Generator
-import org.combinators.ep.language.inbetween.any
+import org.combinators.cogen.Understands
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait Arrays[AST <: ArraysAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait ArraysInCtxt[Ctxt] extends Arys[Ctxt] {
-    val base: _base.type = _base
-  
-    import base.ast.arraysOpsFactory
+trait Arrays[AST <: ArraysAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
+  trait ArraysIn[Ctxt] extends Arys[Ctxt, T] with FFI[Ctxt] {
     import base.ast.any
+    import base.ast.arraysOpsFactory
+    override val base: _base.type = _base
 
     override val arrayCapabilities: ArrayCapabilities = new ArrayCapabilities {
       override implicit val canCreate: Understands[Ctxt, CreateArray[any.Type,any.Expression]] =
@@ -44,8 +41,8 @@ trait Arrays[AST <: ArraysAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
 }
 
 object Arrays {
-  type WithBase[AST <: ArraysAST, B <: AnyParadigm.WithAST[AST]] = Arrays[AST, B] {}
+  type WithBase[T, AST <: ArraysAST, B <: AnyParadigm.WithAST[AST]] = Arrays[AST, B, T] {}
 
-  def apply[AST <: ArraysAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new Arrays[AST, B](_base) {}
+  def apply[T, AST <: ArraysAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Arrays[AST, B, T](_base) {}
 }
 

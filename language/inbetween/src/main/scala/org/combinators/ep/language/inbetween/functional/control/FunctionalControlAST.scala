@@ -74,8 +74,11 @@ trait FunctionalControlAST extends AnyAST {
       def getSelfPatternContext: functionalControlFinalTypes.PatternContext
 
       def variables: Seq[any.Name]
+      /** HEINEMAN. No Longer Done In Context
       def reify[T](tpe: TypeRep.OfHostType[T], value: T): any.Expression
-
+       */
+      // def resolver: ContextSpecificResolver
+      // HEINEMAN. Cannot put ContextSpecificResolver here. Must be in the final Language (i.e., java or Scala)
       def copy(variables: Seq[any.Name] = this.variables): PatternContext = functionalControlFactory.patternContext(variables)
     }
 

@@ -4,7 +4,8 @@ import org.combinators.ep.language.inbetween.ffi.{ArithmeticAST => InbetweenArit
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.scala.ast.ffi.OperatorExpressionsAST
 
-trait ArithmeticAST extends InbetweenArithmeticOpsAST { self: OperatorExpressionsAST & BaseAST =>
+trait ArithmeticAST extends InbetweenArithmeticOpsAST { 
+  self: OperatorExpressionsAST & BaseAST =>
   object scalaArithmeticOps {
     object arithmeticOpsOverride {
 

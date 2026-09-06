@@ -6,12 +6,11 @@ import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait Lists[AST <: ListsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait ListsIn[Ctxt] extends Lsts[Ctxt] {
-    val base: _base.type = _base
-
-    import base.ast.listsOpsFactory
+trait Lists[AST <: ListsAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
+  trait ListsIn[Ctxt] extends Lsts[Ctxt, T] with FFI[Ctxt] {
     import base.ast.any
+    import base.ast.listsOpsFactory
+    override val base: _base.type = _base
 
     override val listCapabilities: ListCapabilities = new ListCapabilities {
       override implicit val canCreate: Understands[Ctxt, Apply[Create[any.Type], any.Expression, any.Expression]] =
@@ -46,12 +45,11 @@ trait Lists[AST <: ListsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
         }
     }
   }
-  
 }
 
 object Lists {
-  type WithBase[AST <: ListsAST, B <: AnyParadigm.WithAST[AST]] = Lists[AST, B] {}
+  type WithBase[T, AST <: ListsAST, B <: AnyParadigm.WithAST[AST]] = Lists[AST, B, T] {}
 
-  def apply[AST <: ListsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new Lists[AST, B](_base) {}
+  def apply[T, AST <: ListsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Lists[AST, B, T](_base) {}
 }
 

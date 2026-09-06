@@ -2,15 +2,14 @@ package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{Assert, Assertions as Asrts}
-import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.Understands
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait Assertions[AST <: AssertionsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait AssertionsIn[Ctxt] extends Asrts[Ctxt] {
-    val base: _base.type = _base
-    import base.ast.assertionOpsFactory
+trait Assertions[AST <: AssertionsAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
+  trait AssertionsIn[Ctxt] extends Asrts[Ctxt, T] with FFI[Ctxt] {
     import base.ast.any
+    import base.ast.assertionOpsFactory
+    override val base: _base.type = _base
 
     val assertionCapabilities: AssertionCapabilities = new AssertionCapabilities {
       implicit val canAssert: Understands[Ctxt, Apply[Assert, any.Expression, any.Expression]] =
@@ -20,12 +19,11 @@ trait Assertions[AST <: AssertionsAST, B](val _base: AnyParadigm.WithAST[AST] & 
           }
         }
     }
-    def enable(): Generator[any.Project, Unit] = Command.skip[any.Project]
   }
 }
 
 object Assertions {
-  type WithBase[AST <: AssertionsAST, B <: AnyParadigm.WithAST[AST]] = Assertions[AST, B] {}
+  type WithBase[T, AST <: AssertionsAST, B <: AnyParadigm.WithAST[AST]] = Assertions[AST, B, T] {}
 
-  def apply[AST <: AssertionsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new Assertions[AST, B](_base) {}
+  def apply[T, AST <: AssertionsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Assertions[AST, B, T](_base) {}
 }

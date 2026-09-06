@@ -16,7 +16,7 @@ import org.combinators.cogen.paradigm.control.{DeclareVariable, LiftExpression}
 import org.combinators.cogen.paradigm.ffi.{ContainsKey, CreateMap, GetOrElse, Put, Maps as Mps}
 import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddImport, Apply, FreshName}
 
-trait Maps[Ctxt, AP <: AnyParadigm] extends Mps[Ctxt] {
+trait Maps[Ctxt, T, AP <: AnyParadigm] extends Mps[Ctxt, T] {
   case object MapsEnabled
 
   val base: AP
@@ -264,10 +264,10 @@ trait Maps[Ctxt, AP <: AnyParadigm] extends Mps[Ctxt] {
 }
 
 object Maps {
-  type Aux[Ctxt, AP <: AnyParadigm, Gen <: Generics[AP]] = Maps[Ctxt, AP] {
+  type Aux[Ctxt, T, AP <: AnyParadigm, Gen <: Generics[AP]] = Maps[Ctxt, T, AP] {
     val generics: Gen
   }
-  def apply[Ctxt, AP <: AnyParadigm, Gen[A <: AP] <: Generics[A]](
+  def apply[Ctxt, T, AP <: AnyParadigm, Gen[A <: AP] <: Generics[A]](
     base: AP,
     addImport: Understands[Ctxt, AddImport[Import]],
     canApplyType: Understands[Ctxt, Apply[Type, Type, Type]],
@@ -278,7 +278,7 @@ object Maps {
   )
     (
       generics: Gen[base.type]
-    ): Aux[Ctxt, base.type, generics.type] = {
+    ): Aux[Ctxt, T, base.type, generics.type] = {
     val b: base.type = base
     val addImp = addImport
     val applyType = canApplyType
@@ -297,7 +297,7 @@ object Maps {
       override val canDeclareVariable: Understands[Ctxt, DeclareVariable[Name, Type, Option[Expression], Expression]],
       override val canLiftExpression: Understands[Ctxt, LiftExpression[Expression, Statement]],
       override val canAddBlockDefinitions: Understands[Ctxt, AddBlockDefinitions[Statement]]
-    ) extends Maps[Ctxt, b.type]
+    ) extends Maps[Ctxt, T, b.type]
 
     Mps(b, gen, addImp, applyType, freshName, declareVar, liftExp, addBlockDfn)
   }

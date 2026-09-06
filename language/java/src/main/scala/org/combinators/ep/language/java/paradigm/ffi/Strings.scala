@@ -12,11 +12,11 @@ import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{Apply, GetMember}
 import org.combinators.cogen.paradigm.ffi.{GetCharAt, GetStringLength, StringAppend, SubString, ToString, Strings as Strs}
 
-class Strings[Ctxt, AP <: AnyParadigm](
+class Strings[Ctxt, T, AP <: AnyParadigm](
   val base: AP,
   getMember: Understands[Ctxt, GetMember[Expression, Name]],
   applyMethod: Understands[Ctxt, Apply[Expression, Expression, Expression]]
-) extends Strs[Ctxt] {
+) extends Strs[Ctxt, T] {
   case object StringsEnabled
 
   val stringCapabilities: StringCapabilities =

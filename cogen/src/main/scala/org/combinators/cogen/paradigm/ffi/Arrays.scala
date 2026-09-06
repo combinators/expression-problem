@@ -13,7 +13,7 @@ case class Get()
 case class Set()
 case class Length()
 
-trait Arrays[Context] extends FFI {
+trait Arrays[Context, T] extends FFI {
   import base._
   import syntax._
 
@@ -49,5 +49,5 @@ trait Arrays[Context] extends FFI {
 }
 
 object Arrays {
-  type WithBase[Ctxt, B <: AnyParadigm] = Arrays[Ctxt] { val base: B }
+  type WithBase[Ctxt, B <: AnyParadigm, T] = Arrays[Ctxt, T] { val base: B }
 }

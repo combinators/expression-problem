@@ -9,7 +9,7 @@ case class GetOrElse()
 case class ContainsKey()
 case class Put[Type](keyType: Type, valueType: Type)
 
-trait Maps[Context] extends FFI {
+trait Maps[Context, T] extends FFI {
   import base._
   import syntax._
 
@@ -35,5 +35,5 @@ trait Maps[Context] extends FFI {
 }
 
 object Maps {
-  type WithBase[Ctxt, B <: AnyParadigm] = Maps[Ctxt] { val base: B }
+  type WithBase[Ctxt, B <: AnyParadigm, T] = Maps[Ctxt, T] { val base: B }
 }

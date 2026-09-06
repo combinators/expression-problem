@@ -6,7 +6,7 @@ import Command.Generator
 
 case class Assert(message: String = "")
 
-trait Assertions[Context] extends FFI {
+trait Assertions[Context, T] extends FFI {
   import base.syntax._
 
   trait AssertionCapabilities {
@@ -40,5 +40,5 @@ trait Assertions[Context] extends FFI {
 }
 
 object Assertions {
-  type WithBase[Ctxt, B <: AnyParadigm] = Assertions[Ctxt] { val base: B }
+  type WithBase[Ctxt, B <: AnyParadigm, T] = Assertions[Ctxt, T] { val base: B }
 }

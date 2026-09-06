@@ -7,11 +7,10 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
 trait RealArithmetic[AST <: RealArithmeticAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait RealArithmeticIn[Ctxt] extends RealArith[Ctxt, T] {
-    val base: _base.type = _base
-
-    import base.ast.realArithmeticOpsFactory
+  trait RealArithmeticIn[Ctxt] extends RealArith[Ctxt, T] with FFI[Ctxt] {
     import base.ast.any
+    import base.ast.realArithmeticOpsFactory
+    override val base: _base.type = _base
 
     val realArithmeticCapabilities: RealArithmeticCapabilities = new RealArithmeticCapabilities {
       implicit val canSqrt: Understands[Ctxt, Apply[Sqrt[T], any.Expression, any.Expression]] =

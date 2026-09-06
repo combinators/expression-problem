@@ -15,7 +15,7 @@ case class False[Expression]() extends Command {
   type Result = Expression
 }
 
-trait Booleans[Context] extends FFI {
+trait Booleans[Context, T] extends FFI {
   import base.syntax._
 
   trait BooleanCapabilities {
@@ -43,5 +43,5 @@ trait Booleans[Context] extends FFI {
 }
 
 object Booleans {
-  type WithBase[Ctxt, B <: AnyParadigm] = Booleans[Ctxt] { val base: B }
+  type WithBase[Ctxt, B <: AnyParadigm, T] = Booleans[Ctxt, T] { val base: B }
 }

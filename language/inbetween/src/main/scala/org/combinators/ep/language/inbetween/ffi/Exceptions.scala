@@ -1,16 +1,14 @@
 package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.ffi.{Exception, Exceptions as Excptns}
-import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.Understands
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait Exceptions[AST <: ExceptionsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait ExceptionsIn[Ctxt] extends Excptns[Ctxt] {
-    val base: _base.type = _base
-    import base.ast.exceptionsOpsFactory
+trait Exceptions[AST <: ExceptionsAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
+  trait ExceptionsIn[Ctxt] extends Excptns[Ctxt, T] with FFI[Ctxt] {
     import base.ast.any
-    import base.ast
+    import base.ast.exceptionsOpsFactory
+    override val base: _base.type = _base
 
     val exceptionsCapabilities: ExceptionsCapabilities = new ExceptionsCapabilities {
 
@@ -24,12 +22,11 @@ trait Exceptions[AST <: ExceptionsAST, B](val _base: AnyParadigm.WithAST[AST] & 
           }
         }
     }
-    def enable(): Generator[any.Project, Unit] = Command.skip[any.Project]
   }
 }
 
 object Exceptions {
-  type WithBase[AST <: ExceptionsAST, B <: AnyParadigm.WithAST[AST]] = Exceptions[AST, B] {}
+  type WithBase[T, AST <: ExceptionsAST, B <: AnyParadigm.WithAST[AST]] = Exceptions[AST, B, T] {}
 
-  def apply[AST <: ExceptionsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new Exceptions[AST, B](_base) {}
+  def apply[T, AST <: ExceptionsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Exceptions[AST, B, T](_base) {}
 }

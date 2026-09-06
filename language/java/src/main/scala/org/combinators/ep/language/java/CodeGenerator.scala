@@ -22,8 +22,8 @@ class CodeGenerator(config: Config) { cc =>
   val parametricPolymorphism: ParametricPolymorphism[paradigm.type] = ParametricPolymorphism(paradigm)
   val generics: Generics.Aux[paradigm.type, ooParadigm.type, parametricPolymorphism.type] = Generics(paradigm)(ooParadigm, parametricPolymorphism)
 
-  val booleansInMethod = new Booleans[MethodBodyCtxt, paradigm.type](paradigm)
-  val booleansInConstructor = new Booleans[MethodBodyCtxt, paradigm.type](paradigm)
+  val booleansInMethod = new Booleans[MethodBodyCtxt, Boolean, paradigm.type](paradigm)
+  val booleansInConstructor = new Booleans[MethodBodyCtxt, Boolean, paradigm.type](paradigm)
 
   val doublesInMethod =
     new Arithmetic[MethodBodyCtxt, Double, paradigm.type](
@@ -70,68 +70,68 @@ class CodeGenerator(config: Config) { cc =>
     )
 
   val stringsInMethod =
-    new Strings[MethodBodyCtxt, paradigm.type](
+    new Strings[MethodBodyCtxt, String, paradigm.type](
       paradigm,
       ooParadigm.methodBodyCapabilities.canGetMemberInMethod,
       paradigm.methodBodyCapabilities.canApplyInMethodBody
     )
   val stringsInConstructor =
-    new Strings[CtorCtxt, paradigm.type](
+    new Strings[CtorCtxt, String, paradigm.type](
       paradigm,
       ooParadigm.constructorCapabilities.canGetMemberInConstructor,
       ooParadigm.constructorCapabilities.canApplyInConstructor
     )
 
   val equalityInMethod =
-    new Equality[MethodBodyCtxt, paradigm.type](
+    new Equality[MethodBodyCtxt, Unit, paradigm.type](   // Heineman: Not sure if Unit is correct
       paradigm,
       ooParadigm.methodBodyCapabilities.canGetMemberInMethod,
       paradigm.methodBodyCapabilities.canApplyInMethodBody
     )
   val equalityInConstructor =
-    new Equality[CtorCtxt, paradigm.type](
+    new Equality[CtorCtxt, Unit, paradigm.type]( // Heineman: Not sure if Unit is correct
       paradigm,
       ooParadigm.constructorCapabilities.canGetMemberInConstructor,
       ooParadigm.constructorCapabilities.canApplyInConstructor
     )
 
   val consoleInMethod =
-    new Console[MethodBodyCtxt, paradigm.type](
+    new Console[MethodBodyCtxt, String, paradigm.type](
       paradigm, stringsInMethod
     )
 
   val consoleInConstructor =
-    new Console[CtorCtxt, paradigm.type](
+    new Console[CtorCtxt, String, paradigm.type](
       paradigm, stringsInConstructor
     )
   
   val arraysInMethod =
-    new Arrays[MethodBodyCtxt, paradigm.type](
+    new Arrays[MethodBodyCtxt, Array[Any], paradigm.type](
       paradigm
     )
 
   val arraysInConstructor =
-    new Arrays[CtorCtxt, paradigm.type](
+    new Arrays[CtorCtxt, Array[Any], paradigm.type](
       paradigm
     )
     
 
   val listsInMethod =
-    Lists[MethodBodyCtxt, paradigm.type, Generics](
+    Lists[MethodBodyCtxt, Any, paradigm.type, Generics](
       paradigm,
       parametricPolymorphism.methodBodyCapabilities.canApplyTypeInMethod,
       paradigm.methodBodyCapabilities.canAddImportInMethodBody
     )(generics)
 
   val listsInConstructor =
-    Lists[CtorCtxt, paradigm.type, Generics](
+    Lists[CtorCtxt, Any, paradigm.type, Generics](
       paradigm,
       generics.constructorCapabilities.canApplyTypeInConstructor,
       ooParadigm.constructorCapabilities.canAddImportInConstructor
     )(generics)
 
   val mapsInMethod =
-    Maps[MethodBodyCtxt, paradigm.type, Generics](
+    Maps[MethodBodyCtxt, Map[?,?], paradigm.type, Generics](
       paradigm,
       paradigm.methodBodyCapabilities.canAddImportInMethodBody,
       parametricPolymorphism.methodBodyCapabilities.canApplyTypeInMethod,
@@ -142,7 +142,7 @@ class CodeGenerator(config: Config) { cc =>
     )(generics)
 
   val mapsInConstructor =
-    Maps[CtorCtxt, paradigm.type, Generics](
+    Maps[CtorCtxt, Map[?,?], paradigm.type, Generics](
       paradigm,
       ooParadigm.constructorCapabilities.canAddImportInConstructor,
       generics.constructorCapabilities.canApplyTypeInConstructor,
@@ -152,8 +152,8 @@ class CodeGenerator(config: Config) { cc =>
       ooParadigm.constructorCapabilities.canAddBlockDefinitionsInConstructor
     )(generics)
 
-  val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)
-  val exceptionsInMethod = new Exceptions[paradigm.type](paradigm)
+  val assertionsInMethod = new Assertions[String, paradigm.type](paradigm)(ooParadigm)
+  val exceptionsInMethod = new Exceptions[Unit, paradigm.type](paradigm)
 }
 
 object CodeGenerator {

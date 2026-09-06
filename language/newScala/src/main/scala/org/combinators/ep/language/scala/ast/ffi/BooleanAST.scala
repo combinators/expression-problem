@@ -11,46 +11,40 @@ trait BooleanAST extends InbetweenBooleanAST { self: OperatorExpressionsAST & Ba
 
       trait AndOp
         extends booleanOps.AndOp
-        with scalaOperatorExpressions.operatorExpressionsOverrides.Operator
-        with scalaOperatorExpressions.InfixOperator {
+          with scalaOperatorExpressions.operatorExpressionsOverrides.Operator
+          with scalaOperatorExpressions.InfixOperator {
         override def operator: String = "&&"
       }
+
       trait OrOp extends booleanOps.OrOp
         with scalaOperatorExpressions.operatorExpressionsOverrides.Operator
         with scalaOperatorExpressions.InfixOperator {
         override def operator: String = "||"
       }
+
       trait NotOp extends booleanOps.NotOp
         with scalaOperatorExpressions.operatorExpressionsOverrides.Operator
         with scalaOperatorExpressions.PrefixOperator {
         override def operator: String = "!"
       }
+
       trait True extends booleanOps.True with scalaBase.anyOverrides.Expression {
         def toScala: String = "true"
+
         def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): any.Expression = this
       }
+
       trait False extends booleanOps.False with scalaBase.anyOverrides.Expression {
         def toScala: String = "false"
+
         def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): any.Expression = this
       }
-      
+
       trait Factory extends booleanOps.Factory {}
     }
-    
-    object scalaBaseOverride {
-      trait ReificationExtensions extends scalaBase.ReificationExtensions {
-        override def reifiyFunctions: List[(tpe: TypeRep) => (value: tpe.HostType) => Option[any.Expression]] = super.reifiyFunctions :+ { tpe => value =>
-          tpe match {
-            case TypeRep.Boolean => Some(if (value.asInstanceOf[Boolean]) booleanOpsFactory.trueExp() else  booleanOpsFactory.falseExp())
-            case _ => None
-          }
-        }
-      }
-    }
   }
-
+   
   override val booleanOpsFactory: scalaBooleanOps.booleanOpsOverride.Factory
-  override val reificationExtensions: scalaBooleanOps.scalaBaseOverride.ReificationExtensions
 }
 
 trait FinalBooleanAST extends BooleanAST { self: FinalOperatorExpressionsAST & FinalBaseAST =>

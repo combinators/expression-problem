@@ -6,7 +6,7 @@ import Command.Generator
 
 case class Equals[Type](inType: Type)
 
-trait Equality[Context] extends FFI  {
+trait Equality[Context, T] extends FFI  {
   import base.syntax._
 
   trait EqualityCapabilities {
@@ -18,5 +18,5 @@ trait Equality[Context] extends FFI  {
 }
 
 object Equality {
-  type WithBase[Ctxt, B <: AnyParadigm] = Equality[Ctxt] { val base: B }
+  type WithBase[Ctxt, B <: AnyParadigm, T] = Equality[Ctxt, T] { val base: B }
 }

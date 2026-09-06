@@ -13,7 +13,7 @@ import org.combinators.ep.language.java.{ContextSpecificResolver, JavaNameProvid
 import org.combinators.ep.language.java.Syntax.default._
 import org.combinators.ep.language.java.CodeGenerator.Enable
 
-class Assertions[AP <: AnyParadigm](val base: AP)(ooParadigm: ObjectOriented[AP]) extends Assrts[MethodBodyCtxt] {
+class Assertions[T, AP <: AnyParadigm](val base: AP)(ooParadigm: ObjectOriented[AP]) extends Assrts[MethodBodyCtxt, T] {
   val assertImp = new ImportDeclaration("org.junit.Assert", false, false)
 
   case object AssertionsEnabled

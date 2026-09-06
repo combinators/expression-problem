@@ -1,16 +1,15 @@
 package org.combinators.ep.language.inbetween.ffi    /*DI:LI:AI*/
 
-import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.{Command, Understands}
+import org.combinators.cogen.Understands
 import org.combinators.cogen.paradigm.ffi.Equality as Eqls
 import org.combinators.cogen.paradigm.{Apply, ffi}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait Equals[AST <: EqualsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait BooleansIn[Ctxt] extends Eqls[Ctxt] {
+trait Equals[AST <: EqualsAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
+  trait EqualsIn[Ctxt] extends Eqls[Ctxt, T] with FFI[Ctxt] {
+    import base.ast.any
+    import base.ast.equalsOpFactory
     override val base: _base.type = _base
-
-    import base.ast.{any, equalsOpFactory}
 
     val equalityCapabilities: EqualityCapabilities = new EqualityCapabilities {
       implicit val canEquals: Understands[Ctxt, Apply[ffi.Equals[any.Type], any.Expression, any.Expression]] = new Understands[Ctxt, Apply[ffi.Equals[any.Type], any.Expression, any.Expression]] {
@@ -19,13 +18,12 @@ trait Equals[AST <: EqualsAST, B](val _base: AnyParadigm.WithAST[AST] & B) {
         }
       }
     }
-    def enable(): Generator[any.Project, Unit] = Command.skip[any.Project]
   }
 }
 
 object Equals {
-  type WithBase[AST <: EqualsAST, B <: AnyParadigm.WithAST[AST]] = Equals[AST, B] {}
+  type WithBase[T, AST <: EqualsAST, B <: AnyParadigm.WithAST[AST]] = Equals[AST, B, T] {}
 
-  def apply[AST <: EqualsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new Equals[AST, B](_base) {}
+  def apply[T, AST <: EqualsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Equals[AST, B, T](_base) {}
 }
 

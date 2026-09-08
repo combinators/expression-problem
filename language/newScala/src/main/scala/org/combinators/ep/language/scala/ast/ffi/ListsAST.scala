@@ -4,7 +4,8 @@ import org.combinators.cogen.TypeRep
 import org.combinators.ep.language.inbetween.ffi.ListsAST as InbetweenListsAST
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
 
-trait ListsAST extends InbetweenListsAST { self: OperatorExpressionsAST & BaseAST =>
+trait ListsAST extends InbetweenListsAST { 
+  self: OperatorExpressionsAST & BaseAST =>
   object scalaListsOps {
     object listsOpsOverride {
 

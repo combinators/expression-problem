@@ -1,7 +1,7 @@
 package org.combinators.ep.language.scala.ast.ffi     /*DI:LD:AI*/
 
 import org.combinators.ep.language.inbetween.ffi.{ArithmeticAST => InbetweenArithmeticOpsAST}
-import org.combinators.ep.language.scala.ast.BaseAST
+import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
 import org.combinators.ep.language.scala.ast.ffi.OperatorExpressionsAST
 
 trait ArithmeticAST extends InbetweenArithmeticOpsAST { 
@@ -52,7 +52,7 @@ trait ArithmeticAST extends InbetweenArithmeticOpsAST {
   val arithmeticOpsFactory: scalaArithmeticOps.arithmeticOpsOverride.Factory
 }
 
-trait FinalArithmeticAST extends ArithmeticAST { self: FinalOperatorExpressionsAST & BaseAST =>
+trait FinalArithmeticAST extends ArithmeticAST { self: FinalOperatorExpressionsAST & FinalBaseAST =>
   object finalArithmeticFactoryTypes {
     trait FinalArithmeticFactory extends scalaArithmeticOps.arithmeticOpsOverride.Factory {
       def addOp(): arithmeticOps.AddOp = {

@@ -9,40 +9,58 @@ import org.combinators.ep.language.inbetween.ffi.Strings as Str
 
 import scala.reflect.{ClassTag, classTag}
 
-trait Strings[AST <: StringAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm, T: ClassTag](
-  val _base: AnyParadigm.WithAST[AST] & B,
-  matchingTpeRep: TypeRep.OfHostType[T],
-  methodRegistry: ContextRegistry[B, _base.ast.any.Method],
-  constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor],
-  classRegistry: ContextRegistry[B, _base.ast.oo.Class]
-) extends Str[AST, B, T] {
-  
+trait Strings[AST <: StringAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm] extends Str[AST, B]{
+  val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
+  val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
+  val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
   val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
-  
-  trait ScalaStringsIn[Ctxt](val registry: ContextRegistry[B, Ctxt]) extends super.StringsIn[Ctxt] {
-    override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] =
-      tpeRep => if (tpeRep == matchingTpeRep) {
-        Some(Command.lift(_base.ast.ooFactory.classReferenceType(nameProvider.mangle(classTag[T].runtimeClass.getName))))
-      } else None
+
+  trait ScalaStringsIn[Ctxt] extends super.StringsIn[Ctxt] {
+    override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] = {
+      case TypeRep.String =>
+        Some(Command.lift(_base.ast.ooFactory.classReferenceType(nameProvider.mangle("String"))))
+      case _ => None
+    }
     override val reifylookup: (tpeRep: TypeRep) => tpeRep.HostType => Option[Generator[Ctxt, _base.syntax.Expression]] = {
-      tpeRep => if (tpeRep == matchingTpeRep) {
-        (value: tpeRep.HostType) => Some(Command.lift(_base.ast.scalaBaseFactory.reifiedScalaValue(tpeRep, value, None)))
-      } else value => None
+      case TypeRep.String => s =>
+        Some(Command.lift(_base.ast.scalaBaseFactory.reifiedScalaValue[String](TypeRep.String, s.asInstanceOf[String], None)))
+      case _ => b => None
     }
   }
-  
-  val stringsInMethods: ScalaStringsIn[_base.ast.any.Method] = new ScalaStringsIn(methodRegistry) {}
-  val stringsInConstructors: ScalaStringsIn[_base.ast.oo.Constructor] = new ScalaStringsIn(constructorRegistry) {}
-  val stringsInClasses: ScalaStringsIn[_base.ast.oo.Class] = new ScalaStringsIn(classRegistry) {}
+
+  val stringsInMethods: ScalaStringsIn[_base.ast.any.Method] = {
+    class Strs(
+      override val registry: ContextRegistry[_base.type, _base.ast.any.Method] = methodRegistry
+    ) extends ScalaStringsIn[_base.ast.any.Method] {}
+    new Strs()
+  }
+  val stringsInConstructors: ScalaStringsIn[_base.ast.oo.Constructor] = {
+    class Strs(
+      override val registry: ContextRegistry[_base.type, _base.ast.oo.Constructor] = constructorRegistry
+    ) extends ScalaStringsIn[_base.ast.oo.Constructor] {}
+    new Strs()
+  }
+  val stringsInClasses: ScalaStringsIn[_base.ast.oo.Class] = {
+    class Strs(
+      override val registry: ContextRegistry[_base.type, _base.ast.oo.Class] = classRegistry
+    ) extends ScalaStringsIn[_base.ast.oo.Class] {}
+    new Strs()
+  }
 }
 
 object Strings {
-  type WithBase[T, AST <: StringAST & BaseAST, B <: AnyParadigm.WithAST[AST]] = Strings[AST, B, T] {}
-  def apply[T: ClassTag, AST <: StringAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
-    _base: B,
-    matchingTpeRep: TypeRep.OfHostType[T],
-    methodRegistry: ContextRegistry[B, _base.ast.any.Method],
-    constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor],
-    classRegistry: ContextRegistry[B, _base.ast.oo.Class],
-  ): WithBase[T, AST, B] = new Strings[AST, B, T](_base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry) with Str[AST, B, T](_base) {}
+  def apply[AST <: StringAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
+    base: B,
+    methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
+    constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
+    classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+  ): Strings[base.ast.type, base.type] = {
+    class Strs(
+      override val _base: base.type,
+      override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
+      override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
+      override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+    ) extends Strings[base.ast.type, base.type]
+    new Strs(base, methodRegistry, constructorRegistry, classRegistry) {}
+  }
 }

@@ -9,40 +9,52 @@ import org.combinators.ep.language.inbetween.ffi.Exceptions as Excpt
 
 import scala.reflect.{ClassTag, classTag}
 
-trait Exceptions[AST <: ExceptionsAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm, T: ClassTag](
-  val _base: AnyParadigm.WithAST[AST] & B,
-  matchingTpeRep: TypeRep.OfHostType[T],
-  methodRegistry: ContextRegistry[B, _base.ast.any.Method],
-  constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor],
-  classRegistry: ContextRegistry[B, _base.ast.oo.Class]
-) extends Excpt[AST, B, T] {
-  
-  val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
-  
-  trait ScalaExceptionsIn[Ctxt](val registry: ContextRegistry[B, Ctxt]) extends super.ExceptionsIn[Ctxt] {
+trait Exceptions[AST <: ExceptionsAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm] extends Excpt[AST, B] {
+  val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
+  val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
+  val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
+
+  trait ScalaExceptionsIn[Ctxt] extends super.ExceptionsIn[Ctxt] {
     override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] =
-      tpeRep => if (tpeRep == matchingTpeRep) {
-        Some(Command.lift(_base.ast.ooFactory.classReferenceType(nameProvider.mangle(classTag[T].runtimeClass.getName))))
-      } else None
-    override val reifylookup: (tpeRep: TypeRep) => tpeRep.HostType => Option[Generator[Ctxt, _base.syntax.Expression]] = {
-      tpeRep => if (tpeRep == matchingTpeRep) {
-        (value: tpeRep.HostType) => Some(Command.lift(_base.ast.scalaBaseFactory.reifiedScalaValue(tpeRep, value, None)))
-      } else value => None
-    }
+      _ => None
+    override val reifylookup: (tpeRep: TypeRep) => tpeRep.HostType => Option[Generator[Ctxt, _base.syntax.Expression]] =
+      _ => _ => None
   }
-  
-  val exceptionsInMethods: ScalaExceptionsIn[_base.ast.any.Method] = new ScalaExceptionsIn(methodRegistry) {}
-  val exceptionsInConstructors: ScalaExceptionsIn[_base.ast.oo.Constructor] = new ScalaExceptionsIn(constructorRegistry) {}
-  val exceptionsInClasses: ScalaExceptionsIn[_base.ast.oo.Class] = new ScalaExceptionsIn(classRegistry) {}
+
+  val exceptionsInMethods: ScalaExceptionsIn[_base.ast.any.Method] = {
+    class ExIn(
+      override val registry: ContextRegistry[_base.type, _base.ast.any.Method] = methodRegistry
+    ) extends ScalaExceptionsIn[_base.ast.any.Method]
+    new ExIn() {}
+  }
+  val exceptionsInConstructors: ScalaExceptionsIn[_base.ast.oo.Constructor] = {
+    class ExIn(
+      override val registry: ContextRegistry[_base.type, _base.ast.oo.Constructor] = constructorRegistry
+    ) extends ScalaExceptionsIn[_base.ast.oo.Constructor]
+    new ExIn() {}
+  }
+
+  val exceptionsInClasses: ScalaExceptionsIn[_base.ast.oo.Class] = {
+    class ExIn(
+      override val registry: ContextRegistry[_base.type, _base.ast.oo.Class] = classRegistry
+    ) extends ScalaExceptionsIn[_base.ast.oo.Class]
+    new ExIn() {}
+  }
 }
 
 object Exceptions {
-  type WithBase[T, AST <: ExceptionsAST & BaseAST, B <: AnyParadigm.WithAST[AST]] = Exceptions[AST, B, T] {}
-  def apply[T: ClassTag, AST <: ExceptionsAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
-    _base: B,
-    matchingTpeRep: TypeRep.OfHostType[T],
-    methodRegistry: ContextRegistry[B, _base.ast.any.Method],
-    constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor],
-    classRegistry: ContextRegistry[B, _base.ast.oo.Class],
-  ): WithBase[T, AST, B] = new Exceptions[AST, B, T](_base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry) with Excpt[AST, B, T](_base) {}
+  def apply[AST <: ExceptionsAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
+    base: B,
+    methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
+    constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
+    classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+  ): Exceptions[base.ast.type, base.type] = {
+    class Ex(
+      override val _base: base.type,
+      override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
+      override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
+      override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+    ) extends Exceptions[base.ast.type, base.type] {}
+    new Ex(base, methodRegistry, constructorRegistry, classRegistry)
+  }
 }

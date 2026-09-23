@@ -7,11 +7,11 @@ import org.combinators.cogen.paradigm.{Apply, Reify, ToTargetLanguageType}
 import org.combinators.cogen.{Command, InstanceRep, TypeRep, Understands}
 import org.combinators.ep.language.inbetween.ContextRegistry
 import org.combinators.ep.language.inbetween.any.AnyParadigm
-import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.inbetween.ffi.Arrays as Ar
 import org.combinators.ep.language.inbetween.oo.OOParadigm
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
 import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
+import org.combinators.ep.language.scala.ast.BaseAST
 
 import scala.reflect.{ClassTag, classTag}
 
@@ -20,13 +20,12 @@ trait Arrays[AST <: ArraysAST & BaseAST, B <: AnyParadigm.WithAST[AST]] extends 
   val oo: OOParadigm[_base.ast.type, _base.type]
   val generics: Generics.WithBase[_base.ast.type, _base.type, oo.type, parametricPolymorphism.type]
   
-  val methodRegistry: ContextRegistry[B, _base.ast.any.Method]
-  val constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor]
-  val classRegistry: ContextRegistry[B, _base.ast.oo.Class]
+  val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
+  val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
+  val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
 
   trait ScalaArraysIn[Ctxt] extends super.ArraysIn[Ctxt] {
     import _base.ast
-    val registry: ContextRegistry[B, Ctxt]
     val canToTargetLanguage: Understands[Ctxt, ToTargetLanguageType[ast.any.Type]]
     val canApplyType: Understands[Ctxt, Apply[ast.any.Type, ast.any.Type, ast.any.Type]]
     def canReifyInCtxt[T]: Understands[Ctxt, Reify[T, ast.any.Expression]]
@@ -48,7 +47,7 @@ trait Arrays[AST <: ArraysAST & BaseAST, B <: AnyParadigm.WithAST[AST]] extends 
       tpe => arr => {
         tpe match {
           case TypeRep.Array(elemTpe) => {
-            import _base.syntax._
+            import _base.syntax.*
             import arrayCapabilities.canCreate
             def elements(elemTypeRep:TypeRep)(elem:elemTypeRep.HostType) : Generator[Ctxt, Seq[Expression]] = {
               elemTypeRep match {
@@ -114,9 +113,9 @@ trait Arrays[AST <: ArraysAST & BaseAST, B <: AnyParadigm.WithAST[AST]] extends 
   }
   
   val arraysInMethods: ScalaArraysIn[_base.ast.any.Method] = {
-    import _base.ast.any._
+    import _base.ast.any.*
     class ArraysInMethods(
-      override val registry: ContextRegistry[B, Method] = methodRegistry,
+      override val registry: ContextRegistry[_base.type, Method] = methodRegistry,
       override val canToTargetLanguage: Understands[Method, ToTargetLanguageType[Type]] = _base.methodBodyCapabilities.canTransformTypeInMethodBody,
       override val canApplyType: Understands[Method, Apply[Type, Type, Type]] = parametricPolymorphism.methodBodyCapabilities.canApplyTypeInMethod,
     ) extends ScalaArraysIn[Method] {
@@ -125,10 +124,10 @@ trait Arrays[AST <: ArraysAST & BaseAST, B <: AnyParadigm.WithAST[AST]] extends 
     new ArraysInMethods()
   }
   val arraysInConstructors: ScalaArraysIn[_base.ast.oo.Constructor] = {
-    import _base.ast.any._
+    import _base.ast.any.*
     import _base.ast.oo.Constructor
     class ArraysInConstructors(
-      override val registry: ContextRegistry[B, Constructor] = constructorRegistry,
+      override val registry: ContextRegistry[_base.type, Constructor] = constructorRegistry,
       override val canToTargetLanguage: Understands[Constructor, ToTargetLanguageType[Type]] = oo.constructorCapabilities.canTranslateTypeInConstructor,
       override val canApplyType: Understands[Constructor, Apply[Type, Type, Type]] = generics.constructorCapabilities.canApplyTypeInConstructor,
     ) extends ScalaArraysIn[Constructor] {
@@ -138,10 +137,10 @@ trait Arrays[AST <: ArraysAST & BaseAST, B <: AnyParadigm.WithAST[AST]] extends 
   }
   
   val arraysInClasses: ScalaArraysIn[_base.ast.oo.Class] = {
-    import _base.ast.any._
-    import _base.ast.oo.{Class => Cls}
+    import _base.ast.any.*
+    import _base.ast.oo.Class as Cls
     class ArraysInClasses(
-      override val registry: ContextRegistry[B, Cls] = classRegistry,
+      override val registry: ContextRegistry[_base.type, Cls] = classRegistry,
       override val canToTargetLanguage: Understands[Cls, ToTargetLanguageType[Type]] = oo.classCapabilities.canTranslateTypeInClass,
       override val canApplyType: Understands[Cls, Apply[Type, Type, Type]] = generics.classCapabilities.canApplyTypeInClass,
     ) extends ScalaArraysIn[Cls] {
@@ -161,18 +160,19 @@ object Arrays {
     parametricPolymorphism: ParametricPolymorphism.WithBase[base.ast.type, base.type],
     oo: OOParadigm[base.ast.type, base.type],
     generics: Generics.WithBase[base.ast.type, base.type, oo.type, parametricPolymorphism.type],
-    methodRegistry: ContextRegistry[B, base.ast.any.Method],
-    constructorRegistry: ContextRegistry[B, base.ast.oo.Constructor],
-    classRegistry: ContextRegistry[B, base.ast.oo.Class],
+    methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
+    constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
+    classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
   ): Arrays[base.ast.type, base.type] = {
     class Arrs(
       override val _base: base.type,
       override val parametricPolymorphism: ParametricPolymorphism.WithBase[_base.ast.type, _base.type],
       override val oo: OOParadigm[_base.ast.type, _base.type],
       override val generics: Generics.WithBase[_base.ast.type, _base.type, oo.type, parametricPolymorphism.type],
-      override val methodRegistry: ContextRegistry[B, _base.ast.any.Method],
-      override val constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor],
-      override val classRegistry: ContextRegistry[B, _base.ast.oo.Class]) extends Arrays[_base.ast.type, _base.type] {}
+      override val methodRegistry: ContextRegistry[base.type, _base.ast.any.Method],
+      override val constructorRegistry: ContextRegistry[base.type, _base.ast.oo.Constructor],
+      override val classRegistry: ContextRegistry[base.type, _base.ast.oo.Class]
+    ) extends Arrays[_base.ast.type, _base.type] {}
     new Arrs(base, parametricPolymorphism, oo, generics, methodRegistry, constructorRegistry, classRegistry)
   }
 }

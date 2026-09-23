@@ -9,40 +9,52 @@ import org.combinators.ep.language.inbetween.ffi.Console as Cons
 
 import scala.reflect.{ClassTag, classTag}
 
-trait Console[AST <: ConsoleAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm, T: ClassTag](
-  val _base: AnyParadigm.WithAST[AST] & B,
-  matchingTpeRep: TypeRep.OfHostType[T],
-  methodRegistry: ContextRegistry[B, _base.ast.any.Method],
-  constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor],
-  classRegistry: ContextRegistry[B, _base.ast.oo.Class]
-) extends Cons[AST, B, T] {
-  
-  val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
-  
-  trait ScalaConsoleIn[Ctxt](val registry: ContextRegistry[B, Ctxt]) extends super.ConsoleIn[Ctxt] {
+trait Console[AST <: ConsoleAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm] extends Cons[AST, B] {
+  val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
+  val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
+  val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
+
+  trait ScalaConsoleIn[Ctxt] extends super.ConsoleIn[Ctxt] {
     override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] =
-      tpeRep => if (tpeRep == matchingTpeRep) {
-        Some(Command.lift(_base.ast.ooFactory.classReferenceType(nameProvider.mangle(classTag[T].runtimeClass.getName))))
-      } else None
-    override val reifylookup: (tpeRep: TypeRep) => tpeRep.HostType => Option[Generator[Ctxt, _base.syntax.Expression]] = {
-      tpeRep => if (tpeRep == matchingTpeRep) {
-        (value: tpeRep.HostType) => Some(Command.lift(_base.ast.scalaBaseFactory.reifiedScalaValue(tpeRep, value, None)))
-      } else value => None
-    }
+      _ => None
+    override val reifylookup: (tpeRep: TypeRep) => tpeRep.HostType => Option[Generator[Ctxt, _base.syntax.Expression]] =
+      _ => _ => None
   }
-  
-  val consoleInMethods: ScalaConsoleIn[_base.ast.any.Method] = new ScalaConsoleIn(methodRegistry) {}
-  val consoleInConstructors: ScalaConsoleIn[_base.ast.oo.Constructor] = new ScalaConsoleIn(constructorRegistry) {}
-  val consoleInClasses: ScalaConsoleIn[_base.ast.oo.Class] = new ScalaConsoleIn(classRegistry) {}
+
+  val consoleInMethods: ScalaConsoleIn[_base.ast.any.Method] = {
+    class ConsoleInMethods(
+      override val registry: ContextRegistry[_base.type, _base.ast.any.Method] = methodRegistry
+    ) extends ScalaConsoleIn[_base.ast.any.Method]
+    new ConsoleInMethods() {}
+  }
+  val consoleInConstructors: ScalaConsoleIn[_base.ast.oo.Constructor] = {
+    class ConsoleInConstructors(
+      override val registry: ContextRegistry[_base.type, _base.ast.oo.Constructor] = constructorRegistry
+    ) extends ScalaConsoleIn[_base.ast.oo.Constructor]
+    new ConsoleInConstructors() {}
+  }
+
+  val consoleInClasses: ScalaConsoleIn[_base.ast.oo.Class] = {
+    class ConsoleInClasses(
+      override val registry: ContextRegistry[_base.type, _base.ast.oo.Class] = classRegistry
+    ) extends ScalaConsoleIn[_base.ast.oo.Class]
+    new ConsoleInClasses() {}
+  }
 }
 
 object Console {
-  type WithBase[T, AST <: ConsoleAST & BaseAST, B <: AnyParadigm.WithAST[AST]] = Console[AST, B, T] {}
-  def apply[T: ClassTag, AST <: ConsoleAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
-    _base: B,
-    matchingTpeRep: TypeRep.OfHostType[T],
-    methodRegistry: ContextRegistry[B, _base.ast.any.Method],
-    constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor],
-    classRegistry: ContextRegistry[B, _base.ast.oo.Class],
-  ): WithBase[T, AST, B] = new Console[AST, B, T](_base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry) with Cons[AST, B, T](_base) {}
+  def apply[AST <: ConsoleAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
+    base: B,
+    methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
+    constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
+    classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+  ): Console[base.ast.type, base.type] = {
+    class Consl(
+      override val _base: base.type,
+      override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
+      override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
+      override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+    ) extends Console[base.ast.type, base.type] {}
+    new Consl(base, methodRegistry, constructorRegistry, classRegistry)
+  }
 }

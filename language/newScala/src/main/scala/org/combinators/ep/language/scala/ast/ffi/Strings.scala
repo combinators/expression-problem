@@ -2,14 +2,15 @@ package org.combinators.ep.language.scala.ast.ffi
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, TypeRep}
-import org.combinators.ep.language.inbetween.ContextRegistry
+import org.combinators.ep.language.inbetween.{ContextRegistry, ffi}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.inbetween.ffi.Strings as Str
 
 import scala.reflect.{ClassTag, classTag}
 
-trait Strings[AST <: StringAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm] extends Str[AST, B]{
+trait Strings extends Str {
+  override val _base: AnyParadigm {val ast: StringAST & BaseAST }
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
@@ -49,18 +50,19 @@ trait Strings[AST <: StringAST & BaseAST, B <: org.combinators.cogen.paradigm.An
 }
 
 object Strings {
+  type WithBase[B <: AnyParadigm] = Strings { val _base: B }
   def apply[AST <: StringAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
     base: B,
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
-  ): Strings[base.ast.type, base.type] = {
+  ): Strings.WithBase[base.type] = {
     class Strs(
       override val _base: base.type,
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
-    ) extends Strings[base.ast.type, base.type]
+    ) extends Strings
     new Strs(base, methodRegistry, constructorRegistry, classRegistry) {}
   }
 }

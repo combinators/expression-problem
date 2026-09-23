@@ -6,8 +6,8 @@ import org.combinators.cogen.paradigm.{Apply, ffi}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Equals[AST <: EqualsAST, B] {
-  val _base: AnyParadigm.WithAST[AST] & B
+trait Equals {
+  val _base: AnyParadigm { val ast: EqualsAST }
   trait EqualsIn[Ctxt] extends Eqls[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.equalsOpFactory
@@ -24,10 +24,11 @@ trait Equals[AST <: EqualsAST, B] {
 }
 
 object Equals {
-  type WithBase[AST <: EqualsAST, B <: AnyParadigm.WithAST[AST]] = Equals[AST, B] {}
+  type WithBase[B <: AnyParadigm] = Equals { val _base: B }
 
-  def apply[AST <: EqualsAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Equals[AST, base.type] {
-    override val _base: base.type = base
+  def apply[AST <: EqualsAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[base.type] = {
+    class Eqls(override val _base: base.type = base) extends Equals {}
+    new Eqls()
   }
 }
 

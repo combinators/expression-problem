@@ -6,7 +6,7 @@ import xerial.sbt.Sonatype.sonatypeCentralHost
 lazy val commonSettings = Seq(
   organization := "org.combinators",
 
-  scalaVersion := "3.8.4",
+  scalaVersion := "3.9.0",
   
   resolvers += Resolver.typesafeRepo("releases"),
   //resolvers ++= Resolver.sonatypeOssRepos("releases"),
@@ -20,6 +20,7 @@ lazy val commonSettings = Seq(
     "-language:implicitConversions",
     "-language:higherKinds",
     "-Xkind-projector:underscores",
+    "-Xno-enrich-error-messages",
   ),
 
   libraryDependencies ++= Seq(

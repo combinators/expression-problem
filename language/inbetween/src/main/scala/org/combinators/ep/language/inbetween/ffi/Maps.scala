@@ -7,9 +7,8 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.{any, polymorphism}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait Maps[AST <: MapsAST, B] {
-  val _base: AnyParadigm.WithAST[AST] & B
-  // TODO: These are defined in Method context. What about constructor? What about Class context when needing to add Field?
+trait Maps {
+  val _base: AnyParadigm { val ast: MapsAST }
   trait MapsIn[Ctxt] extends Mps[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.mapsOpsFactory
@@ -45,10 +44,11 @@ trait Maps[AST <: MapsAST, B] {
 }
 
 object Maps {
-  type WithBase[AST <: MapsAST, B <: AnyParadigm.WithAST[AST]] = Maps[AST, B] {}
+  type WithBase[B <: AnyParadigm] = Maps { val _base: B }
 
-  def apply[AST <: MapsAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Maps[AST, base.type] {
-    val _base: base.type = base
+  def apply[AST <: MapsAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[base.type] = {
+    class Mps(val _base: base.type = base) extends Maps {}
+    new Mps()
   }
 }
 

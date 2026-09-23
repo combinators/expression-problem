@@ -6,8 +6,8 @@ import org.combinators.cogen.Understands
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Arrays[AST <: ArraysAST, B] {
-  val _base: AnyParadigm.WithAST[AST] & B
+trait Arrays {
+  val _base: AnyParadigm { val ast: ArraysAST }
   trait ArraysIn[Ctxt] extends Arys[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.arraysOpsFactory
@@ -43,10 +43,11 @@ trait Arrays[AST <: ArraysAST, B] {
 }
 
 object Arrays {
-  type WithBase[ AST <: ArraysAST, B <: AnyParadigm.WithAST[AST]] = Arrays[AST, B] {}
+  type WithBase[B <: AnyParadigm] = Arrays { val _base: B }
 
-  def apply[AST <: ArraysAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Arrays[AST, base.type] {
-    override val _base: base.type = base
+  def apply[AST <: ArraysAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[base.type] = {
+    class Arrys(override val _base: base.type = base) extends Arrays {}
+    new Arrys()
   }
 }
 

@@ -2,14 +2,15 @@ package org.combinators.ep.language.scala.ast.ffi
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, TypeRep}
-import org.combinators.ep.language.inbetween.ContextRegistry
+import org.combinators.ep.language.inbetween.{ContextRegistry, ffi}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.inbetween.ffi.Exceptions as Excpt
 
 import scala.reflect.{ClassTag, classTag}
 
-trait Exceptions[AST <: ExceptionsAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm] extends Excpt[AST, B] {
+trait Exceptions extends Excpt {
+  override val _base: AnyParadigm { val ast: ExceptionsAST & BaseAST }
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
@@ -43,18 +44,19 @@ trait Exceptions[AST <: ExceptionsAST & BaseAST, B <: org.combinators.cogen.para
 }
 
 object Exceptions {
+  type WithBase[B <: AnyParadigm] = Exceptions { val _base: B }
   def apply[AST <: ExceptionsAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
     base: B,
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
-  ): Exceptions[base.ast.type, base.type] = {
+  ): Exceptions.WithBase[base.type] = {
     class Ex(
       override val _base: base.type,
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
-    ) extends Exceptions[base.ast.type, base.type] {}
+    ) extends Exceptions {}
     new Ex(base, methodRegistry, constructorRegistry, classRegistry)
   }
 }

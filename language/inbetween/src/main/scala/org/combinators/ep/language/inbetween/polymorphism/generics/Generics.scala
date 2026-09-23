@@ -6,7 +6,11 @@ import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.oo.OOParadigm
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
 
-trait Generics[AST <: GenericsAST, B, OO, PP](val base: AnyParadigm.WithAST[AST] & B, override val ooParadigm: OOParadigm.WithBase[AST, base.type] & OO, override val ppolyParadigm: ParametricPolymorphism.WithBase[AST, base.type] & PP) extends GS {
+trait Generics extends GS {
+  override val base: AnyParadigm { val ast: GenericsAST }
+  override val ooParadigm: OOParadigm.WithBase[base.type]
+  override val ppolyParadigm: ParametricPolymorphism.WithBase[base.type]
+  
   import base.ast.factory
   import base.ast.polymorphismFactory
   import base.ast.ooFactory
@@ -83,6 +87,21 @@ trait Generics[AST <: GenericsAST, B, OO, PP](val base: AnyParadigm.WithAST[AST]
 }
 
 object Generics {
-  type WithBase[AST <: GenericsAST, B <: AnyParadigm.WithAST[AST], OO <: OOParadigm.WithBase[AST, B], PP <: ParametricPolymorphism.WithBase[AST, B]] = Generics[AST, B, OO, PP] {}
-  def apply[AST <: GenericsAST, B <: AnyParadigm.WithAST[AST], OO <: OOParadigm.WithBase[AST, B], PP <: ParametricPolymorphism.WithBase[AST, B]](_base: B, _ooParadigm: OO & OOParadigm.WithBase[AST, _base.type], _ppolyParadigm: PP & ParametricPolymorphism.WithBase[AST, _base.type]): WithBase[AST, B, OO, PP] = new Generics[AST, B, OO, PP](_base, _ooParadigm, _ppolyParadigm) {}
+  type WithBase[B <: AnyParadigm, OO <: OOParadigm.WithBase[B], PP <: ParametricPolymorphism.WithBase[B]] = Generics {
+    val base: B
+    val ooParadigm: OO
+    val ppolyParadigm: PP
+  }
+  def apply[AST <: GenericsAST, B <: AnyParadigm.WithAST[AST]](
+    _base: B,
+    _ooParadigm: OOParadigm.WithBase[_base.type],
+    _ppolyParadigm: ParametricPolymorphism.WithBase[_base.type]
+  ): WithBase[_base.type, _ooParadigm.type, _ppolyParadigm.type] = {
+    class G(
+      override val base: _base.type = _base,
+      override val ooParadigm: _ooParadigm.type = _ooParadigm,
+      override val ppolyParadigm: _ppolyParadigm.type = _ppolyParadigm,
+    ) extends Generics {}
+    new G()
+  }
 }

@@ -2,14 +2,15 @@ package org.combinators.ep.language.scala.ast.ffi
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, TypeRep}
-import org.combinators.ep.language.inbetween.ContextRegistry
+import org.combinators.ep.language.inbetween.{ContextRegistry, ffi}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.inbetween.ffi.Booleans as Bools
 
 import scala.reflect.{ClassTag, classTag}
 
-trait Booleans[AST <: BooleanAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm] extends Bools[AST, B] {
+trait Booleans extends Bools {
+  override val _base: AnyParadigm {val ast: BooleanAST & BaseAST }
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
@@ -54,18 +55,19 @@ trait Booleans[AST <: BooleanAST & BaseAST, B <: org.combinators.cogen.paradigm.
 }
 
 object Booleans {
-  def apply[ AST <: BooleanAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
+  type WithBase[B <: AnyParadigm] = Booleans { val _base: B }
+  def apply[AST <: BooleanAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
     base: B,
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
-  ): Booleans[base.ast.type, base.type] = {
+  ): Booleans.WithBase[base.type] = {
     class Bls(
       override val _base: base.type,
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
-    ) extends Booleans[base.ast.type, base.type]
+    ) extends Booleans
     new Bls(base, methodRegistry, constructorRegistry, classRegistry) {}
   }
 }

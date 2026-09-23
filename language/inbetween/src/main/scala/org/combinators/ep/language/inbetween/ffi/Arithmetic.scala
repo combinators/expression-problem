@@ -6,8 +6,8 @@ import org.combinators.cogen.Understands
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Arithmetic[AST <: ArithmeticAST, B, T] {
-  val _base: AnyParadigm.WithAST[AST] & B
+trait Arithmetic[T] {
+  val _base: AnyParadigm { val ast: ArithmeticAST }
   trait ArithmeticIn[Ctxt] extends Arith[Ctxt, T] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.arithmeticOpsFactory
@@ -60,8 +60,9 @@ trait Arithmetic[AST <: ArithmeticAST, B, T] {
   }
 }
 object Arithmetic {
-  type WithBase[T, AST <: ArithmeticAST, B <: AnyParadigm.WithAST[AST]] = Arithmetic[AST, B, T] {}
-  def apply[T, AST <: ArithmeticAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[T, AST, base.type] = new Arithmetic[AST, base.type, T] {
-    override val _base: base.type = base
+  type WithBase[T, B <: AnyParadigm] = Arithmetic[T] { val _base: B }
+  def apply[T, AST <: ArithmeticAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[T, base.type] = {
+    class Arith(override val _base: base.type = base) extends Arithmetic[T] {}
+    new Arith()
   }
 }

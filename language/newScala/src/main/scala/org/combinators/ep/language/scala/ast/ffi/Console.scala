@@ -2,14 +2,15 @@ package org.combinators.ep.language.scala.ast.ffi
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, TypeRep}
-import org.combinators.ep.language.inbetween.ContextRegistry
+import org.combinators.ep.language.inbetween.{ContextRegistry, ffi}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.inbetween.ffi.Console as Cons
 
 import scala.reflect.{ClassTag, classTag}
 
-trait Console[AST <: ConsoleAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm] extends Cons[AST, B] {
+trait Console extends Cons {
+  override val _base: AnyParadigm { val ast: ConsoleAST & BaseAST }
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
@@ -43,18 +44,19 @@ trait Console[AST <: ConsoleAST & BaseAST, B <: org.combinators.cogen.paradigm.A
 }
 
 object Console {
+  type WithBase[B <: AnyParadigm] = Console { val _base: B }
   def apply[AST <: ConsoleAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
     base: B,
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
-  ): Console[base.ast.type, base.type] = {
+  ): Console.WithBase[base.type] = {
     class Consl(
       override val _base: base.type,
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
-    ) extends Console[base.ast.type, base.type] {}
+    ) extends Console {}
     new Consl(base, methodRegistry, constructorRegistry, classRegistry)
   }
 }

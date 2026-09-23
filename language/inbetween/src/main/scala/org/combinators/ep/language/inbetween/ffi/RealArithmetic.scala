@@ -7,8 +7,8 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait RealArithmetic[AST <: RealArithmeticAST, B, T] {
-  val _base: AnyParadigm.WithAST[AST] & B
+trait RealArithmetic[T] {
+  val _base: AnyParadigm { val ast: RealArithmeticAST }
   trait RealArithmeticIn[Ctxt] extends RealArith[Ctxt, T] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.realArithmeticOpsFactory
@@ -88,9 +88,10 @@ trait RealArithmetic[AST <: RealArithmeticAST, B, T] {
   }
 }
 object RealArithmetic {
-  type WithBase[T, AST <: RealArithmeticAST, B <: AnyParadigm.WithAST[AST]] = RealArithmetic[AST, B, T] {val _base: B}
+  type WithBase[T, B <: AnyParadigm] = RealArithmetic[T] {val _base: B }
 
-  def apply[T, AST <: RealArithmeticAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[T, AST, base.type] = new RealArithmetic[AST, base.type, T] {
-    override val _base: base.type = base
+  def apply[T, AST <: RealArithmeticAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[T, base.type] = {
+    class RA(override val _base: base.type = base) extends RealArithmetic[T] {}
+    new RA()
   }
 }

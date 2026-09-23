@@ -3,9 +3,10 @@ package org.combinators.ep.language.inbetween.functional   /*DI:LI:AI*/
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{AddImport, AddMethod, AddType, AddTypeConstructor, AddTypeLookup, FindMethod, FindType, InstantiateType, ResolveImport, ToTargetLanguageType, Functional as FP}
 import org.combinators.cogen.{Command, Understands}
-import org.combinators.ep.language.inbetween.any.AnyParadigm
+import org.combinators.ep.language.inbetween.any.{AnyAST, AnyParadigm}
 
-trait FunctionalParadigm[AST <: FunctionalAST, B](val base: AnyParadigm.WithAST[AST] & B) extends FP {
+trait FunctionalParadigm extends FP {
+  override val base: AnyParadigm { val ast: FunctionalAST }
   import base.ast.any
   import base.ast.factory
   import base.ast.functionalFactory
@@ -127,6 +128,10 @@ trait FunctionalParadigm[AST <: FunctionalAST, B](val base: AnyParadigm.WithAST[
 }
 
 object FunctionalParadigm {
-  type WithBase[AST <: FunctionalAST, B <: AnyParadigm.WithAST[AST]] = FunctionalParadigm[AST, B] {}
-  def apply[AST <: FunctionalAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new FunctionalParadigm[AST, B](_base) {}
+  type WithBase[B <: AnyParadigm] = FunctionalParadigm { val base: B }
+  
+  def apply[AST <: AnyAST & FunctionalAST, B <: AnyParadigm.WithAST[AST]](_base: B): FunctionalParadigm.WithBase[_base.type] = {
+    class FP(override val base: _base.type) extends FunctionalParadigm {}
+    new FP(_base)
+  }
 }

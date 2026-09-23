@@ -6,8 +6,8 @@ import org.combinators.cogen.Understands
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Booleans[AST <: BooleanAST, B] {
-  val _base: AnyParadigm.WithAST[AST] & B
+trait Booleans {
+  val _base: AnyParadigm { val ast: BooleanAST }
   trait BooleansIn[Ctxt] extends Bools[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.booleanOpsFactory
@@ -55,9 +55,10 @@ trait Booleans[AST <: BooleanAST, B] {
 }
 
 object Booleans {
-  type WithBase[AST <: BooleanAST, B <: AnyParadigm.WithAST[AST]] = Booleans[AST, B] {}
+  type WithBase[B <: AnyParadigm] = Booleans { val _base: B }
 
-  def apply[AST <: BooleanAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Booleans[AST, base.type] {
-    override val _base: base.type = base
+  def apply[AST <: BooleanAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[base.type] = {
+    class Bls(override val _base: base.type = base) extends Booleans {}
+    new Bls()
   }
 }

@@ -2,7 +2,9 @@ package org.combinators.ep.language.inbetween.any    /*DI:LI:AI*/
 
 import org.combinators.cogen.AbstractSyntax as AS
 
-trait AbstractSyntax[A](val ast: AnyAST & A) extends AS {
+trait AbstractSyntax extends AS {
+  val ast: AnyAST
+  
   type CompilationUnit = ast.any.CompilationUnit
   type Import = ast.any.Import
   type Expression = ast.any.Expression
@@ -13,6 +15,9 @@ trait AbstractSyntax[A](val ast: AnyAST & A) extends AS {
 }
 
 object AbstractSyntax {
-  type AbstractSyntax[AST <: AnyAST] = org.combinators.ep.language.inbetween.any.AbstractSyntax[AST] { }
-  def apply[AST <: AnyAST](ast: AST): AbstractSyntax[ast.type] = new AbstractSyntax[ast.type](ast) {}
+  type WithAST[AST <: AnyAST] = org.combinators.ep.language.inbetween.any.AbstractSyntax { val ast: AST }
+  def apply[AST <: AnyAST](_ast: AST): AbstractSyntax.WithAST[_ast.type] = {
+    class AS(override val ast: _ast.type = _ast) extends AbstractSyntax {}
+    new AS()
+  } 
 }

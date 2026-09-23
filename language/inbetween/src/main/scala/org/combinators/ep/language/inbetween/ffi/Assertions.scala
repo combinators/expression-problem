@@ -6,8 +6,8 @@ import org.combinators.cogen.Understands
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Assertions[AST <: AssertionsAST, B] {
-  val _base: AnyParadigm.WithAST[AST] & B
+trait Assertions {
+  val _base: AnyParadigm { val ast: AssertionsAST }
   trait AssertionsIn[Ctxt] extends Asrts[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.assertionOpsFactory
@@ -25,9 +25,10 @@ trait Assertions[AST <: AssertionsAST, B] {
 }
 
 object Assertions {
-  type WithBase[AST <: AssertionsAST, B <: AnyParadigm.WithAST[AST]] = Assertions[AST, B] {}
+  type WithBase[B <: AnyParadigm] = Assertions { val _base: B }
 
-  def apply[AST <: AssertionsAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Assertions[AST, base.type] {
-    override val _base: base.type = base
+  def apply[AST <: AssertionsAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[base.type] = {
+    class Asrts(override val _base: base.type = base) extends Assertions {}
+    Asrts()
   }
 }

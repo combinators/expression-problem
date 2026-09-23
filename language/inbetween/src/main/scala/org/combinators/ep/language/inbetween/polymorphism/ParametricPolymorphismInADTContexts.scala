@@ -5,7 +5,9 @@ import org.combinators.cogen.Understands
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.functional.{FunctionalAST, FunctionalParadigm}
 
-trait ParametricPolymorphismInADTContexts[AST <: ParametricPolymorphismAST & FunctionalAST, B, F](val base: AnyParadigm.WithAST[AST] & B, val functional: FunctionalParadigm.WithBase[AST, base.type & B] & F) extends PPADT {
+trait ParametricPolymorphismInADTContexts extends PPADT {
+  val base: AnyParadigm { val ast: ParametricPolymorphismAST & FunctionalAST }
+  val functional: FunctionalParadigm.WithBase[base.type]
   import base.ast.any
   import base.ast.polymorphismFactory
 
@@ -19,7 +21,19 @@ trait ParametricPolymorphismInADTContexts[AST <: ParametricPolymorphismAST & Fun
 }
 
 object ParametricPolymorphismInADTContexts {
-  type WithBase[AST <: ParametricPolymorphismAST & FunctionalAST, B <: AnyParadigm.WithAST[AST], F <: FunctionalParadigm.WithBase[AST, B]] = ParametricPolymorphismInADTContexts[AST, B, F] {}
+  type WithBase[B <: AnyParadigm, F <: FunctionalParadigm.WithBase[B]] = ParametricPolymorphismInADTContexts {
+    val base: B
+    val functional: F
+  }
 
-  def apply[AST <: ParametricPolymorphismAST & FunctionalAST, B <: AnyParadigm.WithAST[AST], F <: FunctionalParadigm.WithBase[AST, B]](_base: B, _functional: FunctionalParadigm.WithBase[AST, _base.type] & F): WithBase[AST, B, F] = new ParametricPolymorphismInADTContexts[AST, B, F](_base, _functional) {}
+  def apply[AST <: ParametricPolymorphismAST & FunctionalAST, B <: AnyParadigm.WithAST[AST]](
+    _base: B,
+    _functional: FunctionalParadigm.WithBase[_base.type]
+  ): WithBase[_base.type, _functional.type] = {
+    class PP(
+      override val base: _base.type = _base,
+      override val functional: _functional.type = _functional
+    ) extends ParametricPolymorphismInADTContexts {}
+    new PP()
+  } 
 }

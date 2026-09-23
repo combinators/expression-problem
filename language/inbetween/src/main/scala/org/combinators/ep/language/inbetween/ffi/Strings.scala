@@ -7,8 +7,8 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Strings[AST <: StringAST, B] {
-  val _base: AnyParadigm.WithAST[AST] & B
+trait Strings {
+  val _base: AnyParadigm { val ast: StringAST }
   trait StringsIn[Ctxt] extends Strs[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.stringOpsFactory
@@ -54,9 +54,10 @@ trait Strings[AST <: StringAST, B] {
 }
 
 object Strings {
-  type WithBase[AST <: StringAST, B <: AnyParadigm.WithAST[AST]] = Strings[AST, B] {}
-  def apply[AST <: StringAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Strings[AST, base.type] {
-    override val _base: base.type = base
+  type WithBase[B <: AnyParadigm] = Strings { val _base: B }
+  def apply[AST <: StringAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[base.type] = {
+    class Strs(override val _base: base.type = base) extends Strings {}
+    new Strs()
   }
 }
 

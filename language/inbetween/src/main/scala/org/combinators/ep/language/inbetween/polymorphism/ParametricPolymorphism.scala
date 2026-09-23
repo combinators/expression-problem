@@ -4,7 +4,8 @@ import org.combinators.cogen.paradigm.{AddTypeParameter, Apply, GetTypeArguments
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 
-trait ParametricPolymorphism[AST <: ParametricPolymorphismAST, B](val base: AnyParadigm.WithAST[AST] & B) extends PP {
+trait ParametricPolymorphism extends PP {
+  val base: AnyParadigm { val ast: ParametricPolymorphismAST }
   import base.ast.factory
   import base.ast.polymorphismFactory
   import base.ast.polymorphism.*
@@ -44,6 +45,9 @@ trait ParametricPolymorphism[AST <: ParametricPolymorphismAST, B](val base: AnyP
 }
 
 object ParametricPolymorphism {
-  type WithBase[AST <: ParametricPolymorphismAST, B <: AnyParadigm.WithAST[AST]] = ParametricPolymorphism[AST, B] {}
-  def apply[AST <: ParametricPolymorphismAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[AST, B] = new ParametricPolymorphism[AST, B](_base) {}
+  type WithBase[B <: AnyParadigm] = ParametricPolymorphism { val base: B }
+  def apply[AST <: ParametricPolymorphismAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[B] = {
+    class PP(override val base: _base.type = _base) extends ParametricPolymorphism {}
+    new PP()
+  }
 }

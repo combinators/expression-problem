@@ -4,7 +4,7 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.{Apply, Reify, ToTargetLanguageType}
 import org.combinators.cogen.{Command, TypeRep, Understands}
-import org.combinators.ep.language.inbetween.ContextRegistry
+import org.combinators.ep.language.inbetween.{ContextRegistry, ffi}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.inbetween.ffi.Maps as Mps
@@ -14,10 +14,11 @@ import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
 
 import scala.reflect.{ClassTag, classTag}
 
-trait Maps[AST <: MapsAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm] extends Mps[AST, B] {
-  val parametricPolymorphism: ParametricPolymorphism.WithBase[_base.ast.type, _base.type]
-  val oo: OOParadigm[_base.ast.type, _base.type]
-  val generics: Generics.WithBase[_base.ast.type, _base.type, oo.type, parametricPolymorphism.type]
+trait Maps extends Mps {
+  override val _base: AnyParadigm { val ast: MapsAST & BaseAST }
+  val parametricPolymorphism: ParametricPolymorphism.WithBase[_base.type]
+  val oo: OOParadigm.WithBase[_base.type]
+  val generics: Generics.WithBase[_base.type, oo.type, parametricPolymorphism.type]
 
   val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
 
@@ -107,24 +108,32 @@ trait Maps[AST <: MapsAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyPara
 }
 
 object Maps {
+  type WithBase[B <: AnyParadigm, PP <: ParametricPolymorphism.WithBase[B], OO <: OOParadigm.WithBase[B], G <: Generics.WithBase[B, OO, PP]] =
+    Maps {
+      val _base: B
+      val parametricPolymorphism: PP
+      val oo: OO
+      val generics: G
+    }
+  
   def apply[AST <: MapsAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
     base: B,
-    parametricPolymorphism: ParametricPolymorphism.WithBase[base.ast.type, base.type],
-    oo: OOParadigm[base.ast.type, base.type],
-    generics: Generics.WithBase[base.ast.type, base.type, oo.type, parametricPolymorphism.type],
-    methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
-    constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
-    classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
-  ): Maps[base.ast.type, base.type] = {
+    _parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
+    _oo: OOParadigm.WithBase[base.type],
+    _generics: Generics.WithBase[base.type, _oo.type, _parametricPolymorphism.type],
+    _methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
+    _constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
+    _classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+  ): Maps.WithBase[base.type, _parametricPolymorphism.type, _oo.type, _generics.type] = {
     class Mps(
-      override val _base: base.type,
-      override val parametricPolymorphism: ParametricPolymorphism.WithBase[_base.ast.type, _base.type],
-      override val oo: OOParadigm[_base.ast.type, _base.type],
-      override val generics: Generics.WithBase[_base.ast.type, _base.type, oo.type, parametricPolymorphism.type],
-      override val methodRegistry: ContextRegistry[base.type, _base.ast.any.Method],
-      override val constructorRegistry: ContextRegistry[base.type, _base.ast.oo.Constructor],
-      override val classRegistry: ContextRegistry[base.type, _base.ast.oo.Class]
-    ) extends Maps[_base.ast.type, _base.type] {}
-    new Mps(base, parametricPolymorphism, oo, generics, methodRegistry, constructorRegistry, classRegistry)
+      override val _base: base.type = base,
+      override val parametricPolymorphism: _parametricPolymorphism.type = _parametricPolymorphism,
+      override val oo: _oo.type = _oo,
+      override val generics: _generics.type = _generics,
+      override val methodRegistry: ContextRegistry[base.type, _base.ast.any.Method] = _methodRegistry,
+      override val constructorRegistry: ContextRegistry[base.type, _base.ast.oo.Constructor] = _constructorRegistry,
+      override val classRegistry: ContextRegistry[base.type, _base.ast.oo.Class] = _classRegistry
+    ) extends Maps {}
+    new Mps()
   }
 }

@@ -2,7 +2,7 @@ package org.combinators.ep.language.scala.ast.ffi
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, TypeRep}
-import org.combinators.ep.language.inbetween.ContextRegistry
+import org.combinators.ep.language.inbetween.{ContextRegistry, ffi}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 import org.combinators.ep.language.scala.ast.BaseAST
@@ -10,7 +10,8 @@ import org.combinators.ep.language.inbetween.ffi.Arithmetic as Arith
 
 import scala.reflect.{ClassTag, classTag}
 
-trait Arithmetic[AST <: ArithmeticAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm, T: ClassTag] extends Arith[AST, B, T] {
+trait Arithmetic[T: ClassTag] extends Arith[T] {
+  override val _base: AnyParadigm { val ast: BaseAST & ArithmeticAST }
   val matchingTpeRep: TypeRep.OfHostType[T]
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
@@ -39,33 +40,35 @@ trait Arithmetic[AST <: ArithmeticAST & BaseAST, B <: org.combinators.cogen.para
   }
   val arithmeticInConstructors: ScalaArithmeticIn[_base.ast.oo.Constructor] = {
     class Arith(
-      override val registry: methodRegistry.type = methodRegistry
+      override val registry: constructorRegistry.type = constructorRegistry
     ) extends ScalaArithmeticIn[_base.ast.oo.Constructor] {}
     new Arith()
   }
-  val arithmeticInClasses: ScalaArithmeticIn[_base.ast.oo.Class] = = {
+  val arithmeticInClasses: ScalaArithmeticIn[_base.ast.oo.Class] = {
     class Arith(
-      override val registry: methodRegistry.type = methodRegistry
+      override val registry: classRegistry.type = classRegistry
     ) extends ScalaArithmeticIn[_base.ast.oo.Class] {}
     new Arith()
   }
 }
 
 object Arithmetic {
+  type WithBase[T, B <: AnyParadigm] = Arithmetic[T] { val _base: B }
+  
   def apply[AST <: ArithmeticAST & BaseAST, B <: AnyParadigm.WithAST[AST], T : ClassTag](
     base: B,
     matchingTpeRep: TypeRep.OfHostType[T],
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
-  ): Arithmetic[base.ast.type, base.type, T] = {
+  ): Arithmetic.WithBase[T, base.type] = {
     class Arith(
       override val _base: base.type,
       override val matchingTpeRep: TypeRep.OfHostType[T],
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
-    ) extends Arithmetic[base.ast.type, base.type, T]
+    ) extends Arithmetic[T]
     new Arith(base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry) {}
   }
 }

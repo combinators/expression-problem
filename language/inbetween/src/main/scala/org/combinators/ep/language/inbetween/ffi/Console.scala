@@ -6,8 +6,8 @@ import org.combinators.cogen.Understands
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Console[AST <: ConsoleAST, B] {
-  val _base: AnyParadigm.WithAST[AST] & B
+trait Console {
+  val _base: AnyParadigm { val ast: ConsoleAST }
   trait ConsoleIn[Ctxt] extends Cnsl[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.consoleOpsFactory
@@ -25,8 +25,9 @@ trait Console[AST <: ConsoleAST, B] {
 }
 
 object Console {
-  type WithBase[AST <: ConsoleAST, B <: AnyParadigm.WithAST[AST]] = Console[AST, B] {}
-  def apply[AST <: ConsoleAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Console[AST, base.type] {
-    override val _base: base.type = base
+  type WithBase[B <: AnyParadigm] = Console { val _base: B }
+  def apply[AST <: ConsoleAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[base.type] = {
+    class Cnsl(override val _base: base.type = base) extends Console {}
+    new Cnsl()
   }
 }

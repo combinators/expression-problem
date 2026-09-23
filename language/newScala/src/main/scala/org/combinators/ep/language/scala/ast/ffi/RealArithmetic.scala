@@ -2,14 +2,15 @@ package org.combinators.ep.language.scala.ast.ffi
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, TypeRep}
-import org.combinators.ep.language.inbetween.ContextRegistry
+import org.combinators.ep.language.inbetween.{ContextRegistry, ffi}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.inbetween.ffi.RealArithmetic as RealArith
 
 import scala.reflect.{ClassTag, classTag}
 
-trait RealArithmetic[AST <: RealArithmeticAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm, T: ClassTag] extends RealArith[AST, B, T] {
+trait RealArithmetic[T: ClassTag] extends RealArith[T] {
+  override val _base: AnyParadigm {val ast: RealArithmeticAST & BaseAST }
   val matchingTpeRep: TypeRep.OfHostType[T]
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
@@ -51,20 +52,21 @@ trait RealArithmetic[AST <: RealArithmeticAST & BaseAST, B <: org.combinators.co
 }
 
 object RealArithmetic {
+  type WithBase[B <: AnyParadigm, T] = RealArithmetic[T] { val _base: B }
   def apply[AST <: RealArithmeticAST & BaseAST, B <: AnyParadigm.WithAST[AST], T: ClassTag](
     base: B,
     matchingTpeRep: TypeRep.OfHostType[T],
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
-  ): RealArithmetic[base.ast.type, base.type, T] = {
+  ): RealArithmetic.WithBase[base.type, T] = {
     class Arith(
       override val _base: base.type,
       override val matchingTpeRep: TypeRep.OfHostType[T],
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
-    ) extends RealArithmetic[base.ast.type, base.type, T]
+    ) extends RealArithmetic[T]
     new Arith(base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry) {}
   }
 }

@@ -7,8 +7,8 @@ import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Lists[AST <: ListsAST, B] {
-  val _base: AnyParadigm.WithAST[AST] & B
+trait Lists {
+  val _base: AnyParadigm { val ast: ListsAST }
   trait ListsIn[Ctxt] extends Lsts[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.listsOpsFactory
@@ -50,10 +50,11 @@ trait Lists[AST <: ListsAST, B] {
 }
 
 object Lists {
-  type WithBase[AST <: ListsAST, B <: AnyParadigm.WithAST[AST]] = Lists[AST, B] {}
+  type WithBase[B <: AnyParadigm] = Lists { val _base: B }
 
-  def apply[AST <: ListsAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Lists[AST, base.type] {
-    override val _base: base.type = base
+  def apply[AST <: ListsAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[base.type] = {
+    class Lsts(override val _base: base.type = base) extends Lists {}
+    new Lsts()
   }
 }
 

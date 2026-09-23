@@ -5,9 +5,11 @@ import org.combinators.cogen.paradigm.ffi.{Append, Cons, Create, Head, Tail, Lis
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any.AnyParadigm
+import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Lists[AST <: ListsAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait ListsIn[Ctxt] extends Lsts[Ctxt, T] with FFI[Ctxt] {
+trait Lists[AST <: ListsAST, B] {
+  val _base: AnyParadigm.WithAST[AST] & B
+  trait ListsIn[Ctxt] extends Lsts[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.listsOpsFactory
     override val base: _base.type = _base
@@ -48,8 +50,10 @@ trait Lists[AST <: ListsAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
 }
 
 object Lists {
-  type WithBase[T, AST <: ListsAST, B <: AnyParadigm.WithAST[AST]] = Lists[AST, B, T] {}
+  type WithBase[AST <: ListsAST, B <: AnyParadigm.WithAST[AST]] = Lists[AST, B] {}
 
-  def apply[T, AST <: ListsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Lists[AST, B, T](_base) {}
+  def apply[AST <: ListsAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Lists[AST, base.type] {
+    override val _base: base.type = base
+  }
 }
 

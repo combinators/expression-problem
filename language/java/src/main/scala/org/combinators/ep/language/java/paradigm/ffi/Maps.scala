@@ -16,7 +16,7 @@ import org.combinators.cogen.paradigm.control.{DeclareVariable, LiftExpression}
 import org.combinators.cogen.paradigm.ffi.{ContainsKey, CreateMap, GetOrElse, Put, Maps as Mps}
 import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddImport, Apply, FreshName}
 
-trait Maps[Ctxt, T, AP <: AnyParadigm] extends Mps[Ctxt, T] {
+trait Maps[Ctxt, AP <: AnyParadigm] extends Mps[Ctxt] {
   case object MapsEnabled
 
   val base: AP
@@ -59,7 +59,7 @@ trait Maps[Ctxt, T, AP <: AnyParadigm] extends Mps[Ctxt, T] {
         }
 
         val gen = for {
-          _ <- AddImport(mapImp).interpret(canAddImport)
+          _ <- AddImport(mapImp).interpret(using canAddImport)
         } yield new MethodCallExpr(
           classScope,
           new NodeList(boxedKeyType, boxedElemType),
@@ -87,22 +87,22 @@ trait Maps[Ctxt, T, AP <: AnyParadigm] extends Mps[Ctxt, T] {
         val mapType = ObjectOriented.nameToType(mapImp.getName)
 
         val gen = for {
-          _ <- AddImport(hashMapImp).interpret(canAddImport)
-          tmp <- FreshName(JavaNameProvider.mangle("tmp")).interpret(canFreshName)
-          appliedMapTpe <- Apply(mapType, Seq(command.functional.keyType, command.functional.valueType)).interpret(canApplyType)
-          appliedHashMapTpe <- Apply(hashMapType, Seq(command.functional.keyType, command.functional.valueType)).interpret(canApplyType)
+          _ <- AddImport(hashMapImp).interpret(using canAddImport)
+          tmp <- FreshName(JavaNameProvider.mangle("tmp")).interpret(using canFreshName)
+          appliedMapTpe <- Apply(mapType, Seq(command.functional.keyType, command.functional.valueType)).interpret(using canApplyType)
+          appliedHashMapTpe <- Apply(hashMapType, Seq(command.functional.keyType, command.functional.valueType)).interpret(using canApplyType)
           newMap = new ObjectCreationExpr(
             null,
             appliedHashMapTpe.asInstanceOf[ClassOrInterfaceType],
             new NodeList[Expression](command.arguments.head),
           )
-          tmpVar <- DeclareVariable(tmp, appliedMapTpe, Some(newMap)).interpret(canDeclareVariable)
+          tmpVar <- DeclareVariable(tmp, appliedMapTpe, Some(newMap)).interpret(using canDeclareVariable)
           putStmt <- LiftExpression(new MethodCallExpr(
               tmpVar,
               "put",
               new NodeList[Expression](command.arguments(1), command.arguments(2))
-            )).interpret(canLiftExpression)
-          _ <- AddBlockDefinitions(Seq(putStmt)).interpret(canAddBlockDefinitions)
+            )).interpret(using canLiftExpression)
+          _ <- AddBlockDefinitions(Seq(putStmt)).interpret(using canAddBlockDefinitions)
         } yield tmpVar
 
         Command.runGenerator(gen, context)
@@ -264,10 +264,10 @@ trait Maps[Ctxt, T, AP <: AnyParadigm] extends Mps[Ctxt, T] {
 }
 
 object Maps {
-  type Aux[Ctxt, T, AP <: AnyParadigm, Gen <: Generics[AP]] = Maps[Ctxt, T, AP] {
+  type Aux[Ctxt, AP <: AnyParadigm, Gen <: Generics[AP]] = Maps[Ctxt, AP] {
     val generics: Gen
   }
-  def apply[Ctxt, T, AP <: AnyParadigm, Gen[A <: AP] <: Generics[A]](
+  def apply[Ctxt, AP <: AnyParadigm, Gen[A <: AP] <: Generics[A]](
     base: AP,
     addImport: Understands[Ctxt, AddImport[Import]],
     canApplyType: Understands[Ctxt, Apply[Type, Type, Type]],
@@ -278,7 +278,7 @@ object Maps {
   )
     (
       generics: Gen[base.type]
-    ): Aux[Ctxt, T, base.type, generics.type] = {
+    ): Aux[Ctxt, base.type, generics.type] = {
     val b: base.type = base
     val addImp = addImport
     val applyType = canApplyType
@@ -297,7 +297,7 @@ object Maps {
       override val canDeclareVariable: Understands[Ctxt, DeclareVariable[Name, Type, Option[Expression], Expression]],
       override val canLiftExpression: Understands[Ctxt, LiftExpression[Expression, Statement]],
       override val canAddBlockDefinitions: Understands[Ctxt, AddBlockDefinitions[Statement]]
-    ) extends Maps[Ctxt, T, b.type]
+    ) extends Maps[Ctxt, b.type]
 
     Mps(b, gen, addImp, applyType, freshName, declareVar, liftExp, addBlockDfn)
   }

@@ -10,7 +10,7 @@ case class Head()
 case class Tail()
 case class Append()
 
-trait Lists[Context, T] extends FFI {
+trait Lists[Context] extends FFI {
   import base._
   import syntax._
 
@@ -39,5 +39,5 @@ trait Lists[Context, T] extends FFI {
 }
 
 object Lists {
-  type WithBase[Ctxt, B <: AnyParadigm, T] = Lists[Ctxt, T] { val base: B }
+  type WithBase[Ctxt, B <: AnyParadigm] = Lists[Ctxt] { val base: B }
 }

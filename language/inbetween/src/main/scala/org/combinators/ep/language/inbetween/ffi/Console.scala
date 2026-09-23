@@ -4,9 +4,11 @@ import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{Print, Console as Cnsl}
 import org.combinators.cogen.Understands
 import org.combinators.ep.language.inbetween.any.AnyParadigm
+import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Console[AST <: ConsoleAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait ConsoleIn[Ctxt] extends Cnsl[Ctxt, T] with FFI[Ctxt] {
+trait Console[AST <: ConsoleAST, B] {
+  val _base: AnyParadigm.WithAST[AST] & B
+  trait ConsoleIn[Ctxt] extends Cnsl[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.consoleOpsFactory
     override val base: _base.type = _base
@@ -23,6 +25,8 @@ trait Console[AST <: ConsoleAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) 
 }
 
 object Console {
-  type WithBase[T, AST <: ConsoleAST, B <: AnyParadigm.WithAST[AST]] = Console[AST, B, T] {}
-  def apply[T, AST <: ConsoleAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Console[AST, B, T](_base) {}
+  type WithBase[AST <: ConsoleAST, B <: AnyParadigm.WithAST[AST]] = Console[AST, B] {}
+  def apply[AST <: ConsoleAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Console[AST, base.type] {
+    override val _base: base.type = base
+  }
 }

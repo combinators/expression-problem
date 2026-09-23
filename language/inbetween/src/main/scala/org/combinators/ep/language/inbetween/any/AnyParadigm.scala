@@ -5,7 +5,10 @@ import org.combinators.cogen.paradigm.{AddBlockDefinitions, AddCompilationUnit, 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, Understands}
 
-trait AnyParadigm[A, S](val ast: AnyAST & A, val syntax: AbstractSyntax.AbstractSyntax[ast.type] & S) extends AP {
+trait AnyParadigm[A, S] extends AP {
+  val ast: AnyAST & A
+  val syntax: AbstractSyntax.AbstractSyntax[ast.type] & S
+  
   import ast.factory
   import ast.any.*
   val _runGenerator: Generator[ast.any.Project, Unit] => Seq[FileWithPath]
@@ -171,7 +174,11 @@ object AnyParadigm {
     (_ast: AST,
      __runGenerator: Generator[_ast.any.Project, Unit] => Seq[FileWithPath],
      _syntax: Syntax & AbstractSyntax.AbstractSyntax[_ast.type]
-    ): WithSyntax[_ast.type, _syntax.type] = new AnyParadigm[_ast.type, _syntax.type](_ast, _syntax) {
-      override val _runGenerator: __runGenerator.type = __runGenerator
+    ): WithSyntax[_ast.type, _syntax.type] = {
+    case class AP(override val ast: _ast.type,
+      override val _runGenerator: __runGenerator.type,
+      override val syntax: _syntax.type) extends AnyParadigm[_ast.type, _syntax.type] {
+    }
+    AP(_ast, __runGenerator, _syntax)
   }
 }

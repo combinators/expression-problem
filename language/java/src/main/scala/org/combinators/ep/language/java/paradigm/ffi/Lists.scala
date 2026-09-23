@@ -14,7 +14,7 @@ import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.ffi.{Append, Cons, Create, Head, Tail, Lists as Lsts}
 import org.combinators.cogen.paradigm.{AddImport, Apply}
 
-trait Lists[Ctxt, T, AP <: AnyParadigm] extends Lsts[Ctxt, T] {
+trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
   case object ListsEnabled
 
   val base: AP
@@ -250,15 +250,15 @@ trait Lists[Ctxt, T, AP <: AnyParadigm] extends Lsts[Ctxt, T] {
 
 
 object Lists {
-  type Aux[Ctxt, T, AP <: AnyParadigm, Gen <: Generics[AP]] = Lists[Ctxt, T, AP] {
+  type Aux[Ctxt, AP <: AnyParadigm, Gen <: Generics[AP]] = Lists[Ctxt, AP] {
     val generics: Gen
   }
-  def apply[Ctxt, T, AP <: AnyParadigm, Gen[A <: AP] <: Generics[A]](
+  def apply[Ctxt, AP <: AnyParadigm, Gen[A <: AP] <: Generics[A]](
      base: AP,
      applyType: Understands[Ctxt, Apply[Type, Type, Type]],
      addImport: Understands[Ctxt, AddImport[Import]])(
      generics: Gen[base.type]
-   ): Aux[Ctxt, T, base.type, generics.type] = {
+   ): Aux[Ctxt, base.type, generics.type] = {
     val b: base.type = base
     val appTy = applyType
     val addImp = addImport
@@ -268,7 +268,7 @@ object Lists {
                     override val applyType: Understands[Ctxt, Apply[Type, Type, Type]],
                     override val addImport: Understands[Ctxt, AddImport[Import]],
                     override val generics: gen.type
-                   ) extends Lists[Ctxt, T, b.type]
+                   ) extends Lists[Ctxt, b.type]
 
     Lsts(b, appTy, addImp, gen)
   }

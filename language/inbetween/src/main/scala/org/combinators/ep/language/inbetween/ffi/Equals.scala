@@ -4,9 +4,11 @@ import org.combinators.cogen.Understands
 import org.combinators.cogen.paradigm.ffi.Equality as Eqls
 import org.combinators.cogen.paradigm.{Apply, ffi}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
+import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Equals[AST <: EqualsAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait EqualsIn[Ctxt] extends Eqls[Ctxt, T] with FFI[Ctxt] {
+trait Equals[AST <: EqualsAST, B] {
+  val _base: AnyParadigm.WithAST[AST] & B
+  trait EqualsIn[Ctxt] extends Eqls[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.equalsOpFactory
     override val base: _base.type = _base
@@ -22,8 +24,10 @@ trait Equals[AST <: EqualsAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
 }
 
 object Equals {
-  type WithBase[T, AST <: EqualsAST, B <: AnyParadigm.WithAST[AST]] = Equals[AST, B, T] {}
+  type WithBase[AST <: EqualsAST, B <: AnyParadigm.WithAST[AST]] = Equals[AST, B] {}
 
-  def apply[T, AST <: EqualsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Equals[AST, B, T](_base) {}
+  def apply[AST <: EqualsAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Equals[AST, base.type] {
+    override val _base: base.type = base
+  }
 }
 

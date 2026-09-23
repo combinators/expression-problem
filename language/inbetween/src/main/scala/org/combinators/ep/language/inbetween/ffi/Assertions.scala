@@ -4,9 +4,11 @@ import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{Assert, Assertions as Asrts}
 import org.combinators.cogen.Understands
 import org.combinators.ep.language.inbetween.any.AnyParadigm
+import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Assertions[AST <: AssertionsAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait AssertionsIn[Ctxt] extends Asrts[Ctxt, T] with FFI[Ctxt] {
+trait Assertions[AST <: AssertionsAST, B] {
+  val _base: AnyParadigm.WithAST[AST] & B
+  trait AssertionsIn[Ctxt] extends Asrts[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.assertionOpsFactory
     override val base: _base.type = _base
@@ -23,7 +25,9 @@ trait Assertions[AST <: AssertionsAST, B, T](val _base: AnyParadigm.WithAST[AST]
 }
 
 object Assertions {
-  type WithBase[T, AST <: AssertionsAST, B <: AnyParadigm.WithAST[AST]] = Assertions[AST, B, T] {}
+  type WithBase[AST <: AssertionsAST, B <: AnyParadigm.WithAST[AST]] = Assertions[AST, B] {}
 
-  def apply[T, AST <: AssertionsAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Assertions[AST, B, T](_base) {}
+  def apply[AST <: AssertionsAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Assertions[AST, base.type] {
+    override val _base: base.type = base
+  }
 }

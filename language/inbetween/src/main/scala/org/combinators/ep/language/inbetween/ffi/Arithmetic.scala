@@ -4,8 +4,10 @@ import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{Add, Div, LE, LT, Mod, Mult, Sub, Arithmetic as Arith}
 import org.combinators.cogen.Understands
 import org.combinators.ep.language.inbetween.any.AnyParadigm
+import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Arithmetic[AST <: ArithmeticAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
+trait Arithmetic[AST <: ArithmeticAST, B, T] {
+  val _base: AnyParadigm.WithAST[AST] & B
   trait ArithmeticIn[Ctxt] extends Arith[Ctxt, T] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.arithmeticOpsFactory
@@ -59,5 +61,7 @@ trait Arithmetic[AST <: ArithmeticAST, B, T](val _base: AnyParadigm.WithAST[AST]
 }
 object Arithmetic {
   type WithBase[T, AST <: ArithmeticAST, B <: AnyParadigm.WithAST[AST]] = Arithmetic[AST, B, T] {}
-  def apply[T, AST <: ArithmeticAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Arithmetic[AST, B, T](_base) {}
+  def apply[T, AST <: ArithmeticAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[T, AST, base.type] = new Arithmetic[AST, base.type, T] {
+    override val _base: base.type = base
+  }
 }

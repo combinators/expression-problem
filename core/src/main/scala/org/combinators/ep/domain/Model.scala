@@ -273,7 +273,7 @@ class GenericModel(val name:String,
    * Typical usage is to call 'getModel.flatten' before calling this method.
    */
   def hasBinaryMethod: Boolean =
-    toSeq.exists(_.ops.exists(_.isBinary(this)))
+    toSeq.exists(_.ops.exists(_.isBinary(using this)))
 
   /**
    * Determine if this model or its history contain any producer operations.
@@ -281,7 +281,7 @@ class GenericModel(val name:String,
    * Typical usage is to call 'getModel.flatten' before calling this method.
    */
   def hasProducerOperation: Boolean =
-    toSeq.exists(_.ops.exists(_.isProducer(this)))
+    toSeq.exists(_.ops.exists(_.isProducer(using this)))
 
   /**
    * Determines if this model comes before the given model in the evolution history.

@@ -5,9 +5,11 @@ import org.combinators.cogen.paradigm.ffi.{GetCharAt, GetStringLength, StringApp
 import org.combinators.cogen.{Command, Understands}
 import org.combinators.cogen.Command.Generator
 import org.combinators.ep.language.inbetween.any.AnyParadigm
+import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Strings[AST <: StringAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait StringsIn[Ctxt] extends Strs[Ctxt, T] with FFI[Ctxt] {
+trait Strings[AST <: StringAST, B] {
+  val _base: AnyParadigm.WithAST[AST] & B
+  trait StringsIn[Ctxt] extends Strs[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.stringOpsFactory
     override val base: _base.type = _base
@@ -52,7 +54,9 @@ trait Strings[AST <: StringAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
 }
 
 object Strings {
-  type WithBase[T, AST <: StringAST, B <: AnyParadigm.WithAST[AST]] = Strings[AST, B, T] {}
-  def apply[T, AST <: StringAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Strings[AST, B, T](_base) {}
+  type WithBase[AST <: StringAST, B <: AnyParadigm.WithAST[AST]] = Strings[AST, B] {}
+  def apply[AST <: StringAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Strings[AST, base.type] {
+    override val _base: base.type = base
+  }
 }
 

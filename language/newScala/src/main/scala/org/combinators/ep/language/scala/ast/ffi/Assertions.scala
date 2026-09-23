@@ -9,40 +9,53 @@ import org.combinators.ep.language.inbetween.ffi.Assertions as Assrt
 
 import scala.reflect.{ClassTag, classTag}
 
-trait Assertions[AST <: AssertionsAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm, T: ClassTag](
-  val _base: AnyParadigm.WithAST[AST] & B,
-  matchingTpeRep: TypeRep.OfHostType[T],
-  methodRegistry: ContextRegistry[B, _base.ast.any.Method],
-  constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor],
-  classRegistry: ContextRegistry[B, _base.ast.oo.Class]
-) extends Assrt[AST, B, T] {
+trait Assertions[AST <: AssertionsAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm] extends Assrt[AST, B] {
+  val _base: AnyParadigm.WithAST[AST] & B
+  val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
+  val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
+  val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
   
-  val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
-  
-  trait ScalaAssertionsIn[Ctxt](val registry: ContextRegistry[B, Ctxt]) extends super.AssertionsIn[Ctxt] {
+  trait ScalaAssertionsIn[Ctxt] extends super.AssertionsIn[Ctxt] {
     override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] =
-      tpeRep => if (tpeRep == matchingTpeRep) {
-        Some(Command.lift(_base.ast.ooFactory.classReferenceType(nameProvider.mangle(classTag[T].runtimeClass.getName))))
-      } else None
-    override val reifylookup: (tpeRep: TypeRep) => tpeRep.HostType => Option[Generator[Ctxt, _base.syntax.Expression]] = {
-      tpeRep => if (tpeRep == matchingTpeRep) {
-        (value: tpeRep.HostType) => Some(Command.lift(_base.ast.scalaBaseFactory.reifiedScalaValue(tpeRep, value, None)))
-      } else value => None
-    }
+      _  => None
+    override val reifylookup: (tpeRep: TypeRep) => tpeRep.HostType => Option[Generator[Ctxt, _base.syntax.Expression]] =
+      _ => _ => None
   }
   
-  val assertionsInMethods: ScalaAssertionsIn[_base.ast.any.Method] = new ScalaAssertionsIn(methodRegistry) {}
-  val assertionsInConstructors: ScalaAssertionsIn[_base.ast.oo.Constructor] = new ScalaAssertionsIn(constructorRegistry) {}
-  val assertionsInClasses: ScalaAssertionsIn[_base.ast.oo.Class] = new ScalaAssertionsIn(classRegistry) {}
+  val assertionsInMethods: ScalaAssertionsIn[_base.ast.any.Method] = {
+    class AssertionsInMethods(
+      override val registry: ContextRegistry[_base.type, _base.ast.any.Method] = methodRegistry
+    ) extends ScalaAssertionsIn[_base.ast.any.Method]
+    new AssertionsInMethods() {}
+  }
+  val assertionsInConstructors: ScalaAssertionsIn[_base.ast.oo.Constructor] = {
+    class AssertionsInConstructors(
+      override val registry: ContextRegistry[_base.type, _base.ast.oo.Constructor] = constructorRegistry
+    ) extends ScalaAssertionsIn[_base.ast.oo.Constructor]
+    new AssertionsInConstructors() {}
+  }
+    
+  val assertionsInClasses: ScalaAssertionsIn[_base.ast.oo.Class] = {
+    class AssertionsInClasses(
+      override val registry: ContextRegistry[_base.type, _base.ast.oo.Class] = classRegistry
+    ) extends ScalaAssertionsIn[_base.ast.oo.Class]
+    new AssertionsInClasses() {}
+  }
 }
 
 object Assertions {
-  type WithBase[T, AST <: AssertionsAST & BaseAST, B <: AnyParadigm.WithAST[AST]] = Assertions[AST, B, T] {}
-  def apply[T: ClassTag, AST <: AssertionsAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
-    _base: B,
-    matchingTpeRep: TypeRep.OfHostType[T],
-    methodRegistry: ContextRegistry[B, _base.ast.any.Method],
-    constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor],
-    classRegistry: ContextRegistry[B, _base.ast.oo.Class],
-  ): WithBase[T, AST, B] = new Assertions[AST, B, T](_base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry) with Assrt[AST, B, T](_base) {}
+  def apply[AST <: AssertionsAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
+    base: B,
+    methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
+    constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
+    classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+  ): Assertions[base.ast.type, base.type] = {
+    class Asrts(
+      override val _base: base.type,
+      override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
+      override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
+      override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+    ) extends Assertions[base.ast.type, base.type] {}
+    new Asrts(base, methodRegistry, constructorRegistry, classRegistry)
+  }
 }

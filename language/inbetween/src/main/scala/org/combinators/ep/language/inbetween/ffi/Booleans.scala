@@ -4,9 +4,11 @@ import org.combinators.cogen.paradigm.Apply
 import org.combinators.cogen.paradigm.ffi.{And, False, Not, Or, True, Booleans as Bools}
 import org.combinators.cogen.Understands
 import org.combinators.ep.language.inbetween.any.AnyParadigm
+import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 
-trait Booleans[AST <: BooleanAST, B, T](val _base: AnyParadigm.WithAST[AST] & B) {
-  trait BooleansIn[Ctxt] extends Bools[Ctxt, T] with FFI[Ctxt] {
+trait Booleans[AST <: BooleanAST, B] {
+  val _base: AnyParadigm.WithAST[AST] & B
+  trait BooleansIn[Ctxt] extends Bools[Ctxt] with FFI[Ctxt] {
     import base.ast.any
     import base.ast.booleanOpsFactory
     override val base: _base.type = _base
@@ -53,7 +55,9 @@ trait Booleans[AST <: BooleanAST, B, T](val _base: AnyParadigm.WithAST[AST] & B)
 }
 
 object Booleans {
-  type WithBase[T, AST <: BooleanAST, B <: AnyParadigm.WithAST[AST]] = Booleans[AST, B, T] {}
+  type WithBase[AST <: BooleanAST, B <: AnyParadigm.WithAST[AST]] = Booleans[AST, B] {}
 
-  def apply[T, AST <: BooleanAST, B <: AnyParadigm.WithAST[AST]](_base: B): WithBase[T, AST, B] = new Booleans[AST, B, T](_base) {}
+  def apply[AST <: BooleanAST, B <: AnyParadigm.WithAST[AST]](base: B): WithBase[AST, base.type] = new Booleans[AST, base.type] {
+    override val _base: base.type = base
+  }
 }

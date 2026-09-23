@@ -11,13 +11,14 @@ import org.combinators.cogen.paradigm.AnyParadigm.syntax
 import org.combinators.cogen.{Command, FileWithPath, TypeRep, Understands}
 import org.combinators.ep.domain.abstractions.DomainTpeRep
 
-trait Trees[AST <: TreesAST, B, Context](val base: AnyParadigm.WithAST[AST] & B) extends Trs[Context] {
+trait Trees[AST <: TreesAST, B, Context] extends Trs[Context] {
+  override val base: AnyParadigm.WithAST[AST] & B
   import base.ast.treesOpsFactory
   import base.ast.any
   val treeLibrary: Seq[FileWithPath]
   def addContextTypeLookup(tpe: TypeRep, lookup: any.Type): Generator[any.Project, Unit]
 
-  override val treeCapabilities: TreeCapabilities = new TreeCapabilities {
+   trait TreeCapabilities extends super.TreeCapabilities {
     implicit val canCreateLeaf: Understands[Context, Apply[CreateLeaf[any.Type], any.Expression, any.Expression]] =
       new Understands[Context, Apply[CreateLeaf[any.Type], any.Expression, any.Expression]] {
         def perform(context: Context, command: Apply[CreateLeaf[any.Type], any.Expression, any.Expression]): (Context, any.Expression) = {
@@ -31,6 +32,8 @@ trait Trees[AST <: TreesAST, B, Context](val base: AnyParadigm.WithAST[AST] & B)
         }
       }
   }
+
+  override val treeCapabilities: TreeCapabilities
 
   override def enable(): Generator[any.Project, Unit] = {
     import base.projectCapabilities.*
@@ -53,8 +56,10 @@ object Trees {
      _base: B)(
      _treeLibrary: Seq[FileWithPath],
     _addContextTypeLookup: (tpe: TypeRep, lookup: _base.ast.any.Type) => Generator[_base.ast.any.Project, Unit]
-   ): WithBase[AST, _base.type, Context] = new Trees[AST, _base.type, Context](_base) {
+   ): WithBase[AST, _base.type, Context] = new Trees[AST, _base.type, Context] {
+    override val base: _base.type = _base
     override val treeLibrary: _treeLibrary.type = _treeLibrary
+    override val treeCapabilities: TreeCapabilities = new TreeCapabilities {}
     override def addContextTypeLookup(tpe: TypeRep, lookup: base.ast.any.Type): Generator[base.ast.any.Project, Unit] = _addContextTypeLookup(tpe, lookup)
   }
 }

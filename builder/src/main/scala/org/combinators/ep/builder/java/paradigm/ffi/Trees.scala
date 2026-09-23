@@ -69,14 +69,13 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
       }
     }
 
-  override val treeCapabilities: TreeCapabilities =
-    new TreeCapabilities {
-      implicit val canCreateLeaf: Understands[Ctxt, Apply[CreateLeaf[Type], Expression, Expression]] =
-        leafCreation(addImport)
-      implicit val canCreateNode: Understands[Ctxt, Apply[CreateNode, Expression, Expression]] =
-        nodeCreation(addImport)
-    }
-
+  trait TreeCapabilities extends super.TreeCapabilities {
+    implicit val canCreateLeaf: Understands[Ctxt, Apply[CreateLeaf[Type], Expression, Expression]] =
+      leafCreation(addImport)
+    implicit val canCreateNode: Understands[Ctxt, Apply[CreateNode, Expression, Expression]] =
+      nodeCreation(addImport)
+  }
+  override val treeCapabilities: TreeCapabilities
   def enable(): Generator[base.ProjectContext, Unit] =
     Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
       def perform(
@@ -199,7 +198,9 @@ object Trees {
       val base: b.type,
       val addImport: Understands[Ctxt, AddImport[Import]],
       val ooParadigm: oo.type
-    ) extends Trees[Ctxt, b.type]
+    ) extends Trees[Ctxt, b.type] {
+      override val treeCapabilities: TreeCapabilities = new TreeCapabilities {}
+    }
 
     T(b, addImport, oo)
   }

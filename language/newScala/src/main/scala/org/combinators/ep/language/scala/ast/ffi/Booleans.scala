@@ -9,40 +9,63 @@ import org.combinators.ep.language.inbetween.ffi.Booleans as Bools
 
 import scala.reflect.{ClassTag, classTag}
 
-trait Booleans[AST <: BooleanAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm, T: ClassTag](
-  val _base: AnyParadigm.WithAST[AST] & B,
-  matchingTpeRep: TypeRep.OfHostType[T],
-  methodRegistry: ContextRegistry[B, _base.ast.any.Method],
-  constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor],
-  classRegistry: ContextRegistry[B, _base.ast.oo.Class]
-) extends Bools[AST, B, T] {
-  
+trait Booleans[AST <: BooleanAST & BaseAST, B <: org.combinators.cogen.paradigm.AnyParadigm] extends Bools[AST, B] {
+  val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
+  val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
+  val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
+
   val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
   
-  trait ScalaBooleansIn[Ctxt](val registry: ContextRegistry[B, Ctxt]) extends super.BooleansIn[Ctxt] {
-    override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] =
-      tpeRep => if (tpeRep == matchingTpeRep) {
-        Some(Command.lift(_base.ast.ooFactory.classReferenceType(nameProvider.mangle(classTag[T].runtimeClass.getName))))
-      } else None
+  trait ScalaBooleansIn[Ctxt] extends super.BooleansIn[Ctxt] {
+    override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] = {
+      case TypeRep.Boolean =>
+        Some(Command.lift(_base.ast.ooFactory.classReferenceType(nameProvider.mangle("Boolean"))))
+      case _ => None
+    }
     override val reifylookup: (tpeRep: TypeRep) => tpeRep.HostType => Option[Generator[Ctxt, _base.syntax.Expression]] = {
-      tpeRep => if (tpeRep == matchingTpeRep) {
-        (value: tpeRep.HostType) => Some(Command.lift(_base.ast.scalaBaseFactory.reifiedScalaValue(tpeRep, value, None)))
-      } else value => None
+      case TypeRep.Boolean => b => Some(Command.lift(
+        if (b.asInstanceOf[scala.Boolean]) {
+          _base.ast.booleanOpsFactory.trueExp()
+        } else {
+          _base.ast.booleanOpsFactory.falseExp()
+        }))
+      case _ => b => None
     }
   }
   
-  val booleansInMethods: ScalaBooleansIn[_base.ast.any.Method] = new ScalaBooleansIn(methodRegistry) {}
-  val booleansInConstructors: ScalaBooleansIn[_base.ast.oo.Constructor] = new ScalaBooleansIn(constructorRegistry) {}
-  val booleansInClasses: ScalaBooleansIn[_base.ast.oo.Class] = new ScalaBooleansIn(classRegistry) {}
+  val booleansInMethods: ScalaBooleansIn[_base.ast.any.Method] = {
+    class Bls(
+      override val registry: ContextRegistry[_base.type, _base.ast.any.Method] = methodRegistry
+    ) extends ScalaBooleansIn[_base.ast.any.Method] {}
+    new Bls()
+  }
+  val booleansInConstructors: ScalaBooleansIn[_base.ast.oo.Constructor] = {
+    class Bls(
+      override val registry: ContextRegistry[_base.type, _base.ast.oo.Constructor] = constructorRegistry
+    ) extends ScalaBooleansIn[_base.ast.oo.Constructor] {}
+    new Bls()
+  }
+  val booleansInClasses: ScalaBooleansIn[_base.ast.oo.Class] = {
+    class Bls(
+      override val registry: ContextRegistry[_base.type, _base.ast.oo.Class] = classRegistry
+    ) extends ScalaBooleansIn[_base.ast.oo.Class] {}
+    new Bls()
+  }
 }
 
 object Booleans {
-  type WithBase[T, AST <: BooleanAST & BaseAST, B <: AnyParadigm.WithAST[AST]] = Booleans[AST, B, T] {}
-  def apply[T: ClassTag, AST <: BooleanAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
-    _base: B,
-    matchingTpeRep: TypeRep.OfHostType[T],
-    methodRegistry: ContextRegistry[B, _base.ast.any.Method],
-    constructorRegistry: ContextRegistry[B, _base.ast.oo.Constructor],
-    classRegistry: ContextRegistry[B, _base.ast.oo.Class],
-  ): WithBase[T, AST, B] = new Booleans[AST, B, T](_base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry) with Bools[AST, B, T](_base) {}
+  def apply[ AST <: BooleanAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
+    base: B,
+    methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
+    constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
+    classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+  ): Booleans[base.ast.type, base.type] = {
+    class Bls(
+      override val _base: base.type,
+      override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
+      override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
+      override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+    ) extends Booleans[base.ast.type, base.type]
+    new Bls(base, methodRegistry, constructorRegistry, classRegistry) {}
+  }
 }

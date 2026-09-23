@@ -8,7 +8,7 @@ case class Exception[Expression,Stmt](exp:Expression) extends Command {
   type Result = Stmt
 }
 
-trait Exceptions[Context, T] extends FFI {
+trait Exceptions[Context] extends FFI {
   import base.syntax._
 
   trait ExceptionsCapabilities {
@@ -22,5 +22,5 @@ trait Exceptions[Context, T] extends FFI {
 }
 
 object Exceptions {
-  type WithBase[Ctxt, B <: AnyParadigm, T] = Exceptions[Ctxt, T] { val base: B }
+  type WithBase[Ctxt, B <: AnyParadigm] = Exceptions[Ctxt] { val base: B }
 }

@@ -66,7 +66,7 @@ class FibonacciScala {
       () => generator.paradigm.runGenerator {
         for {
           _ <- generator.ints.arithmeticInMethods.enable()
-          _ <- generator.booleans.booleansInMethodsInMethods.enable()
+          _ <- generator.booleans.booleansInMethods.enable()
           _ <- generator.strings.stringsInMethods.enable()
           _ <- generator.equality.equalsInMethods.enable()
           _ <- generator.assertions.assertionsInMethods.enable()

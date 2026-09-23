@@ -40,7 +40,9 @@ trait BaseTypeAST extends InbetweenBaseTypeAST { self: OOAST & NameProviderAST &
         case BaseType.AnyTpe => Some(s"new java.lang.Object")
         case BaseType.CompositeTpe(description) =>
           val args = value.asInstanceOf[Seq[(String, InstanceRep)]].map({ (name, instRep) =>
-            s"${scalaBaseFactory.reifiedScalaValue(instRep.tpe, instRep.inst).toScala}"     // ${name} =   cannot work since constructor params are mangled
+            // TODO FIXME:
+            //s"${scalaBaseFactory.reifiedScalaValue(instRep.tpe, instRep.inst).toScala}"     // ${name} =   cannot work since constructor params are mangled
+            ""
           })
           Some(s"new ${compositeType(description).toScala}${args.mkString("(", ", ", ")")}")
         case _ => None

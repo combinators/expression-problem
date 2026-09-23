@@ -36,8 +36,10 @@ trait TreesAST extends InbetweenTreesAST { self: ParametricPolymorphismAST & Bas
       tpe match {
         case t: DomainTpeRep.Tree.type =>
           value match {
-            case org.combinators.ep.domain.tree.Node(id, values) => Some(s"org.combinators.ep.util.Node($id, ${values.map(v => scalaBaseFactory.reifiedScalaValue(DomainTpeRep.Tree, v).toScala).mkString(", ")})")
-            case org.combinators.ep.domain.tree.Leaf(r) => Some(s"org.combinators.ep.util.Leaf(${scalaBaseFactory.reifiedScalaValue(r.tpe, r.inst).toScala})")
+            //case org.combinators.ep.domain.tree.Node(id, values) => Some(s"org.combinators.ep.util.Node($id, ${values.map(v => scalaBaseFactory.reifiedScalaValue(DomainTpeRep.Tree, v).toScala).mkString(", ")})")
+            //case org.combinators.ep.domain.tree.Leaf(r) => Some(s"org.combinators.ep.util.Leaf(${scalaBaseFactory.reifiedScalaValue(r.tpe, r.inst).toScala})")
+            // TODO: FIXME
+            case _ => None
           }
         case _ => None
       }

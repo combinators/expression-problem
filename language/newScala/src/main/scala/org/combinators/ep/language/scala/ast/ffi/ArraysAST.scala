@@ -159,7 +159,7 @@ trait ArraysAST extends InbetweenArraysAST {
   }
 
   override val arraysOpsFinalTypes: scalaArraysOps.arraysOpsOverride.FinalTypes
-  val arrayOpsFactory: scalaArraysOps.arraysOpsOverride.Factory
+  val arraysOpsFactory: scalaArraysOps.arraysOpsOverride.Factory
 }
 
 
@@ -265,5 +265,5 @@ trait FinalArraysAST extends ArraysAST {
     }
   }
 
-  val arraysOpsFactory: finalArraysFactoryTypes.FinalArraysFactory = new finalArraysFactoryTypes.FinalArraysFactory {}
+  override val arraysOpsFactory: finalArraysFactoryTypes.FinalArraysFactory = new finalArraysFactoryTypes.FinalArraysFactory {}
 }

@@ -34,7 +34,7 @@ trait BaseType[Ctxt, AP <: AnyParadigm] extends BT[Ctxt] {
                    toResolution: ContextSpecificResolver => TypeRep => Generator[Ctxt, Type],
                    canFindClass: Understands[Ctxt, FindClass[Name, Type]]): ContextSpecificResolver => TypeRep => Generator[Ctxt, Type] = k => {
               case BT.AnyTpe => Command.lift[Ctxt, Type](objectType)
-              case BT.CompositeTpe(descriptor) => FindClass(Seq(JavaNameProvider.mangle(descriptor.name))).interpret(canFindClass)
+              case BT.CompositeTpe(descriptor) => FindClass(Seq(JavaNameProvider.mangle(descriptor.name))).interpret(using canFindClass)
               case other => toResolution(k)(other)
             }
 
@@ -48,7 +48,7 @@ trait BaseType[Ctxt, AP <: AnyParadigm] extends BT[Ctxt] {
 
                 case BT.AnyTpe =>
                   for {
-                    result <- InstantiateObject(objectType, Seq.empty).interpret(canConstructObject)
+                    result <- InstantiateObject(objectType, Seq.empty).interpret(using canConstructObject)
                   } yield result
 
                 case ct: BT.CompositeTpe =>
@@ -57,7 +57,7 @@ trait BaseType[Ctxt, AP <: AnyParadigm] extends BT[Ctxt] {
                     translatedArgs <- forEach(rep.inst.asInstanceOf[Seq[(String, InstanceRep)]]){ case (name, fieldRep) =>
                       projectReify(k)(fieldRep)
                     }
-                    result <- InstantiateObject(translatedTpe, translatedArgs).interpret(canConstructObject)
+                    result <- InstantiateObject(translatedTpe, translatedArgs).interpret(using canConstructObject)
                   } yield result
                
                 case _ => reify(k)(rep)

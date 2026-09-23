@@ -105,9 +105,9 @@ class EqualsMainScala {
   }
 
   val eqlsGenerator: EqualsGenerator.Aux[generator.paradigm.type, generator.ooParadigm.type] = EqualsGenerator(generator.paradigm)(
-    generator.nameProvider, baseTypeIn, generator.imperative.imperativeInMethods, generator.equality.equalsInMethods, generator.booleans.booleansInMethodsInMethods, generator.arrays.arraysInMethods, generator.ooParadigm)
+    generator.nameProvider, baseTypeIn, generator.imperative.imperativeInMethods, generator.equality.equalsInMethods, generator.booleans.booleansInMethods, generator.arrays.arraysInMethods, generator.ooParadigm)
 
-  val equalsApproach = EqualsObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods, generator.ooParadigm, generator.ints.arithmeticInMethods, generator.booleans.booleansInMethodsInMethods, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods, generator.maps.mapsInMethods, baseTypeIn, eqlsGenerator)
+  val equalsApproach = EqualsObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods, generator.ooParadigm, generator.ints.arithmeticInMethods, generator.booleans.booleansInMethods, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods, generator.maps.mapsInMethods, baseTypeIn, eqlsGenerator)
 
   val persistable: Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
 
@@ -126,7 +126,7 @@ class EqualsMainScala {
           _ <- generator.equality.equalsInMethods.enable()
           _ <- generator.assertions.assertionsInMethods.enable()
           _ <- generator.maps.mapsInMethods.enable()
-          _ <- generator.booleans.booleansInMethodsInMethods.enable()
+          _ <- generator.booleans.booleansInMethods.enable()
 
           _ <- baseTypeIn.enable()
           _ <- equalsApproach.implement(domains, testCases)

@@ -37,7 +37,7 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
         leafType.setTypeArguments(new NodeList[Type](command.functional.valueType))
         val gen =
           for {
-            _ <- AddImport(leafImport).interpret(canAddImport)
+            _ <- AddImport(leafImport).interpret(using canAddImport)
           } yield
             new ObjectCreationExpr(
               null,
@@ -58,7 +58,7 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
       ): (Ctxt, Expression) = {
         val gen =
           for {
-            _ <- AddImport(nodeImport).interpret(canAddImport)
+            _ <- AddImport(nodeImport).interpret(using canAddImport)
           } yield
             new ObjectCreationExpr(
               null,
@@ -69,15 +69,15 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
       }
     }
 
-  trait TreeCapabilities extends super.TreeCapabilities {
+  trait JavaTreeCapabilities extends super.TreeCapabilities {
     implicit val canCreateLeaf: Understands[Ctxt, Apply[CreateLeaf[Type], Expression, Expression]] =
       leafCreation(addImport)
     implicit val canCreateNode: Understands[Ctxt, Apply[CreateNode, Expression, Expression]] =
       nodeCreation(addImport)
   }
-  override val treeCapabilities: TreeCapabilities
+  override val treeCapabilities: JavaTreeCapabilities
   def enable(): Generator[base.ProjectContext, Unit] =
-    Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
+    Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type
@@ -93,7 +93,7 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
             ): ContextSpecificResolver => TypeRep => Generator[Ctxt, Type] = k => {
               case DomainTpeRep.Tree =>
                 for {
-                  _ <- AddImport(treeImport).interpret(canAddImport)
+                  _ <- AddImport(treeImport).interpret(using canAddImport)
                 } yield treeType
               case other => toResolution(k)(other)
             }
@@ -111,13 +111,13 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
                       projectReiification(k)(InstanceRep(DomainTpeRep.Tree)(elem))
                     }
                     ident <- projectReiification(k)(InstanceRep(TypeRep.Int)(id))
-                    result <- Apply[CreateNode, Expression, Expression](CreateNode(), ident +: elems).interpret(nodeCreation(canAddImport))
+                    result <- Apply[CreateNode, Expression, Expression](CreateNode(), ident +: elems).interpret(using nodeCreation(canAddImport))
                   } yield result
                 case Leaf(inst) =>
                   for {
                     child <- projectReiification(k)(inst)
                     childType <- projectResolution(k)(inst.tpe)
-                    result <- Apply[CreateLeaf[Type], Expression, Expression](CreateLeaf(childType), Seq(child)).interpret(leafCreation(canAddImport))
+                    result <- Apply[CreateLeaf[Type], Expression, Expression](CreateLeaf(childType), Seq(child)).interpret(using leafCreation(canAddImport))
                   } yield result
                 case _ => reify(k)(rep)
               }
@@ -199,7 +199,7 @@ object Trees {
       val addImport: Understands[Ctxt, AddImport[Import]],
       val ooParadigm: oo.type
     ) extends Trees[Ctxt, b.type] {
-      override val treeCapabilities: TreeCapabilities = new TreeCapabilities {}
+      override val treeCapabilities: JavaTreeCapabilities = new JavaTreeCapabilities {}
     }
 
     T(b, addImport, oo)

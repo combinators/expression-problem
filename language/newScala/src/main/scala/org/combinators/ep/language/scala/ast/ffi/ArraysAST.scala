@@ -1,11 +1,13 @@
-package org.combinators.ep.language.scala.ast.ffi     /*DI:LD:AI*/
+package org.combinators.ep.language.scala.ast.ffi
+
+/*DI:LD:AI*/
 
 import org.combinators.cogen.TypeRep
 import org.combinators.ep.language.inbetween.ffi.ArraysAST as InbetweenArraysAST
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
 
 trait ArraysAST extends InbetweenArraysAST {
-  self: OperatorExpressionsAST & EqualsAST & BaseAST =>    // need EqualsAST because of equalsOpsFactory
+  self: OperatorExpressionsAST & EqualsAST & BaseAST => // need EqualsAST because of equalsOpsFactory
   object scalaArraysOps {
     object arraysOpsOverride {
       trait FinalTypes extends arraysOps.FinalTypes {
@@ -55,7 +57,7 @@ trait ArraysAST extends InbetweenArraysAST {
         override def toScala: String =
           expression.toScala
 
-        override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): arraysOps.CreateArrayFromExpression =
+        override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): CreateArrayFromExpression =
           arraysOpsFactory.convert(copy(expression = expression.prefixRootPackage(rootPackageName, excludedTypeNames)))
 
         override def toImport: Seq[any.Import] = Seq.empty
@@ -69,7 +71,7 @@ trait ArraysAST extends InbetweenArraysAST {
         override def toScala: String
         = s"Array.ofDim[${tpe.toScala}](${dimensions.map(_.toScala).mkString(", ")})"
 
-        override def prefixRootPackage(rootPackageName: scala.Seq[ArraysAST.this.any.Name], excludedTypeNames: _root_.scala.Predef.Set[scala.Seq[ArraysAST.this.any.Name]]): arraysOps.CreateArrayWithDefaultValues =
+        override def prefixRootPackage(rootPackageName: scala.Seq[ArraysAST.this.any.Name], excludedTypeNames: _root_.scala.Predef.Set[scala.Seq[ArraysAST.this.any.Name]]): CreateArrayWithDefaultValues =
           copy(
             tpe = tpe.prefixRootPackage(rootPackageName, excludedTypeNames),
             dimensions = dimensions.map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
@@ -84,7 +86,7 @@ trait ArraysAST extends InbetweenArraysAST {
         override def toScala: String =
           s"Array(${values.map(_.toScala).mkString(", ")})"
 
-        override def prefixRootPackage(rootPackageName: scala.Seq[ArraysAST.this.any.Name], excludedTypeNames: _root_.scala.Predef.Set[scala.Seq[ArraysAST.this.any.Name]]): arraysOps.CreateArrayFromValues =
+        override def prefixRootPackage(rootPackageName: scala.Seq[ArraysAST.this.any.Name], excludedTypeNames: _root_.scala.Predef.Set[scala.Seq[ArraysAST.this.any.Name]]): CreateArrayFromValues =
           copy(
             values = values.map(_.prefixRootPackage(rootPackageName, excludedTypeNames))
           )
@@ -103,7 +105,7 @@ trait ArraysAST extends InbetweenArraysAST {
           s"${base.toScala}$indexPairs"
         }
 
-        override def prefixRootPackage(rootPackageName: scala.Seq[ArraysAST.this.any.Name], excludedTypeNames: _root_.scala.Predef.Set[scala.Seq[ArraysAST.this.any.Name]]): arraysOps.ArrayExpression =
+        override def prefixRootPackage(rootPackageName: scala.Seq[ArraysAST.this.any.Name], excludedTypeNames: _root_.scala.Predef.Set[scala.Seq[ArraysAST.this.any.Name]]): ArrayExpression =
           copy(
             base = base.prefixRootPackage(rootPackageName, excludedTypeNames),
             indices = indices
@@ -120,7 +122,7 @@ trait ArraysAST extends InbetweenArraysAST {
           s"${base.toScala}${indexPairs} = ${value.toScala}"
         }
 
-        override def prefixRootPackage(rootPackageName: scala.Seq[ArraysAST.this.any.Name], excludedTypeNames: _root_.scala.Predef.Set[scala.Seq[ArraysAST.this.any.Name]]): arraysOps.SetArrayExpression =
+        override def prefixRootPackage(rootPackageName: scala.Seq[ArraysAST.this.any.Name], excludedTypeNames: _root_.scala.Predef.Set[scala.Seq[ArraysAST.this.any.Name]]): SetArrayExpression =
           copy(
             base = base.prefixRootPackage(rootPackageName, excludedTypeNames),
             indices = indices,
@@ -145,7 +147,7 @@ trait ArraysAST extends InbetweenArraysAST {
           }
         }
 
-        override def prefixRootPackage(rootPackageName: scala.Seq[ArraysAST.this.any.Name], excludedTypeNames: _root_.scala.Predef.Set[scala.Seq[ArraysAST.this.any.Name]]): arraysOps.LengthArrayExpression =
+        override def prefixRootPackage(rootPackageName: scala.Seq[ArraysAST.this.any.Name], excludedTypeNames: _root_.scala.Predef.Set[scala.Seq[ArraysAST.this.any.Name]]): LengthArrayExpression =
           copy(
             base = base.prefixRootPackage(rootPackageName, excludedTypeNames),
             indices = indices
@@ -155,11 +157,14 @@ trait ArraysAST extends InbetweenArraysAST {
       trait Factory extends arraysOps.Factory {}
     }
   }
-    val arrayOpsFactory: scalaArraysOps.arraysOpsOverride.Factory
-  }
+
+  override val arraysOpsFinalTypes: scalaArraysOps.arraysOpsOverride.FinalTypes
+  val arrayOpsFactory: scalaArraysOps.arraysOpsOverride.Factory
+}
 
 
-trait FinalArraysAST extends ArraysAST { self: FinalOperatorExpressionsAST & FinalEqualsAST & FinalBaseAST =>
+trait FinalArraysAST extends ArraysAST {
+  self: FinalOperatorExpressionsAST & FinalEqualsAST & FinalBaseAST =>
   object finalArraysFinalTypes {
     trait ArraysFinalTypes extends scalaArraysOps.arraysOpsOverride.FinalTypes {
       type Array = scalaArraysOps.arraysOpsOverride.Array
@@ -172,6 +177,7 @@ trait FinalArraysAST extends ArraysAST { self: FinalOperatorExpressionsAST & Fin
       type LengthArrayExpression = scalaArraysOps.arraysOpsOverride.LengthArrayExpression
     }
   }
+
   override val arraysOpsFinalTypes: finalArraysFinalTypes.ArraysFinalTypes = new finalArraysFinalTypes.ArraysFinalTypes {}
 
   object finalArraysFactoryTypes {
@@ -197,7 +203,7 @@ trait FinalArraysAST extends ArraysAST { self: FinalOperatorExpressionsAST & Fin
 
       def createArrayWithDefaultValues(tpe: any.Type, dimensions: Seq[any.Expression]): scalaArraysOps.arraysOpsOverride.CreateArrayWithDefaultValues = {
         case class CreateArrayWithDefaultValues(tpe: any.Type, dimensions: Seq[any.Expression])
-            extends scalaArraysOps.arraysOpsOverride.CreateArrayWithDefaultValues
+          extends scalaArraysOps.arraysOpsOverride.CreateArrayWithDefaultValues
             with finalBaseAST.anyOverrides.FinalExpression {
           override def getSelfCreateArrayExpression: arraysOpsFinalTypes.CreateArrayExpression = this
           override def getSelfCreateArrayWithDefaultValues: arraysOpsFinalTypes.CreateArrayWithDefaultValues = this
@@ -217,9 +223,9 @@ trait FinalArraysAST extends ArraysAST { self: FinalOperatorExpressionsAST & Fin
 
       def lengthArrayExpression(base: any.Expression, indices: Seq[any.Expression]): scalaArraysOps.arraysOpsOverride.LengthArrayExpression = {
         case class LengthArrayExpression(base: any.Expression, indices: Seq[any.Expression])
-             extends scalaArraysOps.arraysOpsOverride.LengthArrayExpression
-               with finalOperatorExpressions.operatorExpressionsOverrides.Operator
-               with finalBaseAST.anyOverrides.FinalExpression {
+          extends scalaArraysOps.arraysOpsOverride.LengthArrayExpression
+            with finalOperatorExpressions.operatorExpressionsOverrides.Operator
+            with finalBaseAST.anyOverrides.FinalExpression {
           def operator: String = ".length"
 
           override def getSelfLengthArrayExpression: scalaArraysOps.arraysOpsOverride.LengthArrayExpression = this
@@ -231,9 +237,9 @@ trait FinalArraysAST extends ArraysAST { self: FinalOperatorExpressionsAST & Fin
 
       def arrayExpression(base: any.Expression, indices: Seq[any.Expression]): scalaArraysOps.arraysOpsOverride.ArrayExpression = {
         case class ArrayExpression(base: any.Expression, indices: Seq[any.Expression])
-            extends scalaArraysOps.arraysOpsOverride.ArrayExpression
-              with finalOperatorExpressions.operatorExpressionsOverrides.Operator
-              with finalBaseAST.anyOverrides.FinalExpression {
+          extends scalaArraysOps.arraysOpsOverride.ArrayExpression
+            with finalOperatorExpressions.operatorExpressionsOverrides.Operator
+            with finalBaseAST.anyOverrides.FinalExpression {
 
           override def getSelfArrayExpression: scalaArraysOps.arraysOpsOverride.ArrayExpression = this
           override def getSelfExpression: finalBaseAST.anyOverrides.FinalExpression = this
@@ -245,7 +251,7 @@ trait FinalArraysAST extends ArraysAST { self: FinalOperatorExpressionsAST & Fin
 
       def setArrayExpression(base: any.Expression, indices: Seq[any.Expression], value: any.Expression): scalaArraysOps.arraysOpsOverride.SetArrayExpression = {
         case class SetArrayExpression(base: any.Expression, indices: Seq[any.Expression], value: any.Expression)
-            extends scalaArraysOps.arraysOpsOverride.SetArrayExpression
+          extends scalaArraysOps.arraysOpsOverride.SetArrayExpression
             with finalOperatorExpressions.operatorExpressionsOverrides.Operator
             with finalBaseAST.anyOverrides.FinalExpression {
           override def toScala(operands: any.Expression*): String = ???

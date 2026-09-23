@@ -39,13 +39,13 @@ trait RealArithmetic[T: ClassTag] extends RealArith[T] {
   }
   val realArithmeticInConstructors: ScalaRealArithmeticIn[_base.ast.oo.Constructor] = {
     class Arith(
-      override val registry: methodRegistry.type = methodRegistry
+      override val registry: constructorRegistry.type = constructorRegistry
     ) extends ScalaRealArithmeticIn[_base.ast.oo.Constructor] {}
     new Arith()
   }
   val realArithmeticInClasses: ScalaRealArithmeticIn[_base.ast.oo.Class] = {
     class Arith(
-      override val registry: methodRegistry.type = methodRegistry
+      override val registry: classRegistry.type = classRegistry
     ) extends ScalaRealArithmeticIn[_base.ast.oo.Class] {}
     new Arith()
   }

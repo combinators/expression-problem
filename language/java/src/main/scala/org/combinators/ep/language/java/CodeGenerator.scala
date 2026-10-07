@@ -25,6 +25,9 @@ class CodeGenerator(config: Config) { cc =>
   val booleansInMethod = new Booleans[MethodBodyCtxt, paradigm.type](paradigm)
   val booleansInConstructor = new Booleans[MethodBodyCtxt, paradigm.type](paradigm)
 
+  val unitsInMethod = new Units[MethodBodyCtxt, paradigm.type](paradigm)
+  val unitsInConstructor = new Units[MethodBodyCtxt, paradigm.type](paradigm)
+
   val doublesInMethod =
     new Arithmetic[MethodBodyCtxt, Double, paradigm.type](
       paradigm,
@@ -159,7 +162,7 @@ class CodeGenerator(config: Config) { cc =>
 object CodeGenerator {
 
   case object Enable extends Command {
-    type Result = Unit
+    type Result = Boolean
   }
 
   val defaultConfig: Config =

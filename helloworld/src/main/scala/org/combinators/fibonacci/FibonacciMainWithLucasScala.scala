@@ -80,7 +80,8 @@ class FibonacciMainWithLucasScala {
     with FinalMapsAST
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
-    with FinalStringAST {
+    with FinalStringAST
+    with FinalUnitAST {
     val reificationExtensions = List.empty
   }
 
@@ -98,6 +99,7 @@ class FibonacciMainWithLucasScala {
     val files =
       () => generator.paradigm.runGenerator {
         for {
+          _ <- generator.enableDefaultFFIs()
           _ <- generator.ints.arithmeticInMethods.enable()
           _ <- generator.booleans.booleansInMethods.enable()
           _ <- generator.strings.stringsInMethods.enable()

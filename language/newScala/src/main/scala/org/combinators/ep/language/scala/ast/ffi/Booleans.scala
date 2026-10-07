@@ -7,8 +7,6 @@ import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.inbetween.ffi.Booleans as Bools
 
-import scala.reflect.{ClassTag, classTag}
-
 trait Booleans extends Bools {
   override val _base: AnyParadigm {val ast: BooleanAST & BaseAST }
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
@@ -20,7 +18,8 @@ trait Booleans extends Bools {
   trait ScalaBooleansIn[Ctxt] extends super.BooleansIn[Ctxt] {
     override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] = {
       case TypeRep.Boolean =>
-        Some(Command.lift(_base.ast.ooFactory.classReferenceType(nameProvider.mangle("Boolean"))))
+        val name = "Boolean"
+        Some(Command.lift(_base.ast.ooFactory.classReferenceType(_base.ast.scalaBaseFactory.name(name, name))))
       case _ => None
     }
     override val reifylookup: (tpeRep: TypeRep) => tpeRep.HostType => Option[Generator[Ctxt, _base.syntax.Expression]] = {

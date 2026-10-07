@@ -11,5 +11,5 @@ trait ContextRegistry[B <: AnyParadigm, Ctxt] {
     ffi: FFI,
     tpeLookup: TypeRep => Option[Generator[Ctxt, base.syntax.Type]],
     reifylookup: (typeRep: TypeRep) => typeRep.HostType => Option[Generator[Ctxt, base.syntax.Expression]]
-  ): Generator[base.ProjectContext, Unit]
+  ): Generator[base.ProjectContext, Boolean]
 }

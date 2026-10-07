@@ -9,20 +9,19 @@ import org.combinators.ep.language.inbetween.ffi.RealArithmetic as RealArith
 
 import scala.reflect.{ClassTag, classTag}
 
-trait RealArithmetic[T: ClassTag] extends RealArith[T] {
+trait RealArithmetic[T] extends RealArith[T] {
   override val _base: AnyParadigm {val ast: RealArithmeticAST & BaseAST }
   val matchingTpeRep: TypeRep.OfHostType[T]
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
- 
-  val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
+  val typeName:String
 
   trait ScalaRealArithmeticIn[Ctxt] extends super.RealArithmeticIn[Ctxt] {
     override val registry: ContextRegistry[_base.type, Ctxt]
     override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] =
       tpeRep => if (tpeRep == matchingTpeRep) {
-        Some(Command.lift(_base.ast.ooFactory.classReferenceType(nameProvider.mangle(classTag[T].runtimeClass.getName))))
+        Some(Command.lift(_base.ast.ooFactory.classReferenceType(_base.ast.scalaBaseFactory.name(typeName, typeName))))
       } else None
     override val reifylookup: (tpeRep: TypeRep) => tpeRep.HostType => Option[Generator[Ctxt, _base.syntax.Expression]] = {
       tpeRep => if (tpeRep == matchingTpeRep) {
@@ -53,12 +52,13 @@ trait RealArithmetic[T: ClassTag] extends RealArith[T] {
 
 object RealArithmetic {
   type WithBase[B <: AnyParadigm, T] = RealArithmetic[T] { val _base: B }
-  def apply[AST <: RealArithmeticAST & BaseAST, B <: AnyParadigm.WithAST[AST], T: ClassTag](
+  def apply[AST <: RealArithmeticAST & BaseAST, B <: AnyParadigm.WithAST[AST], T](
     base: B,
     matchingTpeRep: TypeRep.OfHostType[T],
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+    typeName: String
   ): RealArithmetic.WithBase[base.type, T] = {
     class Arith(
       override val _base: base.type,
@@ -66,7 +66,8 @@ object RealArithmetic {
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+      override val typeName:String
     ) extends RealArithmetic[T]
-    new Arith(base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry) {}
+    new Arith(base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry, typeName) {}
   }
 }

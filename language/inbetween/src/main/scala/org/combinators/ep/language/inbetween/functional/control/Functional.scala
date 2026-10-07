@@ -13,6 +13,7 @@ trait Functional {
 
     import base.ast.{any, factory, functionalControlFactory}
 
+    // must be any.Method since if..the..else cannot be top-level and only can appear within Method
     type Ctxt = any.Method
     override type PatternContext = base.ast.funcontrol.PatternContext
 

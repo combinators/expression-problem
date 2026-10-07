@@ -18,12 +18,12 @@ trait BaseType[Ctxt, AP <: AnyParadigm] extends BT[Ctxt] {
   val ooParadigm: ObjectOriented[base.type]
   import base.syntax._
   
-  def enable(): Generator[base.ProjectContext, Unit] =
+  def enable(): Generator[base.ProjectContext, Boolean] =
     Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
                    context: ProjectCtxt,
                    command: Enable.type
-                 ): (ProjectCtxt, Unit) = {
+                 ): (ProjectCtxt, Boolean) = {
         if (!context.resolver.resolverInfo.contains(BaseTypeEnabled)) {
 
           val objectName = ObjectOriented.fromComponents("java", "lang", "Object")
@@ -75,8 +75,8 @@ trait BaseType[Ctxt, AP <: AnyParadigm] extends BT[Ctxt] {
             ).addInfo(BaseTypeEnabled)
           }
 
-          (context.copy(resolver = updateResolver(context.resolver)), ())
-        } else (context, ())
+          (context.copy(resolver = updateResolver(context.resolver)), true)
+        } else (context, false)
       }
     })
 }

@@ -31,9 +31,12 @@ class HelloWorldMainJava {
     val files =
       () => generator.paradigm.runGenerator {
         for {
+          _ <- generator.unitsInMethod.enable()
+          _ <- generator.unitsInConstructor.enable()
           _ <- generator.doublesInMethod.enable()
           _ <- generator.intsInMethod.enable()
           _ <- generator.stringsInMethod.enable()
+          _ <- generator.stringsInConstructor.enable()
           _ <- generator.listsInMethod.enable()
           _ <- generator.consoleInMethod.enable()
           _ <- generator.arraysInMethod.enable()

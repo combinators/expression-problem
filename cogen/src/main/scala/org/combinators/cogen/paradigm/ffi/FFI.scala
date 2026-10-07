@@ -10,5 +10,5 @@ import org.combinators.cogen.Command.Generator
  */
 trait FFI {
   val base: AnyParadigm
-  def enable(): Generator[base.ProjectContext, Unit]
+  def enable(): Generator[base.ProjectContext, Boolean]
 }

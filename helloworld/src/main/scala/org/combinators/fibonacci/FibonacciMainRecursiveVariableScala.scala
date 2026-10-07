@@ -50,7 +50,8 @@ class FibonacciRecursiveVariableMainScala {
     with FinalMapsAST
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
-    with FinalStringAST {
+    with FinalStringAST 
+    with FinalUnitAST {
     val reificationExtensions = List.empty
   }
 
@@ -72,11 +73,7 @@ class FibonacciRecursiveVariableMainScala {
     val files =
       () => generator.paradigm.runGenerator {
         for {
-          _ <- generator.ints.arithmeticInMethods.enable()
-          _ <- generator.booleans.booleansInMethods.enable()
-          _ <- generator.strings.stringsInMethods.enable()
-          _ <- generator.equality.equalsInMethods.enable()
-          _ <- generator.assertions.assertionsInMethods.enable()
+          _ <- generator.enableDefaultFFIs()
 
           _ <- fibonacciApproach.make_project()
         } yield ()

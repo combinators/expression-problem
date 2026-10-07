@@ -8,22 +8,19 @@ import org.combinators.ep.language.inbetween.any.AnyParadigm.WithAST
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.inbetween.ffi.Arithmetic as Arith
 
-import scala.reflect.{ClassTag, classTag}
-
-trait Arithmetic[T: ClassTag] extends Arith[T] {
+trait Arithmetic[T] extends Arith[T] {
   override val _base: AnyParadigm { val ast: BaseAST & ArithmeticAST }
   val matchingTpeRep: TypeRep.OfHostType[T]
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
-  
-  val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
+  val typeName:String 
   
   trait ScalaArithmeticIn[Ctxt] extends super.ArithmeticIn[Ctxt] {
     override val registry: ContextRegistry[_base.type, Ctxt]
     override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] =
       tpeRep => if (tpeRep == matchingTpeRep) {
-        Some(Command.lift(_base.ast.ooFactory.classReferenceType(nameProvider.mangle(classTag[T].runtimeClass.getName))))
+        Some(Command.lift(_base.ast.ooFactory.classReferenceType(_base.ast.scalaBaseFactory.name(typeName, typeName))))
       } else None
     override val reifylookup: (tpeRep: TypeRep) => tpeRep.HostType => Option[Generator[Ctxt, _base.syntax.Expression]] = {
       tpeRep => if (tpeRep == matchingTpeRep) {
@@ -55,12 +52,13 @@ trait Arithmetic[T: ClassTag] extends Arith[T] {
 object Arithmetic {
   type WithBase[T, B <: AnyParadigm] = Arithmetic[T] { val _base: B }
   
-  def apply[AST <: ArithmeticAST & BaseAST, B <: AnyParadigm.WithAST[AST], T : ClassTag](
+  def apply[AST <: ArithmeticAST & BaseAST, B <: AnyParadigm.WithAST[AST], T](
     base: B,
     matchingTpeRep: TypeRep.OfHostType[T],
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+    typeName: String
   ): Arithmetic.WithBase[T, base.type] = {
     class Arith(
       override val _base: base.type,
@@ -68,7 +66,8 @@ object Arithmetic {
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+      override val typeName:String
     ) extends Arithmetic[T]
-    new Arith(base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry) {}
+    new Arith(base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry, typeName) {}
   }
 }

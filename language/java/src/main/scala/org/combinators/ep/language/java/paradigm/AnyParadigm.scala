@@ -480,7 +480,8 @@ trait AnyParadigm extends AP {
         _instantiationOverride = _ => (tpe, args) => (tpe, args),
         generatedVariables = Map.empty
       )
-    ContextSpecificResolver.updateResolver(config, TypeRep.Unit, new VoidType())(rep => new NullLiteralExpr())(emptyResolver)
+
+    emptyResolver
   }
 
 

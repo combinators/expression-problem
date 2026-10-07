@@ -94,20 +94,20 @@ class Strings[Ctxt, AP <: AnyParadigm](
         }
     }
 
-  def enable(): Generator[base.ProjectContext, Unit] =
+  def enable(): Generator[base.ProjectContext, Boolean] =
     Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type
-      ): (ProjectCtxt, Unit) = {
+      ): (ProjectCtxt, Boolean) = {
         if (!context.resolver.resolverInfo.contains(StringsEnabled)) {
           // heineman: until we have a top-level FFI Character, then sneak in type for Character here.
           val resolverUpdate =
             ContextSpecificResolver.updateResolver(base.config, TypeRep.String, ObjectOriented.nameToType(ObjectOriented.fromComponents("String")))(new StringLiteralExpr(_))
           val resolverCharUpdate =
             ContextSpecificResolver.updateResolver(base.config, TypeRep.Char, ObjectOriented.nameToType(ObjectOriented.fromComponents("Character")))(new CharLiteralExpr(_))
-          (context.copy(resolver = resolverCharUpdate(resolverUpdate(context.resolver)).addInfo(StringsEnabled)), ())
-        } else (context, ())
+          (context.copy(resolver = resolverCharUpdate(resolverUpdate(context.resolver)).addInfo(StringsEnabled)), true)
+        } else (context, false)
       }
     })
 }

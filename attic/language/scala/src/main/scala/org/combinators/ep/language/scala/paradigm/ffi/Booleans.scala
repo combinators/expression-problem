@@ -42,6 +42,7 @@ class Booleans[Ctxt, AP <: AnyParadigm](val base: AP) extends Bools[Ctxt] {
           }
         }
     }
+
   def enable(): Generator[base.ProjectContext, Unit] =
     Enable.interpret(new Understands[base.ProjectContext, Enable.type] {
       def perform(

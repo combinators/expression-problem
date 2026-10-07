@@ -464,7 +464,8 @@ trait AnyParadigm extends AP {
         _termImportResolution = _ => term => throw new NotImplementedError(term.toString),
         _instantiationOverride = _ => (tpe, args) => (tpe, args)
       )
-    ContextSpecificResolver.updateResolver(config, TypeRep.Unit, Type.Name("Unit"))(rep => Lit.Unit())(emptyResolver)
+
+    emptyResolver
   }
 
 

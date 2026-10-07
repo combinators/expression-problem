@@ -20,7 +20,9 @@ object M1 {
       override val model: GenericModel = math.M1.getModel
 
       def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        ffiArithmetic.enable()
+        for {
+          _ <- ffiArithmetic.enable()
+        } yield ()
       }
       
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {

@@ -33,14 +33,15 @@ trait BaseType[AST <: BaseTypeAST, B, Context](val base: AnyParadigm.WithAST[AST
   val baseTypeCapabilities: BaseTypeCapabilities = new BaseTypeCapabilities {}
 
   // once enabled, all types are registered 
-  override def enable(): Generator[any.Project, Unit] = {
+  override def enable(): Generator[any.Project, Boolean] = {
     for {
       _ <- baseTypeCapabilities.addContextTypeLookup({
         case BT.AnyTpe => Some(baseTypeOpsFactory.baseType())
         case BT.CompositeTpe(arg) => Some(baseTypeOpsFactory.compositeType(arg))
         case _ => None
       })
-    } yield ()
+      
+    } yield true
   }
 }
 

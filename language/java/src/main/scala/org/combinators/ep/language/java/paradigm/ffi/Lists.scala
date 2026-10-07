@@ -147,12 +147,12 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
         }
     }
 
-  def enable(): Generator[base.ProjectContext, Unit] =
+  def enable(): Generator[base.ProjectContext, Boolean] =
     Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type
-      ): (ProjectCtxt, Unit) = {
+      ): (ProjectCtxt, Boolean) = {
         if (!context.resolver.resolverInfo.contains(ListsEnabled)) {
 
           val listName = ObjectOriented.fromComponents("java", "util", "List")
@@ -241,8 +241,8 @@ trait Lists[Ctxt, AP <: AnyParadigm] extends Lsts[Ctxt] {
           }
 
 
-          (context.copy(resolver = updateResolver(context.resolver)), ())
-        } else (context, ())
+          (context.copy(resolver = updateResolver(context.resolver)), true)
+        } else (context, false)
       }
     })
 }

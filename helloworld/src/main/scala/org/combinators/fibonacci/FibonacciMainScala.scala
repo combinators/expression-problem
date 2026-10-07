@@ -17,20 +17,19 @@ package org.combinators.fibonacci
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.cogen.FileWithPathPersistable.*
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
-import org.combinators.ep.language.scala.ast.ffi.*
+import org.combinators.ep.language.scala.codegen.FullAST
+import FileWithPathPersistable._
+import org.combinators.ep.language.scala.ast.ffi._
 import org.combinators.ep.language.scala.ast.{FinalBaseAST, FinalNameProviderAST}
-import org.combinators.ep.language.scala.codegen.{CodeGenerator, FullAST}
-import org.combinators.fibonacci.FibonacciIndependentProvider
-
+import org.combinators.ep.language.scala.codegen.CodeGenerator
 import java.nio.file.{Path, Paths}
 
 /**
  * Takes paradigm-independent specification for Fibonacci and generates Scala code
  */
 class FibonacciMainScala {
-  val ast: FullAST = new FinalBaseAST
+  val _ast: FullAST = new FinalBaseAST
     with FinalNameProviderAST
     with FinalArithmeticAST
     with FinalArraysAST
@@ -43,12 +42,13 @@ class FibonacciMainScala {
     with FinalMapsAST
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
-    with FinalStringAST {
+    with FinalStringAST
+    with FinalUnitAST {
     val reificationExtensions = List.empty
   }
 
-  val emptyset: Set[Seq[FibonacciMainScala.this.ast.any.Name]] = Set.empty
-  val generator: CodeGenerator[ast.type] = CodeGenerator("fibonacci", ast, emptyset)
+  val emptyset: Set[Seq[_ast.any.Name]] = Set.empty
+  val generator: CodeGenerator[_ast.type] = CodeGenerator("fibonacci", _ast, emptyset)
 
   // functional
   val fibonacciApproach = FibonacciIndependentProvider.functional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl.functionalControlInMethods, generator.ints.arithmeticInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods)
@@ -60,11 +60,7 @@ class FibonacciMainScala {
     val files =
       () => generator.paradigm.runGenerator {
         for {
-          _ <- generator.ints.arithmeticInMethods.enable()
-          _ <- generator.booleans.booleansInMethods.enable()
-          _ <- generator.strings.stringsInMethods.enable()
-          _ <- generator.equality.equalsInMethods.enable()
-          _ <- generator.assertions.assertionsInMethods.enable()
+          _ <- generator.enableDefaultFFIs()
 
           _ <- fibonacciApproach.make_project()
         } yield ()

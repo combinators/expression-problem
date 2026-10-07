@@ -151,6 +151,7 @@ trait OOAST extends AnyAST {
               constructorTypeLookupMap = compilationUnit.constructorTypeLookupMap,
               methodTypeLookupMap = compilationUnit.methodTypeLookupMap,
               typeLookupMap = compilationUnit.classTypeLookupMap,
+              constructorReifyLookupMap = compilationUnit.constructorReifyLookupMap,
               methodReifyLookupMap = compilationUnit.methodReifyLookupMap,
               reifyLookupMap = compilationUnit.classReifyLookupMap,
             ),

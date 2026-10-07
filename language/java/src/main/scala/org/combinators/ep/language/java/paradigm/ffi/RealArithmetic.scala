@@ -110,17 +110,17 @@ class RealArithmetic[Ctxt, T, AP <: AnyParadigm](
         javaMathOp("floor")
     }
 
-  def enable(): Generator[base.ProjectContext, Unit] =
+  def enable(): Generator[base.ProjectContext, Boolean] =
     Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type
-      ): (ProjectCtxt, Unit) = {
+      ): (ProjectCtxt, Boolean) = {
         if (!context.resolver.resolverInfo.contains(RealArithmeticEnabled)) {
           val resolverUpdate =
             ContextSpecificResolver.updateResolver(base.config, rep, targetType)(reification)(_)
-          (context.copy(resolver = resolverUpdate(context.resolver).addInfo(RealArithmeticEnabled)), ())
-        } else (context, ())
+          (context.copy(resolver = resolverUpdate(context.resolver).addInfo(RealArithmeticEnabled)), true)
+        } else (context, false)
       }
     })
 }

@@ -32,12 +32,13 @@ abstract class EnhancedDPMainScala extends IOApp with EnhancedMainInterface {
     with FinalMapsAST
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
-    with FinalStringAST {
+    with FinalStringAST
+    with FinalUnitAST {
     val reificationExtensions = List.empty
   }
   val generator: CodeGenerator[_ast.type] = CodeGenerator("dp", _ast, Set.empty)
 
-  val dpApproach = EnhancedDPObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods,  generator.ooParadigm, generator.doubles.arithmeticInMethods, generator.realDoubles.realArithmeticInMethods, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.maps.mapsInMethods, generator.maps.mapsIn[generator.ooParadigm.ConstructorContext], generator.assertions.assertionsInMethods, generator.strings.stringsInMethods, generator.equality.equalsInMethods, generator.parametricPolymorphism, generator.booleans.booleansInMethodsInMethods)(generator.generics)
+  val dpApproach = EnhancedDPObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods,  generator.ooParadigm, generator.doubles.arithmeticInMethods, generator.realDoubles.realArithmeticInMethods, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.maps.mapsInMethods, generator.maps.mapsInConstructors, generator.assertions.assertionsInMethods, generator.strings.stringsInMethods, generator.equality.equalsInMethods, generator.parametricPolymorphism, generator.booleans.booleansInMethods)(generator.generics)
 
   val persistable = FileWithPathPersistable[FileWithPath]
 
@@ -52,18 +53,7 @@ abstract class EnhancedDPMainScala extends IOApp with EnhancedMainInterface {
     println(s"Generating ${model.problem}...")
     generator.paradigm.runGenerator {
       for {
-        _ <- generator.doubles.arithmeticInMethods.enable()
-        _ <- generator.realDoubles.realArithmeticInMethods.enable()
-        _ <- generator.ints.arithmeticInMethods.enable()
-        _ <- generator.strings.stringsInMethods.enable()
-        _ <- generator.lists.listsInMethods.enable()
-        _ <- generator.console.consoleInMethods.enable()
-        _ <- generator.arrays.arraysInMethods.enable()
-        _ <- generator.equality.equalsInMethods.enable()
-        _ <- generator.assertions.assertionsInMethods.enable()
-        _ <- generator.booleans.booleansInMethodsInMethods.enable()
-        _ <- generator.maps.mapsInMethods.enable()
-        _ <- generator.maps.mapsIn[generator.ooParadigm.ConstructorContext].enable()
+        _ <- generator.enableDefaultFFIs()
 
         // HERE you can finally specify the method to use for testing and the test cases
         _ <- dpApproach.implement(model, tests, option)

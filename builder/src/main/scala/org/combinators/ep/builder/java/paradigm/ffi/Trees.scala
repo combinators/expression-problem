@@ -76,12 +76,12 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
       nodeCreation(addImport)
   }
   override val treeCapabilities: JavaTreeCapabilities
-  def enable(): Generator[base.ProjectContext, Unit] =
+  def enable(): Generator[base.ProjectContext, Boolean] =
     Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type
-      ): (ProjectCtxt, Unit) = {
+      ): (ProjectCtxt, Boolean) = {
         if (!context.resolver.resolverInfo.contains(TreesEnabled)) {
 
           val treeType = ObjectOriented.nameToType(treeImport.getName)
@@ -177,8 +177,8 @@ trait Trees[Ctxt, AP <: AnyParadigm] extends Ts[Ctxt] {
               StaticJavaParser.parse(getClass.getResourceAsStream(s"/java-code/org/combinators/ep/util/$fileName"))
             )
 
-          (context.copy(resolver = updateResolver(context.resolver), units = (context.units ++ extraUnits).distinct), ())
-        } else (context, ())
+          (context.copy(resolver = updateResolver(context.resolver), units = (context.units ++ extraUnits).distinct), true)
+        } else (context, false)
       }
     })
 }

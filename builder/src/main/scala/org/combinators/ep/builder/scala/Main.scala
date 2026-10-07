@@ -53,7 +53,7 @@ import org.combinators.ep.domain.math.systemX.{X1, X2, X2X3, X3, X4}
 import org.combinators.ep.generator.ApproachImplementationProvider.WithParadigm
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, TestImplementationProvider}
 import org.combinators.ep.language.scala.codegen.{CodeGenerator, FullAST}
-import org.combinators.ep.builder.inbetween.paradigm.ffi.Trees
+
 import org.combinators.ep.language.scala.ast.{FinalBaseAST, FinalNameProviderAST}
 import org.combinators.ep.language.scala.ast.ffi.*
 import org.combinators.ep.builder.scala.paradigm.ffi.*
@@ -74,23 +74,30 @@ class Main(choice:String, select:String) {
     with FinalEqualsAST
     with FinalExceptionsAST
     with FinalListsAST
-    with FinalMapsAST 
+    with FinalMapsAST
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
     with FinalStringAST
-    with FinalTreesAST {
+    with FinalTreesAST
+    with FinalUnitAST {
     val reificationExtensions = List(scalaTreesOps.treeReificationExtensions)
   }
   val generator: CodeGenerator[ast.type] = CodeGenerator(M0.getModel.base.name.toLowerCase, ast, ast.scalaTreesOps.treePrefixExcludes)
 
-  val treesInMethod =
-    Trees[ast.type, generator.paradigm.type, ast.any.Method](generator.paradigm)(ast.scalaTreesOps.treeLibrary, (tpe, lookup) => {
-      for {
-        _ <- generator.paradigm.projectCapabilities.addTypeLookupForMethods(tpe, Command.lift(lookup))
-        _ <- generator.ooParadigm.projectCapabilities.addTypeLookupForClasses(tpe, Command.lift(lookup))
-        _ <- generator.ooParadigm.projectCapabilities.addTypeLookupForConstructors(tpe, Command.lift(lookup))
-      } yield ()
-    })
+//  val treesInMethod: Trees.WithBase[generator.paradigm.type, generator.paradigm.MethodBodyContext] =
+//    Trees[ast.type, generator.paradigm.type, ast.any.Method](generator.paradigm)(ast.scalaTreesOps.treeLibrary, (tpe, lookup) => {
+//        for {
+//          _ <- generator.paradigm.projectCapabilities.addTypeLookupForMethods(tpe, Command.lift(lookup))
+//          _ <- generator.ooParadigm.projectCapabilities.addTypeLookupForClasses(tpe, Command.lift(lookup))
+//          _ <- generator.ooParadigm.projectCapabilities.addTypeLookupForConstructors(tpe, Command.lift(lookup))
+//        } yield ()
+//      }
+//    )
+  
+    val trees =
+      Trees[ast.type, generator.paradigm.type](generator.paradigm, generator.ooParadigm,
+        generator.methodRegistry, generator.constructorRegistry, generator.classRegistry)
+
   val functionalApproach: WithParadigm[generator.paradigm.type] = org.combinators.ep.approach.functional.Traditional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl.functionalControlInMethods)
 
   val ooApproach: WithParadigm[generator.paradigm.type] = Traditional[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm)
@@ -227,7 +234,7 @@ class Main(choice:String, select:String) {
     }
 
   val m5_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
-    eips.M5(approach.paradigm)(m4_eip)(generator.ints.arithmeticInMethods, treesInMethod)
+    eips.M5(approach.paradigm)(m4_eip)(generator.ints.arithmeticInMethods, trees.treesInMethods)
   val m6_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
     eips.M6(approach.paradigm)(m5_eip)(generator.equality.equalsInMethods, generator.booleans.booleansInMethods)
   val m7_eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] =
@@ -362,7 +369,7 @@ class Main(choice:String, select:String) {
   val k1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
       eips.systemK.K1(approach.paradigm)(j2_eip)(generator.doubles.arithmeticInMethods, generator.realDoubles.realArithmeticInMethods, generator.booleans.booleansInMethods, generator.strings.stringsInMethods)
   val j4_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
-    eips.systemJ.J4(approach.paradigm)(j3_eip)(generator.ints.arithmeticInMethods, treesInMethod)
+    eips.systemJ.J4(approach.paradigm)(j3_eip)(generator.ints.arithmeticInMethods, trees.treesInMethods)
   val j5_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     eips.systemJ.J5(approach.paradigm)(j4_eip)(generator.equality.equalsInMethods, generator.booleans.booleansInMethods)
   val j6_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
@@ -446,7 +453,7 @@ class Main(choice:String, select:String) {
     eips.Q1(approach.paradigm)(m3w1_eip)(
       generator.ints.arithmeticInMethods,
       generator.realDoubles.realArithmeticInMethods,
-      treesInMethod, generator.strings.stringsInMethods)
+      trees.treesInMethods, generator.strings.stringsInMethods)
 
   val c2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     if (choice == "functional") {
@@ -625,6 +632,12 @@ class Main(choice:String, select:String) {
       val impl =
         () => generator.paradigm.runGenerator {
           for {
+            _ <- generator.enableDefaultFFIs()   // be sure to prepare all FFIs for typeLookUp and reify
+
+            _ <- trees.treesInMethods.enable()
+            _ <- trees.treesInClasses.enable()
+            _ <- trees.treesInConstructors.enable()
+
             _ <- approach.implement(evolution.getModel, eip)
             _ <- approach.implement(
               evolution.allTests,
@@ -722,7 +735,7 @@ object DirectToDiskMain extends IOApp {
     if (approach == "exit") {
       sys.exit(0)
     }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M9" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M5" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

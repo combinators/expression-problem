@@ -1,16 +1,13 @@
 package org.combinators.equals
 
-
 import cats.effect.{ExitCode, IO, IOApp}
-import com.github.javaparser.ast.PackageDeclaration
 import org.apache.commons.io.FileUtils
 import org.combinators.cogen.{Command, FileWithPath, FileWithPathPersistable, TypeRep}
 import org.combinators.ep.language.scala.codegen.FullAST
 import FileWithPathPersistable.*
 import org.combinators.ep.language.scala.ast.ffi.*
-import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST, FinalNameProviderAST, NameProviderAST}
+import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST, NameProviderAST}
 import org.combinators.ep.language.scala.codegen.CodeGenerator
-import org.combinators.equals.ffi.BaseType.CompositeTpe
 import org.combinators.equals.ffi.scala.FinalBaseTypeAST
 
 import java.nio.file.{Path, Paths}
@@ -18,7 +15,6 @@ import java.nio.file.{Path, Paths}
 // CoCo strategy works as follows
 //   1. Override functionality as desired with Trait
 //   2. Final Factories
-
 
 trait NameProviderAllowsEquals extends NameProviderAST { self: BaseAST =>
 
@@ -86,7 +82,8 @@ class EqualsMainScala {
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
     with FinalBaseTypeAST
-    with FinalStringAST {
+    with FinalStringAST
+    with FinalUnitAST {
     val reificationExtensions = List(scalaBaseTypeOps.baseTypeReificationExtensions)
   }
   val generator: CodeGenerator[_ast.type] = CodeGenerator("eql", _ast, _ast.scalaBaseTypeOps.baseTypePrefixExcludes)
@@ -117,13 +114,16 @@ class EqualsMainScala {
     val files =
       () => generator.paradigm.runGenerator {
         for {
+          _ <- generator.enableDefaultFFIs()
           _ <- generator.doubles.arithmeticInMethods.enable()
           _ <- generator.ints.arithmeticInMethods.enable()
           _ <- generator.strings.stringsInMethods.enable()
-          _ <- generator.lists.listsInMethods.enable()   
+          _ <- generator.lists.listsInMethods.enable()
           _ <- generator.console.consoleInMethods.enable()
           _ <- generator.arrays.arraysInMethods.enable()
           _ <- generator.equality.equalsInMethods.enable()
+          _ <- generator.equality.equalsInClasses.enable()
+          _ <- generator.equality.equalsInConstructors.enable()
           _ <- generator.assertions.assertionsInMethods.enable()
           _ <- generator.maps.mapsInMethods.enable()
           _ <- generator.booleans.booleansInMethods.enable()

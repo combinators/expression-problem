@@ -40,12 +40,12 @@ class Assertions[AP <: AnyParadigm](val base: AP)(ooParadigm: ObjectOriented[AP]
         }
     }
 
-  override def enable(): Generator[base.ProjectContext, Unit] =
+  override def enable(): Generator[base.ProjectContext, Boolean] =
     Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type
-      ): (ProjectCtxt, Unit) = {
+      ): (ProjectCtxt, Boolean) = {
         if (!context.resolver.resolverInfo.contains(AssertionsEnabled)) {
           val assertTpe = ObjectOriented.nameToType(assertImp.getName)
           val resolverUpdate =
@@ -60,8 +60,8 @@ class Assertions[AP <: AnyParadigm](val base: AP)(ooParadigm: ObjectOriented[AP]
                 ).addInfo(AssertionsEnabled)
               )
 
-          (context.copy(resolver = resolverUpdate(context.resolver)), ())
-        } else (context, ())
+          (context.copy(resolver = resolverUpdate(context.resolver)), true)
+        } else (context, false)
       }
     })
 }

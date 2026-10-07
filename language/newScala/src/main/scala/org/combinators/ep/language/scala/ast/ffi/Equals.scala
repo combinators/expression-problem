@@ -16,8 +16,9 @@ trait Equals extends Eql {
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
 
   trait ScalaEqualsIn[Ctxt] extends super.EqualsIn[Ctxt] {
-    override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] =
+    override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] = {
       _ => None
+    }
     override val reifylookup: (tpeRep: TypeRep) => tpeRep.HostType => Option[Generator[Ctxt, _base.syntax.Expression]] =
       _ => _ => None
   }

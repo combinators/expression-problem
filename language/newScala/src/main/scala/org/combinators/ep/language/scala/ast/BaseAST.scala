@@ -34,7 +34,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
 
       trait Project extends oo.anyOverrides.Project with functional.anyOverrides.Project {
         import factory.*
-
+        
         override def addTypeLookupsForMethods(lookups: TypeRep => Option[Generator[any.Method, any.Type]]): any.Project = {
           super.addTypeLookupsForMethods(lookups).addTypeLookupsForFunctions(lookups)
         }
@@ -357,7 +357,7 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             liftExpression(applyExpression(
               applyExpression(
                 memberAccessExpression(selfReferenceExpression, nameProvider.mangle("test")),
-                Seq(scalaBaseFactory.reifiedScalaValue(TypeRep.String, m.name.toString, None))
+                Seq(scalaBaseFactory.reifiedScalaValue(TypeRep.String, s"\"${m.name.toScala}\"", None))
               ),
               Seq(blockExpression(m.statements))
             ))

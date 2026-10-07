@@ -35,7 +35,8 @@ class HelloWorldMainScala {
     with FinalMapsAST
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
-    with FinalStringAST {
+    with FinalStringAST
+    with FinalUnitAST {
     val reificationExtensions = List.empty
   }
   val generator: CodeGenerator[_ast.type] = CodeGenerator("dp", _ast, Set.empty)
@@ -49,16 +50,8 @@ class HelloWorldMainScala {
     val files =
       () => generator.paradigm.runGenerator {
         for {
-          _ <- generator.doubles.arithmeticInMethods.enable()
-          _ <- generator.ints.arithmeticInMethods.enable()
-          _ <- generator.strings.stringsInMethods.enable()
-          _ <- generator.lists.listsInMethods.enable()   
-          _ <- generator.console.consoleInMethods.enable()
-          _ <- generator.arrays.arraysInMethods.enable()
-          _ <- generator.equality.equalsInMethods.enable()
-          _ <- generator.assertions.assertionsInMethods.enable()
-          _ <- generator.maps.mapsInMethods.enable()
-          
+          _ <- generator.enableDefaultFFIs()
+
           _ <- helloWorldApproach.implement()
         } yield ()
       }

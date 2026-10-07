@@ -38,18 +38,18 @@ class Arithmetic[Ctxt, T, AP <: AnyParadigm](
       implicit val canLE: Understands[Ctxt, Apply[LE[T], Expression, Expression]] =
         infixExprOp(BinaryExpr.Operator.LESS_EQUALS)
     }
-  def enable(): Generator[base.ProjectContext, Unit] =
+  def enable(): Generator[base.ProjectContext, Boolean] =
     Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type
-      ): (ProjectCtxt, Unit) = {
+      ): (ProjectCtxt, Boolean) = {
         if (!context.resolver.resolverInfo.contains(ArithmeticEnabled)) {
           val resolverUpdate =
             ContextSpecificResolver.updateResolver(base.config, rep, targetType)(reification)(_)
-          (context.copy(resolver = resolverUpdate(context.resolver).addInfo(ArithmeticEnabled)), ())
+          (context.copy(resolver = resolverUpdate(context.resolver).addInfo(ArithmeticEnabled)), true)
         } else {
-          (context, ())
+          (context, false)
         }
       }
     })

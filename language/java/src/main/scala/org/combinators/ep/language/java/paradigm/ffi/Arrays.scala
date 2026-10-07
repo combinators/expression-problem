@@ -111,12 +111,12 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
         }
     }
 
-  def enable(): Generator[base.ProjectContext, Unit] =
+  def enable(): Generator[base.ProjectContext, Boolean] =
     Enable.interpret(using new Understands[base.ProjectContext, Enable.type] {
       def perform(
         context: ProjectCtxt,
         command: Enable.type
-      ): (ProjectCtxt, Unit) = {
+      ): (ProjectCtxt, Boolean) = {
         if (!context.resolver.resolverInfo.contains(ArraysEnabled)) {
 
           def updateResolver(resolver: ContextSpecificResolver): ContextSpecificResolver = {
@@ -239,8 +239,8 @@ class Arrays[Ctxt, AP <: AnyParadigm](val base:AP) extends Arrs[Ctxt] {
             ).addInfo(ArraysEnabled)
           }
 
-          (context.copy(resolver = updateResolver(context.resolver)), ())
-        } else (context, ())
+          (context.copy(resolver = updateResolver(context.resolver)), true)
+        } else (context, false)
       }
     })
 }

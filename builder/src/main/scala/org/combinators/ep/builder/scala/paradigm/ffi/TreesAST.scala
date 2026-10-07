@@ -63,7 +63,7 @@ trait TreesAST extends InbetweenTreesAST { self: ParametricPolymorphismAST & Bas
   override val treesOpsFactory: scalaTreesOps.treesOpsOverride.Factory
 }
 
-trait FinalTreesAST extends TreesAST { self: FinalBaseAST =>
+trait FinalTreesAST extends TreesAST { self: ParametricPolymorphismAST & FinalBaseAST =>
   object treesFinalTypes {
     trait FinalTrees extends scalaTreesOps.treesOpsOverride.FinalTypes {
       type Tree = scalaTreesOps.treesOpsOverride.Tree

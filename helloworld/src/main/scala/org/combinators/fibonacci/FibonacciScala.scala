@@ -24,7 +24,7 @@ import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
 import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.scala.ast.*
-import org.combinators.ep.language.scala.ast.ffi.{FinalArithmeticAST, FinalArraysAST, FinalAssertionsAST, FinalBooleanAST, FinalConsoleAST, FinalEqualsAST, FinalExceptionsAST, FinalListsAST, FinalMapsAST, FinalOperatorExpressionsAST, FinalRealArithmeticOpsAST, FinalStringAST}
+import org.combinators.ep.language.scala.ast.ffi.{FinalArithmeticAST, FinalArraysAST, FinalAssertionsAST, FinalBooleanAST, FinalConsoleAST, FinalEqualsAST, FinalExceptionsAST, FinalListsAST, FinalMapsAST, FinalOperatorExpressionsAST, FinalRealArithmeticOpsAST, FinalStringAST, FinalUnitAST}
 import org.combinators.ep.language.scala.codegen.{CodeGenerator, FullAST}
 import org.combinators.cogen.FileWithPathPersistable
 import org.combinators.cogen.FileWithPathPersistable.fileWithPathPersistable
@@ -48,28 +48,23 @@ class FibonacciScala {
     with FinalMapsAST
     with FinalOperatorExpressionsAST
     with FinalRealArithmeticOpsAST
-    with FinalStringAST {
+    with FinalStringAST
+    with FinalUnitAST {
     val reificationExtensions = List.empty
   }
 
   val emptyset:Set[Seq[FibonacciScala.this.ast.any.Name]] = Set.empty
   val generator: CodeGenerator[ast.type] = CodeGenerator("fibonacci", ast, emptyset)
 
-  // TODO: Need to add generator.functional
   val fibonacciApproach = FibonacciProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl.functionalControlInMethods, generator.ints.arithmeticInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods)
 
   val persistable: FileWithPathPersistable.Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
 
   def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
-    //FIX:
     val files =
       () => generator.paradigm.runGenerator {
         for {
-          _ <- generator.ints.arithmeticInMethods.enable()
-          _ <- generator.booleans.booleansInMethods.enable()
-          _ <- generator.strings.stringsInMethods.enable()
-          _ <- generator.equality.equalsInMethods.enable()
-          _ <- generator.assertions.assertionsInMethods.enable()
+          _ <- generator.enableDefaultFFIs()
 
           _ <- fibonacciApproach.make_project()
         } yield ()

@@ -16,7 +16,7 @@ object M5 {
     (paradigm: P)
     (m4Provider: EvolutionImplementationProvider[AIP[paradigm.type]])
     (ffiArithmetic: Arithmetic.WithBase[paradigm.MethodBodyContext, paradigm.type, Int],
-     ffiTrees: Trees.WithBase[paradigm.MethodBodyContext, paradigm.type]):
+     ffiTrees: Trees.WithBase[paradigm.MethodBodyContext, paradigm.type]):  // when I switch to Trees.WithBase[paradigm.type, paradigm.MethodBodyContext]): it breaks
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val treeIdProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.M5.getModel
@@ -28,7 +28,7 @@ object M5 {
           _ <- ffiTrees.enable()
         } yield ()
       }
-      
+
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M5.getModel.flatten.typeCases

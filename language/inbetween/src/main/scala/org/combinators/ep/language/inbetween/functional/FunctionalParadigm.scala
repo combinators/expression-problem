@@ -24,7 +24,8 @@ trait FunctionalParadigm extends FP {
         val converted = factory.convert(context)
         val emptyType = functionalFactory.adt(
           name = command.name,
-          typeLookupMap = converted.adtTypeLookupMap)
+          typeLookupMap = converted.adtTypeLookupMap,
+          reifyLookupMap = converted.adtReifyLookupMap)
         var (generatedType, result) = Command.runGenerator(command.tpeGen, emptyType)
         (converted.copyAsFunctionalCompilationUnit(adts = converted.adts :+ generatedType), ())
       }
@@ -35,7 +36,8 @@ trait FunctionalParadigm extends FP {
         val converted = factory.convert(context)
         val emptyMethod = factory.method(
           name = command.name,
-          typeLookupMap = converted.functionTypeLookupMap)
+          typeLookupMap = converted.functionTypeLookupMap,
+          reifyLookupMap = converted.functionReifyLookupMap)
         val (generatedMethod, result) = Command.runGenerator(command.spec, emptyMethod)
         val methodWithResult = generatedMethod.copy(statements = generatedMethod.statements :+ factory.returnExpression(result))
         (converted.copyAsFunctionalCompilationUnit(functions = converted.functions :+ methodWithResult), ())

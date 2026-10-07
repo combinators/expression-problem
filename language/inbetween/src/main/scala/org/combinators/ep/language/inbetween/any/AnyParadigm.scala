@@ -142,6 +142,7 @@ trait AnyParadigm extends AP {
       def perform(context: TestContext, command: AddTestCase[Method, Name, Expression]): (TestContext, Unit) = {
         val emptyMethod = factory.method(
           name = command.name,
+          reifyLookupMap = context.methodReifyLookupMap,
           typeLookupMap = context.methodTypeLookupMap
         )
         val (sample, result) = Command.runGenerator(command.code, emptyMethod)
@@ -154,6 +155,7 @@ trait AnyParadigm extends AP {
         val blocks = groups.map(g => {
           val emptyMethod = factory.method(
             name = sample.getFreshName(command.name),
+            reifyLookupMap = context.methodReifyLookupMap,
             typeLookupMap = context.methodTypeLookupMap
           )
           lastFresh = sample.getFreshName(lastFresh)   // prepare for next time

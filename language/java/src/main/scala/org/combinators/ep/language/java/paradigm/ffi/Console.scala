@@ -30,5 +30,5 @@ class Console[Ctxt, AP <: AnyParadigm](
         }
     }
 
-  def enable(): Generator[base.ProjectContext, Unit] = strings.enable()
+  def enable(): Generator[base.ProjectContext, Boolean] = strings.enable()
 }

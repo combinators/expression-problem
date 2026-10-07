@@ -3,20 +3,19 @@ package org.combinators.ep.language.scala.codegen     /*DI:LD:AI*/
 import cats.Apply as _
 import org.combinators.cogen
 import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.paradigm.{Apply, ToTargetLanguageType, ffi}
 import org.combinators.cogen.{Command, FileWithPath, TypeRep, Understands}
 import org.combinators.ep.language.inbetween.ContextRegistry
 import org.combinators.ep.language.inbetween.any.*
 import org.combinators.ep.language.inbetween.any.AnyParadigm.WithSyntax
-import org.combinators.ep.language.inbetween.functional.control.Functional.WithBase
-import org.combinators.ep.language.inbetween.functional.{FunctionalParadigm, control}
+import org.combinators.ep.language.inbetween.functional.FunctionalParadigm
 import org.combinators.ep.language.inbetween.imperative.Imperative
+import org.combinators.ep.language.scala.ast.functional.control
 import org.combinators.ep.language.inbetween.oo.OOParadigm
 import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
 import org.combinators.ep.language.inbetween.polymorphism.{ParametricPolymorphism, ParametricPolymorphismInADTContexts}
-import org.combinators.ep.language.scala.ast.ffi.{Assertions, Console, Equals, Arithmetic, Arrays, Booleans, RealArithmetic, Exceptions, Strings, Lists, Maps}
-import org.combinators.ep.language.scala.ast.ffi.{AssertionsAST, ConsoleAST, EqualsAST, ArithmeticAST, ArraysAST, BooleanAST, RealArithmeticAST, ExceptionsAST, StringAST, ListsAST, MapsAST, OperatorExpressionsAST}
+import org.combinators.ep.language.scala.ast.ffi.{Arithmetic, ArithmeticAST, Arrays, ArraysAST, Assertions, AssertionsAST, BooleanAST, Booleans, Console, ConsoleAST, Equals, EqualsAST, Exceptions, ExceptionsAST, Lists, ListsAST, Maps, MapsAST, OperatorExpressionsAST, RealArithmetic, RealArithmeticAST, StringAST, Strings, UnitAST, Units}
 import org.combinators.ep.language.scala.ast.{BaseAST, NameProviderAST}
+
 import java.nio.file.{Path, Paths}
 
 type FullAST = BaseAST
@@ -33,6 +32,7 @@ type FullAST = BaseAST
   & OperatorExpressionsAST
   & RealArithmeticAST
   & StringAST
+  & UnitAST
 /**
  * Scala-specific.
  *
@@ -142,37 +142,46 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
         ffi: org.combinators.cogen.paradigm.ffi.FFI,
         tpeLookup: TypeRep => Option[Generator[paradigm.MethodBodyContext, paradigm.syntax.Type]],
         reifylookup: (tpe:TypeRep) => tpe.HostType => Option[Generator[paradigm.MethodBodyContext, this.base.syntax.Expression]],
-      ): Generator[paradigm.ProjectContext, Unit] = {
+      ): Generator[paradigm.ProjectContext, Boolean] = {
         object Enable extends cogen.Command {
-          type Result = Unit
+          type Result = Boolean
         }
         val canEnable = new Understands[paradigm.ProjectContext, Enable.type] {
-          override def perform(context: paradigm.ast.any.Project, command: Enable.type): (paradigm.ast.any.Project, Unit) = {
-            (context.addTypeLookupsForMethods(tpeLookup).addReifyLookupsForMethods(reifylookup), ())
+          override def perform(context: paradigm.ast.any.Project, command: Enable.type): (paradigm.ast.any.Project, Boolean) = {
+            if (!context.enabledFFIs.contains(ffi)) {
+              (context.addTypeLookupsForMethods(tpeLookup).addReifyLookupsForMethods(reifylookup).markEnabledFFI(ffi), true)
+            } else {
+              (context, false)
+            }
           }
         }
-        cogen.paradigm.AnyParadigm.capability[paradigm.ProjectContext, Unit, Enable.type](Enable)(using canEnable)
+        cogen.paradigm.AnyParadigm.capability[paradigm.ProjectContext, Boolean, Enable.type](Enable)(using canEnable)
       }
     }
     new Reg()
   }
+
   val constructorRegistry: ContextRegistry[paradigm.type, paradigm.ast.oo.Constructor] = {
     class Reg(override val base: paradigm.type = paradigm) extends ContextRegistry[paradigm.type, paradigm.ast.oo.Constructor] {
       override def enable(
         ffi: org.combinators.cogen.paradigm.ffi.FFI,
         tpeLookup: TypeRep => Option[Generator[paradigm.ast.oo.Constructor, paradigm.syntax.Type]],
         reifylookup: (tpe: TypeRep) => tpe.HostType => Option[Generator[paradigm.ast.oo.Constructor, this.base.syntax.Expression]],
-      ): Generator[paradigm.ProjectContext, Unit] = {
+      ): Generator[paradigm.ProjectContext, Boolean] = {
         import paradigm.ast.factory._
         object Enable extends cogen.Command {
-          type Result = Unit
+          type Result = Boolean
         }
         val canEnable = new Understands[paradigm.ProjectContext, Enable.type] {
-          override def perform(context: paradigm.ast.any.Project, command: Enable.type): (paradigm.ast.any.Project, Unit) = {
-            (context.addTypeLookupsForConstructors(tpeLookup).addReifyLookupsForConstructors(reifylookup), ())
+          override def perform(context: paradigm.ast.any.Project, command: Enable.type): (paradigm.ast.any.Project, Boolean) = {
+            if (!context.enabledFFIs.contains(ffi)) {
+              (context.addTypeLookupsForConstructors(tpeLookup).addReifyLookupsForConstructors(reifylookup), true)
+            } else {
+              (context, false)
+            }
           }
         }
-        cogen.paradigm.AnyParadigm.capability[paradigm.ProjectContext, Unit, Enable.type](Enable)(using canEnable)
+        cogen.paradigm.AnyParadigm.capability[paradigm.ProjectContext, Boolean, Enable.type](Enable)(using canEnable)
       }
     }
     new Reg()
@@ -183,29 +192,44 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
         ffi: org.combinators.cogen.paradigm.ffi.FFI,
         tpeLookup: TypeRep => Option[Generator[paradigm.ast.oo.Class, paradigm.syntax.Type]],
         reifylookup: (tpe: TypeRep) => tpe.HostType => Option[Generator[paradigm.ast.oo.Class, this.base.syntax.Expression]],
-      ): Generator[paradigm.ProjectContext, Unit] = {
+      ): Generator[paradigm.ProjectContext, Boolean] = {
         import paradigm.ast.factory._
         object Enable extends cogen.Command {
-          type Result = Unit
+          type Result = Boolean
         }
         val canEnable = new Understands[paradigm.ProjectContext, Enable.type] {
-          override def perform(context: paradigm.ast.any.Project, command: Enable.type): (paradigm.ast.any.Project, Unit) = {
-            (context.addTypeLookupsForClasses(tpeLookup).addReifyLookupsForClasses(reifylookup), ())
+          override def perform(context: paradigm.ast.any.Project, command: Enable.type): (paradigm.ast.any.Project, Boolean) = {
+            if (!context.enabledFFIs.contains(ffi)) {
+              (context.addTypeLookupsForClasses(tpeLookup).addReifyLookupsForClasses(reifylookup), true)
+            } else {
+              (context, false)
+            }
           }
         }
-        cogen.paradigm.AnyParadigm.capability[paradigm.ProjectContext, Unit, Enable.type](Enable)(using canEnable)
+        cogen.paradigm.AnyParadigm.capability[paradigm.ProjectContext, Boolean, Enable.type](Enable)(using canEnable)
       }
     }
     new Reg()
   }
   val ooParadigm: OOParadigm.WithBase[paradigm.type] = OOParadigm(paradigm)
   val imperative: Imperative.WithBase[paradigm.type] = Imperative[ast.type, paradigm.type](paradigm)
+
   val functional: FunctionalParadigm.WithBase[paradigm.type] = FunctionalParadigm[ast.type, paradigm.type](paradigm)
-  val functionalControl: control.Functional.WithBase[paradigm.type] = control.Functional[ast.type, paradigm.type](paradigm)
 
   val parametricPolymorphism: ParametricPolymorphism.WithBase[paradigm.type] = ParametricPolymorphism[ast.type, paradigm.type](paradigm)
   val generics: Generics.WithBase[paradigm.type, ooParadigm.type, parametricPolymorphism.type] = Generics[ast.type, paradigm.type](paradigm, ooParadigm, parametricPolymorphism)
   val parametricPolymorphismInADTContexts: ParametricPolymorphismInADTContexts.WithBase[paradigm.type, functional.type] = ParametricPolymorphismInADTContexts[ast.type, paradigm.type](paradigm, functional)
+
+  val functionalControl: control.Functional.WithBase[paradigm.type, parametricPolymorphism.type, ooParadigm.type, generics.type] =
+    control.Functional[ast.type, paradigm.type](
+      paradigm,
+      parametricPolymorphism,
+      ooParadigm,
+      generics,
+      methodRegistry,
+      constructorRegistry,
+      classRegistry
+    )
 
   val arrays: Arrays.WithBase[paradigm.type, parametricPolymorphism.type, ooParadigm.type, generics.type] = Arrays[ast.type, paradigm.type](
     paradigm,
@@ -223,13 +247,21 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     constructorRegistry,
     classRegistry,
   )
-
+  
+  val units: Units.WithBase[paradigm.type] = Units[ast.type, paradigm.type](
+    paradigm,
+    methodRegistry,
+    constructorRegistry,
+    classRegistry,
+  )
+  
   val doubles: Arithmetic.WithBase[Double, paradigm.type] = Arithmetic[ast.type, paradigm.type, Double](
     paradigm,
     TypeRep.Double,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    "Double"
   )
   
   val console: Console.WithBase[paradigm.type] = Console[ast.type, paradigm.type](
@@ -245,6 +277,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    "Double"
   )
 
   val ints: Arithmetic.WithBase[Int, paradigm.type] = Arithmetic[ast.type, paradigm.type, Int](
@@ -253,6 +286,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    "Int"
   )
 
   val equality: Equals.WithBase[paradigm.type] = Equals[ast.type, paradigm.type](
@@ -301,6 +335,67 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     constructorRegistry,
     classRegistry,
   )
+  
+  def enableDefaultFFIs():Generator[paradigm.ProjectContext, Unit] = {
+    for {
+      _ <- functionalControl.arrowsInMethods.enable()
+      _ <- functionalControl.arrowsInClasses.enable()
+      _ <- functionalControl.arrowsInConstructors.enable()
+
+      _ <- units.unitsInClasses.enable()
+      _ <- units.unitsInMethods.enable()
+      _ <- units.unitsInConstructors.enable()
+
+      _ <- doubles.arithmeticInMethods.enable()
+      _ <- doubles.arithmeticInClasses.enable()
+      _ <- doubles.arithmeticInConstructors.enable()
+
+      _ <- realDoubles.realArithmeticInMethods.enable()
+      _ <- realDoubles.realArithmeticInClasses.enable()
+      _ <- realDoubles.realArithmeticInConstructors.enable()
+
+      _ <- ints.arithmeticInMethods.enable()
+      _ <- ints.arithmeticInClasses.enable()
+      _ <- ints.arithmeticInConstructors.enable()
+
+      _ <- strings.stringsInMethods.enable()
+      _ <- strings.stringsInClasses.enable()
+      _ <- strings.stringsInConstructors.enable()
+
+      _ <- lists.listsInMethods.enable()
+      _ <- lists.listsInClasses.enable()
+      _ <- lists.listsInConstructors.enable()
+
+      _ <- console.consoleInMethods.enable()
+      _ <- console.consoleInClasses.enable()
+      _ <- console.consoleInConstructors.enable()
+
+      _ <- arrays.arraysInMethods.enable()
+      _ <- arrays.arraysInClasses.enable()
+      _ <- arrays.arraysInConstructors.enable()
+
+      _ <- equality.equalsInMethods.enable()
+      _ <- equality.equalsInClasses.enable()
+      _ <- equality.equalsInConstructors.enable()
+
+      _ <- assertions.assertionsInMethods.enable()
+      _ <- assertions.assertionsInClasses.enable()
+      _ <- assertions.assertionsInConstructors.enable()
+
+      _ <- booleans.booleansInMethods.enable()
+      _ <- booleans.booleansInClasses.enable()
+      _ <- booleans.booleansInConstructors.enable()
+
+      _ <- exceptions.exceptionsInMethods.enable()
+      _ <- exceptions.exceptionsInClasses.enable()
+      _ <- exceptions.exceptionsInConstructors.enable()
+      
+      _ <- maps.mapsInMethods.enable()
+      _ <- maps.mapsInClasses.enable()
+      _ <- maps.mapsInConstructors.enable()
+
+    } yield ()
+  }
 }
 
 object CodeGenerator {

@@ -133,17 +133,23 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
     //  le <- liftExpression(output)
     //  _ <- addBlockDefinitions(Seq(le))
 
+      // enhanced array examples
+      
+      
       // array example
       intType <- toTargetLanguageType(TypeRep.Int)
       arr1Type <- toTargetLanguageType(TypeRep.Array(TypeRep.Int))
       arr2Type <- toTargetLanguageType(TypeRep.Array(TypeRep.Array(TypeRep.Int)))
       arname <- freshName(names.mangle("ar"))
+      arname2 <- freshName(names.mangle("ar2"))
 
       two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
       three <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 3)
       initial <- array.arrayCapabilities.create(intType, Seq(two, three), None)
+      initial2 <- paradigm.methodBodyCapabilities.reify(TypeRep.Array(TypeRep.Int), Array(2, 3))
       A <- declareVar(arname, arr2Type, Some(initial))
-
+      A2 <- declareVar(arname2, arr2Type, Some(initial2))
+      
       // now set individual values
       setInst1 <- array.arrayCapabilities.set(A, Seq(zero, one), three)       // A[0][1] = 3
       setStmt1 <- impParadigm.imperativeCapabilities.liftExpression(setInst1)

@@ -731,11 +731,11 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
-    val approach = if (args.isEmpty) "oo" else args.head // {coco, O1OA} fails
+    val approach = if (args.isEmpty) "coco" else args.head // {coco, O1OA} fails
     if (approach == "exit") {
       sys.exit(0)
     }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M5" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M9" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 
@@ -796,7 +796,6 @@ object GenerateAllForOneApproach extends IOApp {
 
 object QuickValidation extends Subselection {
 
-
   // note that visitorSideEffect and dispatch are omitted from this validation.  VISITORSIDEEFFECT has a problem
   // with the test cases in that the methods become too long for the JavaVM and attempts to subdivide them fail
   // because visitorSideEffect needs to create visitor objects, and arbitrarily splitting test cases means that
@@ -813,11 +812,9 @@ object QuickValidation extends Subselection {
 
   // latest in all system families
   val evolutions = Seq("M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2")
-
 }
 
 object GenerateAllMain extends Subselection {
-
 
   def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
     Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
@@ -831,11 +828,9 @@ object GenerateAllMain extends Subselection {
   }
   val evolutions = Seq("M0", "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M7I2", "M8", "M9", "I1", "A1", "A1M3", "A1M3I2", "A3", "I2",
     "O1", "O2", "OA", "O1OA", "OD1", "OD2", "OD3", "OO1", "OO2", "OO3")
-
 }
 
 object GenerateAllJ extends Subselection {
-
 
   def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
     Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
@@ -848,7 +843,6 @@ object GenerateAllJ extends Subselection {
     args.head
   }
   val evolutions = Seq("M0", "J1", "J2", "J3", "K1", "K2", "J4", "J5", "J6", "K2J6", "J7", "J8")
-
 }
 
 object GenerateAllD1D2 extends Subselection {
@@ -883,7 +877,6 @@ object GenerateAllMerging extends Subselection {
 
 object GenerateAllExtended extends Subselection {
 
-
   def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
     Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
   } else {
@@ -899,7 +892,6 @@ object GenerateAllExtended extends Subselection {
 
 object GenerateAllThirdAlternate extends Subselection {
 
-
   def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
     Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")
   } else {
@@ -914,7 +906,6 @@ object GenerateAllThirdAlternate extends Subselection {
 }
 
 object GenerateShapes extends Subselection {
-
 
   def approaches(args: List[String]): Seq[String] = if (args.isEmpty) {
     Seq("oo", "visitor", "extensibleVisitor", "interpreter", "coco", "trivially", "algebra")

@@ -352,12 +352,13 @@ trait BaseAST extends OOAST with FunctionalAST with GenericsAST with FunctionalC
             underlyingClass.addParent(classReferenceType(
               Seq("org", "scalatest", "funsuite", "AnyFunSuite").map(n => nameProvider.mangle(n)) *
             ))
-            
-          val methodsAsTests = withFunSuiteExtension.methods.zip(this.testMarkers).filter { case (m, isTest) => isTest }.map { case (m, _) => 
+
+          // need to pass in Index so we can differentiate test names in the Scla emitted code (must be different? SHEESH! Pedantic Much!)
+          val methodsAsTests = withFunSuiteExtension.methods.zip(this.testMarkers).zipWithIndex.filter { case ((m, isTest), idx) => isTest }.map { case ((m, _), idx) =>
             liftExpression(applyExpression(
               applyExpression(
                 memberAccessExpression(selfReferenceExpression, nameProvider.mangle("test")),
-                Seq(scalaBaseFactory.reifiedScalaValue(TypeRep.String, s"\"${m.name.toScala}\"", None))
+                Seq(scalaBaseFactory.reifiedScalaValue(TypeRep.String, s"\"${m.name.toScala}${idx}\"", None))
               ),
               Seq(blockExpression(m.statements))
             ))

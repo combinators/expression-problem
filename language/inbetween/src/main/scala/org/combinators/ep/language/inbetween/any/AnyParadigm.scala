@@ -161,6 +161,7 @@ trait AnyParadigm extends AP {
           lastFresh = sample.getFreshName(lastFresh)   // prepare for next time
           sample.addTestExpressions(g)                 // when emptymethod, scala generation fails to generation intermediate stmts instantiating arrays
         })
+        
         (context.copy(tests = context.tests ++ blocks), ())
       }
     }

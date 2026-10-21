@@ -46,7 +46,7 @@ or
 
 ```sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAllXXX"```
 
-Depending on the system, this could take 5 minutes (_GenerateAllD1D2_) or 45 minutes (_GenerateAllMain_).
+Depending on the system, this could take 5 minutes (_GenerateAllD1D2_) or longer (_GenerateAllMain_).
 
 2. Produce full report to validate which AIPs are truly correct
 

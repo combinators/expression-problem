@@ -3,7 +3,6 @@ package org.combinators.equals
 import org.combinators.cogen.{InstanceRep, TypeRep}
 import org.combinators.equals.ffi.BaseType
 
-
 /** Represents a composite data type, composed either from built-in data types, or other composite data types. */
 case class CompositeDataType(val name:String, fields:Seq[(String, TypeRep)]) {
   def inst(args: Seq[(String, InstanceRep)]): InstanceRep = InstanceRep(BaseType.CompositeTpe(this))(args)
@@ -23,7 +22,6 @@ object ShapeDomain {
   val pt1 = Seq("x" -> InstanceRep(TypeRep.Int)(1), "y" -> InstanceRep(TypeRep.Int)(2))
   val pt2 = Seq("x" -> InstanceRep(TypeRep.Int)(2), "y" -> InstanceRep(TypeRep.Int)(3))
   val pt3 = Seq("x" -> InstanceRep(TypeRep.Int)(1), "y" -> InstanceRep(TypeRep.Int)(3))
-
   
   val pointArray = TypeRep.Array[Seq[(String, InstanceRep)]](pointTypeRep)
   val rectangle: CompositeDataType = CompositeDataType(

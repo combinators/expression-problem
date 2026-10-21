@@ -8,7 +8,7 @@ import FileWithPathPersistable.*
 import org.combinators.ep.language.scala.ast.ffi.*
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST, NameProviderAST}
 import org.combinators.ep.language.scala.codegen.CodeGenerator
-import org.combinators.equals.ffi.scala.FinalBaseTypeAST
+import org.combinators.equals.ffi.scala.{BaseTypeAST, FinalBaseTypeAST}
 
 import java.nio.file.{Path, Paths}
 
@@ -84,27 +84,16 @@ class EqualsMainScala {
     with FinalBaseTypeAST
     with FinalStringAST
     with FinalUnitAST {
-    val reificationExtensions = List(scalaBaseTypeOps.baseTypeReificationExtensions)
   }
   val generator: CodeGenerator[_ast.type] = CodeGenerator("eql", _ast, _ast.scalaBaseTypeOps.baseTypePrefixExcludes)
 
-  val baseTypeIn: org.combinators.equals.ffi.inbetween.BaseType.WithBase[_ast.type, generator.paradigm.type, _ast.any.Method] = {
-    import _ast.factory._
-
-    org.combinators.equals.ffi.inbetween.BaseType[_ast.type, generator.paradigm.type, _ast.any.Method](generator.paradigm)( (project,tpeLookup) => {
-      project
-        .addTypeLookupsForMethods(tpeRep => tpeLookup(tpeRep).map(Command.lift))
-        .addTypeLookupsForClasses(tpeRep => tpeLookup(tpeRep).map(Command.lift))
-        .addTypeLookupsForConstructors(tpeRep => tpeLookup(tpeRep).map(Command.lift))
-        .addTypeLookupsForFunctions(tpeRep => tpeLookup(tpeRep).map(Command.lift))
-        .addTypeLookupsForAlgebraicDataTypes(tpeRep => tpeLookup(tpeRep).map(Command.lift))
-    })
-  }
+  val baseType: BaseType.WithBase[generator.paradigm.type, generator.ooParadigm.type] =
+    BaseType(generator.paradigm, generator.ooParadigm, generator.methodRegistry, generator.constructorRegistry, generator.classRegistry)
 
   val eqlsGenerator: EqualsGenerator.Aux[generator.paradigm.type, generator.ooParadigm.type] = EqualsGenerator(generator.paradigm)(
-    generator.nameProvider, baseTypeIn, generator.imperative.imperativeInMethods, generator.equality.equalsInMethods, generator.booleans.booleansInMethods, generator.arrays.arraysInMethods, generator.ooParadigm)
+    generator.nameProvider, baseType.baseTypeInMethods, generator.imperative.imperativeInMethods, generator.equality.equalsInMethods, generator.booleans.booleansInMethods, generator.arrays.arraysInMethods, generator.ooParadigm)
 
-  val equalsApproach = EqualsObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods, generator.ooParadigm, generator.ints.arithmeticInMethods, generator.booleans.booleansInMethods, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods, generator.maps.mapsInMethods, baseTypeIn, eqlsGenerator)
+  val equalsApproach = EqualsObjectOrientedProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.imperative.imperativeInMethods, generator.ooParadigm, generator.ints.arithmeticInMethods, generator.booleans.booleansInMethods, generator.console.consoleInMethods, generator.arrays.arraysInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods, generator.maps.mapsInMethods, baseType.baseTypeInMethods, eqlsGenerator)
 
   val persistable: Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
 
@@ -115,20 +104,11 @@ class EqualsMainScala {
       () => generator.paradigm.runGenerator {
         for {
           _ <- generator.enableDefaultFFIs()
-          _ <- generator.doubles.arithmeticInMethods.enable()
-          _ <- generator.ints.arithmeticInMethods.enable()
-          _ <- generator.strings.stringsInMethods.enable()
-          _ <- generator.lists.listsInMethods.enable()
-          _ <- generator.console.consoleInMethods.enable()
-          _ <- generator.arrays.arraysInMethods.enable()
-          _ <- generator.equality.equalsInMethods.enable()
-          _ <- generator.equality.equalsInClasses.enable()
-          _ <- generator.equality.equalsInConstructors.enable()
-          _ <- generator.assertions.assertionsInMethods.enable()
-          _ <- generator.maps.mapsInMethods.enable()
-          _ <- generator.booleans.booleansInMethods.enable()
 
-          _ <- baseTypeIn.enable()
+          _ <- baseType.baseTypeInMethods.enable()
+          _ <- baseType.baseTypeInConstructors.enable()
+          _ <- baseType.baseTypeInClasses.enable()
+
           _ <- equalsApproach.implement(domains, testCases)
         } yield ()
       }

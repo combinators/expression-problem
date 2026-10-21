@@ -735,7 +735,7 @@ object DirectToDiskMain extends IOApp {
     if (approach == "exit") {
       sys.exit(0)
     }
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M9" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M5" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

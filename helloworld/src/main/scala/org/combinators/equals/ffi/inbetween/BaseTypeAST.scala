@@ -18,15 +18,16 @@ trait BaseTypeAST extends ParametricPolymorphismAST {
       def getSelfCompositeType: baseTypeOpsFinalTypes.CompositeType
       
       def model: CompositeDataType
+      def rootPackageName: Seq[any.Name]
       
-      def copyAsCompositeType(model:CompositeDataType = this.model) = {
-        baseTypeOpsFactory.compositeType(model)
+      def copyAsCompositeType(model:CompositeDataType = this.model, rootPackageName:Seq[any.Name] = rootPackageName) = {
+        baseTypeOpsFactory.compositeType(model, rootPackageName)
       }
     }
 
     trait Factory {
       def baseType(): BaseType
-      def compositeType(model:CompositeDataType): CompositeType
+      def compositeType(model:CompositeDataType, rootPackageName:Seq[any.Name]): CompositeType
 
       implicit def convert(other: BaseType): baseTypeOpsFinalTypes.BaseType = other.getSelfBaseType
       implicit def convert(other: CompositeType): baseTypeOpsFinalTypes.CompositeType = other.getSelfCompositeType

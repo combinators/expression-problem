@@ -1,7 +1,5 @@
 package org.combinators.equals.ffi.java
 
-import com.github.javaparser.StaticJavaParser
-import com.github.javaparser.ast.ImportDeclaration
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, InstanceRep, TypeRep, Understands}
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach

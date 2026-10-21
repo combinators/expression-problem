@@ -113,7 +113,7 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
     import impParadigm.imperativeCapabilities._
 
 
-
+    val fixed2 = Array(Array(1, 2, 3), Array(4, 5, 6))
     for {
       _ <- makeStaticSignature()
       worldType <- findClass(names.mangle("World"))
@@ -146,7 +146,7 @@ trait HelloWorldObjectOrientedProvider extends HelloWorldProvider {
       two <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 2)
       three <- paradigm.methodBodyCapabilities.reify(TypeRep.Int, 3)
       initial <- array.arrayCapabilities.create(intType, Seq(two, three), None)
-      initial2 <- paradigm.methodBodyCapabilities.reify(TypeRep.Array(TypeRep.Int), Array(2, 3))
+      initial2 <- paradigm.methodBodyCapabilities.reify(TypeRep.Array(TypeRep.Array(TypeRep.Int)), fixed2)
       A <- declareVar(arname, arr2Type, Some(initial))
       A2 <- declareVar(arname2, arr2Type, Some(initial2))
       

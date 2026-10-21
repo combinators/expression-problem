@@ -3,7 +3,7 @@ package org.combinators.equals.ffi.scala    /*DI:LD:AI*/
 import org.combinators.cogen.{InstanceRep, TypeRep}
 import org.combinators.equals.ffi.inbetween.BaseTypeAST as InbetweenBaseTypeAST
 import org.combinators.ep.language.inbetween.oo.OOAST
-import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST, FinalNameProviderAST, NameProviderAST}
+import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST, NameProviderAST}
 import org.combinators.equals.CompositeDataType
 import org.combinators.equals.ffi.BaseType
 
@@ -20,10 +20,16 @@ trait BaseTypeAST extends InbetweenBaseTypeAST { self: OOAST & NameProviderAST &
       }
 
       trait CompositeType extends baseTypeOps.CompositeType with scalaBase.ooOverrides.ClassReferenceType {
-        def qualifiedClassName: Seq[any.Name] = Seq(nameProviderFactory.scalaNameProvider.mangle(model.name))
+        def qualifiedClassName: Seq[any.Name] = rootPackageName :+ nameProviderFactory.scalaNameProvider.mangle(model.name)
         import factory._
         import baseTypeOpsFactory._
-        override def copy(qualifiedClassName:Seq[any.Name]) = copyAsCompositeType(model.copy(name = qualifiedClassName.last.component))
+
+        override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): CompositeType = {
+          copy(rootPackageName = rootPackageName)
+        }
+
+        override def copy(qualifiedClassName:Seq[any.Name]) = 
+          copyAsCompositeType(model.copy(name = qualifiedClassName.last.component))
       }
 
       trait Factory extends baseTypeOps.Factory {}
@@ -33,19 +39,6 @@ trait BaseTypeAST extends InbetweenBaseTypeAST { self: OOAST & NameProviderAST &
 
     def baseTypePrefixExcludes: Set[Seq[any.Name]] =
       Set(qualifiedClassNameAny)
-
-    def baseTypeReificationExtensions(tpe: TypeRep)(value: tpe.HostType): Option[String] = {
-      import baseTypeOpsFactory._
-      tpe match {
-        case BaseType.AnyTpe => Some(s"new java.lang.Object")
-        case BaseType.CompositeTpe(description) =>
-          val args = value.asInstanceOf[Seq[(String, InstanceRep)]].map({ (name, instRep) =>
-            s"${scalaBaseFactory.reifiedScalaValue(instRep.tpe, instRep.inst, None).toScala}"
-          })
-          Some(s"new ${compositeType(description).toScala}${args.mkString("(", ", ", ")")}")
-        case _ => None
-      }
-    }
   }
 
   override val baseTypeOpsFinalTypes: scalaBaseTypeOps.baseTypeOpsOverride.FinalTypes

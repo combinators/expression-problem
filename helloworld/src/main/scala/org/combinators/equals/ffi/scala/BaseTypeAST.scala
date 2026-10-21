@@ -25,11 +25,11 @@ trait BaseTypeAST extends InbetweenBaseTypeAST { self: OOAST & NameProviderAST &
         import baseTypeOpsFactory._
 
         override def prefixRootPackage(rootPackageName: Seq[any.Name], excludedTypeNames: Set[Seq[any.Name]]): CompositeType = {
-          copy(rootPackageName = rootPackageName)
+          copyAsCompositeType(rootPackageName = rootPackageName)
         }
 
-        override def copy(qualifiedClassName:Seq[any.Name]) = 
-          copyAsCompositeType(model.copy(name = qualifiedClassName.last.component))
+        override def copy(qualifiedClassName:Seq[any.Name] = qualifiedClassName): CompositeType = 
+          copyAsCompositeType(model = model.copy(name = qualifiedClassName.last.component), rootPackageName = qualifiedClassName.drop(1))
       }
 
       trait Factory extends baseTypeOps.Factory {}
@@ -64,13 +64,13 @@ trait FinalBaseTypeAST extends BaseTypeAST { self: NameProviderAST & FinalBaseAS
         BaseType()
       }
 
-      def compositeType(model:CompositeDataType): baseTypeOps.CompositeType = {
-        class CompositeType(override val model:CompositeDataType) extends scalaBaseTypeOps.baseTypeOpsOverride.CompositeType {
+      def compositeType(model:CompositeDataType, rootPackageName: Seq[any.Name] = Seq.empty): baseTypeOps.CompositeType = {
+        class CompositeType(override val model:CompositeDataType, override val rootPackageName: Seq[any.Name]) extends scalaBaseTypeOps.baseTypeOpsOverride.CompositeType {
           override def getSelfCompositeType: baseTypeOpsFinalTypes.CompositeType = this
           def getSelfClassReferenceType: scalaBase.ooOverrides.ClassReferenceType = this
           def getSelfType: scalaBase.anyOverrides.Type = this
         }
-        CompositeType(model)
+        CompositeType(model, rootPackageName)
       }
     }
   }

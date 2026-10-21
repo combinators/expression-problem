@@ -72,7 +72,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
                     |Compile / scalacOptions ++= sopts ++ soptsNoTest
                     |Test / scalacOptions ++= sopts
                     |
-                    |scalaVersion := "3.3.3"
+                    |scalaVersion := "3.9.0"
                     |coverageEnabled := true
                     |libraryDependencies ++= Seq(
                     |    "org.scalactic" %% "scalactic" % "3.2.19" % "test",
@@ -85,8 +85,8 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     def pluginsFile: FileWithPath = {
       val plugins =
         s"""
-           |addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.2")
-           |addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.8")
+           |addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.6.2")
+           |addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.4.4")
            |
            |ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
            |""".stripMargin
@@ -96,7 +96,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     def scalaFmt: FileWithPath = {
       val fmt =
         s"""
-           |version = 3.8.3
+           |version = 3.11.5
            |runner.dialect = scala3
            |""".stripMargin
       FileWithPath(fmt, Paths.get(".scalafmt.conf"))

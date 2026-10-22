@@ -2,19 +2,15 @@ package org.combinators.ep.language.scala.ast.ffi
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.cogen.paradigm.{Apply, InstantiateObject, Reify, ToTargetLanguageType}
+import org.combinators.cogen.paradigm.{Reify, ToTargetLanguageType}
 import org.combinators.cogen.{Command, InstanceRep, TypeRep, Understands}
-import org.combinators.ep.language.inbetween.{ContextRegistry, ffi}
+import org.combinators.ep.language.inbetween.{ContextRegistry}
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.equals.ffi.inbetween.BaseType as Bts
 import org.combinators.ep.language.inbetween.oo.OOParadigm
-import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
-import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
 import org.combinators.equals.ffi.inbetween.BaseTypeAST
 import org.combinators.equals.ffi.BaseType as Bt
-
-import scala.reflect.{ClassTag, classTag}
 
 trait BaseType extends Bts {
   override val _base: AnyParadigm { val ast: BaseTypeAST & BaseAST }

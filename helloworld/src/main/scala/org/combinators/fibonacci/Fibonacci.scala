@@ -2,7 +2,6 @@ package org.combinators.fibonacci
 
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.paradigm.{AnyParadigm, Functional}
-import org.combinators.cogen.paradigm.control
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, Assertions, Equality}
 import org.combinators.cogen.Command
 import org.combinators.cogen.Command.Generator

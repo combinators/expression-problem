@@ -1,13 +1,11 @@
-package org.combinators.ep.language.scala.ast.ffi
+package org.combinators.ep.language.scala.ast.ffi     /*DI:LD:AI*/
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, TypeRep}
-import org.combinators.ep.language.inbetween.{ContextRegistry, ffi}
+import org.combinators.ep.language.inbetween.ContextRegistry
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.inbetween.ffi.Strings as Str
-
-import scala.reflect.{ClassTag, classTag}
 
 trait Strings extends Str {
   override val _base: AnyParadigm {val ast: StringAST & BaseAST }

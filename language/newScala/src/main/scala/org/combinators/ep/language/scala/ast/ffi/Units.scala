@@ -1,4 +1,4 @@
-package org.combinators.ep.language.scala.ast.ffi
+package org.combinators.ep.language.scala.ast.ffi     /*DI:LD:AI*/
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, TypeRep}

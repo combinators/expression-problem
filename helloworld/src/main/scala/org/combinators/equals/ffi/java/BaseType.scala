@@ -3,9 +3,9 @@ package org.combinators.equals.ffi.java
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, InstanceRep, TypeRep, Understands}
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
-import org.combinators.cogen.paradigm.{AddImport, FindClass, InstantiateObject, ToTargetLanguageType}
+import org.combinators.cogen.paradigm.{FindClass, InstantiateObject}
 import org.combinators.ep.language.java.CodeGenerator.Enable
-import org.combinators.ep.language.java.{ContextSpecificResolver, JavaNameProvider, ProjectCtxt, TestCtxt}
+import org.combinators.ep.language.java.{ContextSpecificResolver, JavaNameProvider, ProjectCtxt}
 import org.combinators.ep.language.java.paradigm.{AnyParadigm, ObjectOriented}
 import org.combinators.equals.ffi.BaseType as BT
 

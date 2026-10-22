@@ -2,7 +2,6 @@ package org.combinators.ep.language.scala.ast.ffi     /*DI:LD:AI*/
 
 import org.combinators.ep.language.inbetween.ffi.MapsAST as InbetweenMapsAST
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
-import org.combinators.cogen.TypeRep
 
 trait MapsAST extends InbetweenMapsAST { self: OperatorExpressionsAST & BaseAST =>
   object scalaMapsOps {

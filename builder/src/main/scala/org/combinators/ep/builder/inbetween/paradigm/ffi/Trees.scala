@@ -9,7 +9,7 @@ import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.{Command, FileWithPath, TypeRep, Understands}
 import org.combinators.ep.domain.abstractions.DomainTpeRep
 import org.combinators.ep.language.inbetween.ffi.FFI
-import org.combinators.ep.domain.tree.{Tree, Node, Leaf}
+import org.combinators.ep.domain.tree.{Node, Leaf}
 
 trait Trees {
   val _base: AnyParadigm { val ast: TreesAST }

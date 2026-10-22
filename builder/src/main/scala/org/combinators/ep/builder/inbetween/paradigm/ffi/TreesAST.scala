@@ -1,6 +1,5 @@
-package org.combinators.ep.builder.inbetween.paradigm.ffi
+package org.combinators.ep.builder.inbetween.paradigm.ffi     /*DI:LI:AI*/
 
-import org.combinators.ep.language.inbetween.ffi.OperatorExpressionOpsAST
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphismAST
 
 trait TreesAST extends ParametricPolymorphismAST {

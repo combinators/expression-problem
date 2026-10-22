@@ -34,34 +34,34 @@ For simplicity, all instructions using the 'sbt' command line.
       * Approaches: trivially oo visitor extensibleVisitor interpreter coco algebra
       * Evolutions: A3 D3 I2M3I1N1 J8 M9 O1OA O2 OD3 OO3 V1
 
-For Scala-generated code, the above are replaced with `ep-scala-XXX` and approaches and
-evolutions remain the same.
-
-Note: you can generate all of these from the command line where the `build.sbt` file exists
-by typing:
-
-```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllXXX"``` 
-
-or
-
-```sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAllXXX"```
-
-Depending on the system, this could take 5 minutes (_GenerateAllD1D2_) or longer (_GenerateAllMain_).
+  For Scala-generated code, the above are replaced with `ep-scala-XXX` and approaches and
+  evolutions remain the same.
+    
+  Note: you can generate all of these from the command line where the `build.sbt` file exists
+  by typing:
+    
+  ```sbt "language-java/runMain org.combinators.ep.language.java.GenerateAllXXX"``` 
+    
+  or
+    
+  ```sbt "language-newScala/runMain org.combinators.ep.language.scala.codegen.GenerateAllXXX"```
+    
+  Depending on the system, this could take 5 minutes (_GenerateAllD1D2_) or longer (_GenerateAllMain_).
 
 2. Produce full report to validate which AIPs are truly correct
 
-```c:\Python37\python.exe ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] >> REPORT```
+  ```c:\Python37\python.exe ..\..\scripts\compare.py ..\..\scripts\systems\[EVOLUTION-JSON] >> REPORT```
 
-or
+  or
 
-```python3 ../../scripts/compare.py ../../scripts/systems/[EVOLUTION-JSON] >> REPORT```
+  ```python3 ../../scripts/compare.py ../../scripts/systems/[EVOLUTION-JSON] >> REPORT```
 
-Example EVOLUTION-JSON files are `system-j.json` or `system-main.json`
+  Example EVOLUTION-JSON files are `system-j.json` or `system-main.json`
 
-If you are comparing Scala generated code, be sure to include 'scala' as the final argument
+  If you are comparing Scala generated code, be sure to include 'scala' as the final argument
 
-Note that the JSON files look like the following and contain predecessor information for each EIP to
-make the Python processing a bit easier.
+  Note that the JSON files look like the following and contain predecessor information for each EIP to
+  make the Python processing a bit easier.
 
          {
            "evolutions" : [
@@ -110,23 +110,23 @@ make the Python processing a bit easier.
 
   In the respective ep-java-XXX directories, execute the following Python script:
 
-```c:\Python37\python.exe ..\..\scripts\compile.py```
+  ```c:\Python37\python.exe ..\..\scripts\compile.py```
         
-or
+  or
 
-```python3 ../../scripts/compile.py```
+  ```python3 ../../scripts/compile.py```
 
-  In the respective ep-scala-XXX directories, execute the following Python script:
+    In the respective ep-scala-XXX directories, execute the following Python script:
 
-```c:\Python37\python.exe ..\..\scripts\compile.py```
+  ```c:\Python37\python.exe ..\..\scripts\compile.py```
         
-or
+  or
 
-```python3 ../../scripts/compile.py```
+  ```python3 ../../scripts/compile.py```
 
-   Note: The length of the compilation time depends on the complexity of the Extension Graph
-   for the chosen system. Be prepared for this process to take about 30-45 minutes. Information
-   about the compilation and testing process is stored in created jacoco.* files, one per approach.
+     Note: The length of the compilation time depends on the complexity of the Extension Graph
+     for the chosen system. Be prepared for this process to take about 30-45 minutes. Information
+     about the compilation and testing process is stored in created jacoco.* files, one per approach.
 
 4. Generate statistics regarding the results of generating the source code, compiling the
    source code, executing the test cases and code coverage statistics. This script also detects
@@ -136,17 +136,17 @@ or
 
    In the respective ep-java-XXX directories, execute the following Python script:
 
-```c:\Python37\python.exe ..\..\scripts\process.py > STATISTICS```
+  ```c:\Python37\python.exe ..\..\scripts\process.py > STATISTICS```
         
-or
+  or
 
-```python3 ../../scripts/process.py > STATISTICS```
+  ```python3 ../../scripts/process.py > STATISTICS```
 
    In the respective ep-scala-XXX directories, execute the following Python script:
 
-```c:\Python37\python.exe ..\..\scripts\process.py > STATISTICS```
+  ```c:\Python37\python.exe ..\..\scripts\process.py > STATISTICS```
 
-or
+  or
 
 ```python3 ../../scripts/process.py > STATISTICS```
 

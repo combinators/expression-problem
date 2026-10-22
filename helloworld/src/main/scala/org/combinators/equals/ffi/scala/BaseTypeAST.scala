@@ -1,11 +1,9 @@
-package org.combinators.equals.ffi.scala    /*DI:LD:AI*/
+package org.combinators.equals.ffi.scala
 
-import org.combinators.cogen.{InstanceRep, TypeRep}
 import org.combinators.equals.ffi.inbetween.BaseTypeAST as InbetweenBaseTypeAST
 import org.combinators.ep.language.inbetween.oo.OOAST
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST, NameProviderAST}
 import org.combinators.equals.CompositeDataType
-import org.combinators.equals.ffi.BaseType
 
 trait BaseTypeAST extends InbetweenBaseTypeAST { self: OOAST & NameProviderAST & BaseAST =>
   object scalaBaseTypeOps {

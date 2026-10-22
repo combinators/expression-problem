@@ -133,7 +133,7 @@ lazy val helloWorldProject: Project =
     .dependsOn(cogen, languageJava, languageNewScala)
 
 // first update general infra. for FFI
-// second update java code gener updates
+// second update Java code generation updates
 // third then in-between
 // fourth then newScala
 lazy val dynamicProgramming: Project =

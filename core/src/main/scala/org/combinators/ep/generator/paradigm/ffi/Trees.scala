@@ -1,4 +1,4 @@
-package org.combinators.ep.generator.paradigm.ffi
+package org.combinators.ep.generator.paradigm.ffi    /*DI:LI:AI*/
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.ffi.FFI

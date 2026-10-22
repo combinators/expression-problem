@@ -1,10 +1,8 @@
-package org.combinators.equals.ffi.inbetween     /*DI:LI:AI*/
+package org.combinators.equals.ffi.inbetween 
 
-import org.combinators.cogen.Command.Generator
-import org.combinators.cogen.paradigm.AnyParadigm as AP
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.equals.ffi.BaseType as BT
-import org.combinators.cogen.{Command, TypeRep, Understands}
+import org.combinators.cogen.{Command, TypeRep}
 import org.combinators.ep.language.inbetween.ffi.FFI
 
 // add capability to register arbitrary types in project

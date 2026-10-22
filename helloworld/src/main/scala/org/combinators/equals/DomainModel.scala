@@ -58,7 +58,7 @@ object ShapeDomain {
 // to get working with Scala, still would need to have InBetween. 
 //
 // by placing in inbetween. We have imperative API for generating AST.
-// java bridges gap manually because of java github parser.
+// java bridges gap manually because of java GitHub parser.
 // for inbetween we bridge that gap once (generically). Then for each AST node, tell it how to translate that AST 
 // node into the target language. No longer have to connect EACH and EVERY command to the AST and you can focus 
 // only on the differences.

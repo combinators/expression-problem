@@ -1,6 +1,5 @@
 package org.combinators.ep.language.inbetween.functional.control    /*DI:LI:AI*/
 
-import org.combinators.cogen.TypeRep
 import org.combinators.ep.language.inbetween.any.AnyAST
 
 trait FunctionalControlAST extends AnyAST {

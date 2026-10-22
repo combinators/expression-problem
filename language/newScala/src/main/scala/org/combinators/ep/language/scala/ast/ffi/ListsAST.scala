@@ -1,6 +1,5 @@
 package org.combinators.ep.language.scala.ast.ffi     /*DI:LD:AI*/
 
-import org.combinators.cogen.TypeRep
 import org.combinators.ep.language.inbetween.ffi.ListsAST as InbetweenListsAST
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST}
 

@@ -1,19 +1,17 @@
-package org.combinators.ep.language.scala.ast.ffi
+package org.combinators.ep.language.scala.ast.ffi     /*DI:LD:AI*/
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.paradigm.AnyParadigm.syntax.forEach
 import org.combinators.cogen.paradigm.ffi.CreateArray
 import org.combinators.cogen.paradigm.{Apply, Reify, ToTargetLanguageType}
-import org.combinators.cogen.{Command, InstanceRep, TypeRep, Understands}
-import org.combinators.ep.language.inbetween.{ContextRegistry, ffi}
+import org.combinators.cogen.{Command, TypeRep, Understands}
+import org.combinators.ep.language.inbetween.ContextRegistry
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.inbetween.ffi.Arrays as Ar
 import org.combinators.ep.language.inbetween.oo.OOParadigm
 import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
 import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
 import org.combinators.ep.language.scala.ast.BaseAST
-
-import scala.reflect.{ClassTag, classTag}
 
 trait Arrays extends Ar {
   override val _base: AnyParadigm { val ast: ArraysAST & BaseAST }

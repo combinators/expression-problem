@@ -1,6 +1,5 @@
 package org.combinators.ep.language.scala.codegen     /*DI:LD:AI*/
 
-import cats.Apply as _
 import org.combinators.cogen
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.{Command, FileWithPath, TypeRep, Understands}

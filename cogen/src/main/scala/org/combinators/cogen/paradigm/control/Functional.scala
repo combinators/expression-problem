@@ -1,4 +1,4 @@
-package org.combinators.cogen.paradigm.control
+package org.combinators.cogen.paradigm.control     /*DI:LI:AI*/
 
 import org.combinators.cogen.paradigm.{AnyParadigm, Apply, IfThenElse, Reify}
 import org.combinators.cogen.{Command, TypeRep, Understands}

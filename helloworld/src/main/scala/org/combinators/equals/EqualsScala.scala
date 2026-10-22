@@ -2,19 +2,15 @@ package org.combinators.equals
 
 import cats.effect.{ExitCode, IO, IOApp}
 import org.apache.commons.io.FileUtils
-import org.combinators.cogen.{Command, FileWithPath, FileWithPathPersistable, TypeRep}
+import org.combinators.cogen.{FileWithPath, FileWithPathPersistable}
 import org.combinators.ep.language.scala.codegen.FullAST
 import FileWithPathPersistable.*
 import org.combinators.ep.language.scala.ast.ffi.*
 import org.combinators.ep.language.scala.ast.{BaseAST, FinalBaseAST, NameProviderAST}
 import org.combinators.ep.language.scala.codegen.CodeGenerator
-import org.combinators.equals.ffi.scala.{BaseTypeAST, FinalBaseTypeAST}
+import org.combinators.equals.ffi.scala.FinalBaseTypeAST
 
 import java.nio.file.{Path, Paths}
-
-// CoCo strategy works as follows
-//   1. Override functionality as desired with Trait
-//   2. Final Factories
 
 trait NameProviderAllowsEquals extends NameProviderAST { self: BaseAST =>
 

@@ -1,8 +1,8 @@
-package org.combinators.ep.language.inbetween.ffi
+package org.combinators.ep.language.inbetween.ffi      /*DI:LI:AI*/
 
 import org.combinators.cogen.Command.Generator
 import org.combinators.cogen.TypeRep
-import org.combinators.cogen.paradigm.{AnyParadigm, ffi}
+import org.combinators.cogen.paradigm.ffi
 import org.combinators.ep.language.inbetween.ContextRegistry
 
 trait FFI[Ctxt] extends ffi.FFI {

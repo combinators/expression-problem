@@ -19,14 +19,6 @@ object O1 {
     val o1Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemO.O1.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- m2Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiStrings.enable()
-        } yield ()
-      }
-
       /** This evolution "fixes" a defect on (PrettyP,Lit) by duplicating the output of Lit. */
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if ((potentialRequest.op == math.M2.PrettyP) && Set(math.M0.Lit).contains(potentialRequest.tpeCase)) {

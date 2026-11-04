@@ -26,16 +26,6 @@ object D1 {
     val d1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemD.D1.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- m1Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiRealArithmetic.enable()
-          _ <- ffiStrings.enable()
-          _ <- ffiEquals.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if ((potentialRequest.op == systemD.D1.MultBy) && Set(math.M0.Lit, math.M0.Add, math.M1.Sub).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)

@@ -20,14 +20,6 @@ object J5 {
     val j5Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemJ.J5.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- j4Provider.initialize(forApproach)
-          _ <- ffiEquality.enable()
-          _ <- ffiBooleans.enable()
-        } yield ()
-      }
-
       // J5 adds  Seq.empty, Seq(Equals))
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.systemJ.J5.getModel.flatten.typeCases

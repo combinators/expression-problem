@@ -8,8 +8,9 @@ import org.combinators.ep.language.inbetween.ContextRegistry
 import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.inbetween.ffi.Lists as Lsts
+import org.combinators.ep.language.inbetween.functional.FunctionalParadigm
 import org.combinators.ep.language.inbetween.oo.OOParadigm
-import org.combinators.ep.language.inbetween.polymorphism.ParametricPolymorphism
+import org.combinators.ep.language.inbetween.polymorphism.{ParametricPolymorphism, ParametricPolymorphismInADTContexts}
 import org.combinators.ep.language.inbetween.polymorphism.generics.Generics
 
 trait Lists extends Lsts {
@@ -17,13 +18,16 @@ trait Lists extends Lsts {
   val parametricPolymorphism: ParametricPolymorphism.WithBase[_base.type]
   val oo: OOParadigm.WithBase[_base.type]
   val generics: Generics.WithBase[_base.type, oo.type, parametricPolymorphism.type]
-
-  val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
+  val functional: FunctionalParadigm.WithBase[_base.type]
+  val parametricPolymorphismInADTContexts: ParametricPolymorphismInADTContexts.WithBase[_base.type, functional.type]
   
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
-  
+  val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
+
+  val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
+
   trait ScalaListsIn[Ctxt] extends super.ListsIn[Ctxt] {
     import _base.ast
     val canToTargetLanguage: Understands[Ctxt, ToTargetLanguageType[ast.any.Type]]
@@ -98,35 +102,61 @@ trait Lists extends Lsts {
     }
     new Lsts()
   }
+
+  val listsInADTs: ScalaListsIn[_base.ast.functional.AlgebraicDataType] = {
+    import _base.ast.any._
+    import _base.ast.functional.{AlgebraicDataType => Adt}
+    class Lsts(
+                override val registry: ContextRegistry[_base.type, Adt] = adtRegistry,
+                override val canToTargetLanguage: Understands[Adt, ToTargetLanguageType[Type]] = functional.typeCapabilities.canTranslateTypeInType,
+                override val canApplyType: Understands[Adt, Apply[Type, Type, Type]] = parametricPolymorphismInADTContexts.algebraicDataTypeCapabilities.canApplyTypeInADT,
+              ) extends ScalaListsIn[Adt] {
+      override def canReifyInCtxt[T]: Understands[Adt, Reify[T, Expression]] = new Understands[Adt, Reify[T, Expression]] {
+        def perform(context: Adt, command: Reify[T, Expression]): (Adt, Expression) = {
+          Command.runGenerator(context.reifyLookupMap(command.tpe)(command.value), context)
+        }
+      }
+    }
+    new Lsts()
+  }
   
 }
 
 object Lists {
-  type WithBase[B <: AnyParadigm, PP <: ParametricPolymorphism.WithBase[B], OO <: OOParadigm.WithBase[B], G <: Generics.WithBase[B, OO, PP]] =
+  type WithBase[B <: AnyParadigm, PP <: ParametricPolymorphism.WithBase[B], OO <: OOParadigm.WithBase[B], G <: Generics.WithBase[B, OO, PP],
+    F <: FunctionalParadigm.WithBase[B], PA <: ParametricPolymorphismInADTContexts.WithBase[B, F]] =
     Lists {
       val _base: B
       val parametricPolymorphism: PP
       val oo: OO
       val generics: G
+      val functional: F
+      val parametricPolymorphismInADTContexts: PA
     }
   
   def apply[AST <: ListsAST & BaseAST, B <: AnyParadigm.WithAST[AST]](
     base: B,
-    _parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
     _oo: OOParadigm.WithBase[base.type],
+    _parametricPolymorphism: ParametricPolymorphism.WithBase[base.type],
     _generics: Generics.WithBase[base.type, _oo.type, _parametricPolymorphism.type],
+    _functional: FunctionalParadigm.WithBase[base.type],
+    _parametricPolymorphismInADTContexts: ParametricPolymorphismInADTContexts.WithBase[base.type, _functional.type],
     _methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     _constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     _classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
-  ): Lists.WithBase[base.type, _parametricPolymorphism.type, _oo.type, _generics.type] = {
+    _adtRegistry: ContextRegistry[base.type, base.ast.functional.AlgebraicDataType]
+  ): Lists.WithBase[base.type, _parametricPolymorphism.type, _oo.type, _generics.type, _functional.type, _parametricPolymorphismInADTContexts.type] = {
     class Lsts(
       override val _base: base.type = base,
-      override val parametricPolymorphism: _parametricPolymorphism.type = _parametricPolymorphism,
       override val oo: _oo.type = _oo,
+      override val parametricPolymorphism: _parametricPolymorphism.type = _parametricPolymorphism,
       override val generics: _generics.type = _generics,
+      override val functional: _functional.type = _functional,
+      override val parametricPolymorphismInADTContexts: _parametricPolymorphismInADTContexts.type = _parametricPolymorphismInADTContexts, 
       override val methodRegistry: ContextRegistry[base.type, _base.ast.any.Method] = _methodRegistry,
       override val constructorRegistry: ContextRegistry[base.type, _base.ast.oo.Constructor] = _constructorRegistry, 
       override val classRegistry: ContextRegistry[base.type, _base.ast.oo.Class] = _classRegistry,
+      override val adtRegistry: _adtRegistry.type = _adtRegistry,
     ) extends Lists{}
     new Lsts()
   }

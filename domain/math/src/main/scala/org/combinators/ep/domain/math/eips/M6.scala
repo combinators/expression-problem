@@ -23,14 +23,6 @@ object M6 {
     val equalsProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.M6.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- m5Provider.initialize(forApproach)
-          _ <- ffiEquality.enable()
-          _ <- ffiBooleans.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M6.getModel.flatten.typeCases
         if (cases.contains(potentialRequest.tpeCase)) {

@@ -1,7 +1,6 @@
 package org.combinators.ep.domain.math.eips.systemJK    /*DD:LI:AI*/
 
-import org.combinators.cogen.InstanceRep
-import org.combinators.cogen.TypeRep
+import org.combinators.cogen.{Command, InstanceRep, TypeRep}
 import org.combinators.cogen.paradigm.AnyParadigm
 import org.combinators.cogen.paradigm.control
 import org.combinators.cogen.paradigm.ffi.{Arithmetic, RealArithmetic}
@@ -23,14 +22,6 @@ object J8 {
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val j8Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemJK.J8.getModel
-
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- j7Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiRealArithmetic.enable()
-        } yield ()
-      }
 
       // J8 adds Height operation
       // J6 adds  Seq.empty, Seq(PowBy))

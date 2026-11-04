@@ -26,16 +26,6 @@ object M7funct {
     val m7Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.M7.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- m6Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiRealArithmetic.enable()
-          _ <- ffiStrings.enable()
-          _ <- ffiEquals.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M7.getModel.flatten.typeCases
         if (potentialRequest.op == math.M7.PowBy && cases.contains(potentialRequest.tpeCase)) {

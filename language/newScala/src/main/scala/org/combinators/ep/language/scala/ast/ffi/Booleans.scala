@@ -12,6 +12,7 @@ trait Booleans extends Bools {
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
+  val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
 
   val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
   
@@ -51,6 +52,12 @@ trait Booleans extends Bools {
     ) extends ScalaBooleansIn[_base.ast.oo.Class] {}
     new Bls()
   }
+  val booleansInADTs: ScalaBooleansIn[_base.ast.functional.AlgebraicDataType] = {
+    class Bls(
+     override val registry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType] = adtRegistry
+   ) extends ScalaBooleansIn[_base.ast.functional.AlgebraicDataType] {}
+    new Bls()
+  }
 }
 
 object Booleans {
@@ -60,13 +67,15 @@ object Booleans {
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+    adtRegistry: ContextRegistry[base.type, base.ast.functional.AlgebraicDataType]
   ): Booleans.WithBase[base.type] = {
     class Bls(
       override val _base: base.type,
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+      override val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
     ) extends Booleans
-    new Bls(base, methodRegistry, constructorRegistry, classRegistry) {}
+    new Bls(base, methodRegistry, constructorRegistry, classRegistry, adtRegistry) {}
   }
 }

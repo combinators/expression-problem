@@ -744,7 +744,6 @@ trait Visitor extends SharedOO with OperationAsClass { self =>
 
     val flatDomain = gdomain.flatten
     for {
-      _ <- debug ("Processing Visitor")
       _ <- registerTypeMapping(flatDomain)
       _ <- domainSpecific.initialize(self)
       _ <- makeBase(flatDomain.baseDataType)

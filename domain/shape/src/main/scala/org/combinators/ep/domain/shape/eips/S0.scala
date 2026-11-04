@@ -38,15 +38,6 @@ object S0 {
     new EvolutionImplementationProvider[AIP[paradigm.type]] {
       val model:GenericModel = shape.S0.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiArithmetic.enable()
-          _ <- ffiBooleans.enable()
-          _ <- ffiRealArithmetic.enable()
-          _ <- ffiStrings.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if ((potentialRequest.op == shape.S0.ContainsPt) &&
           Set(shape.S0.Circle, shape.S0.Square, shape.S0.Translate).contains(potentialRequest.tpeCase)) {

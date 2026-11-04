@@ -21,14 +21,6 @@ object A3 {
     val a3Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.A3.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- a1m3i2Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiStrings.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if ((potentialRequest.tpeCase == math.A3.Inv) && Set(math.M0.Eval, math.M2.PrettyP, math.systemI.I1.MultBy).contains(potentialRequest.op)) {
           Some(Set.empty)

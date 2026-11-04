@@ -210,6 +210,32 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     }
     new Reg()
   }
+  val adtRegistry: ContextRegistry[paradigm.type, paradigm.ast.functional.AlgebraicDataType] = {
+    class Reg(override val base: paradigm.type = paradigm) extends ContextRegistry[paradigm.type, paradigm.ast.functional.AlgebraicDataType] {
+      override def enable(
+         ffi: org.combinators.cogen.paradigm.ffi.FFI,
+         tpeLookup: TypeRep => Option[Generator[paradigm.ast.functional.AlgebraicDataType, paradigm.syntax.Type]],
+         reifylookup: (tpe: TypeRep) => tpe.HostType => Option[Generator[paradigm.ast.functional.AlgebraicDataType, this.base.syntax.Expression]],
+       ): Generator[paradigm.ProjectContext, Boolean] = {
+        import paradigm.ast.factory._
+        object Enable extends cogen.Command {
+          type Result = Boolean
+        }
+        val canEnable = new Understands[paradigm.ProjectContext, Enable.type] {
+          override def perform(context: paradigm.ast.any.Project, command: Enable.type): (paradigm.ast.any.Project, Boolean) = {
+            if (!context.enabledFFIs.contains(ffi)) {
+              (context.addTypeLookupsForAlgebraicDataTypes(tpeLookup).addReifyLookupsForAlgebraicDataTypes(reifylookup), true)
+            } else {
+              (context, false)
+            }
+          }
+        }
+        cogen.paradigm.AnyParadigm.capability[paradigm.ProjectContext, Boolean, Enable.type](Enable)(using canEnable)
+      }
+    }
+    new Reg()
+  }
+
   val ooParadigm: OOParadigm.WithBase[paradigm.type] = OOParadigm(paradigm)
   val imperative: Imperative.WithBase[paradigm.type] = Imperative[ast.type, paradigm.type](paradigm)
 
@@ -219,25 +245,31 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
   val generics: Generics.WithBase[paradigm.type, ooParadigm.type, parametricPolymorphism.type] = Generics[ast.type, paradigm.type](paradigm, ooParadigm, parametricPolymorphism)
   val parametricPolymorphismInADTContexts: ParametricPolymorphismInADTContexts.WithBase[paradigm.type, functional.type] = ParametricPolymorphismInADTContexts[ast.type, paradigm.type](paradigm, functional)
 
-  val functionalControl: control.Functional.WithBase[paradigm.type, parametricPolymorphism.type, ooParadigm.type, generics.type] =
+  val functionalControl: control.Functional.WithBase[paradigm.type, parametricPolymorphism.type, ooParadigm.type, generics.type, functional.type , parametricPolymorphismInADTContexts.type] =
     control.Functional[ast.type, paradigm.type](
       paradigm,
-      parametricPolymorphism,
       ooParadigm,
+      parametricPolymorphism,
       generics,
+      functional,
+      parametricPolymorphismInADTContexts,
       methodRegistry,
       constructorRegistry,
-      classRegistry
+      classRegistry,
+      adtRegistry
     )
 
-  val arrays: Arrays.WithBase[paradigm.type, parametricPolymorphism.type, ooParadigm.type, generics.type] = Arrays[ast.type, paradigm.type](
+  val arrays: Arrays.WithBase[paradigm.type, parametricPolymorphism.type, ooParadigm.type, generics.type, functional.type, parametricPolymorphismInADTContexts.type] = Arrays[ast.type, paradigm.type](
     paradigm,
-    parametricPolymorphism,
     ooParadigm,
+    parametricPolymorphism,
     generics,
+    functional,
+    parametricPolymorphismInADTContexts,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    adtRegistry
   )
   
   val booleans: Booleans.WithBase[paradigm.type] = Booleans[ast.type, paradigm.type](
@@ -245,6 +277,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    adtRegistry
   )
   
   val units: Units.WithBase[paradigm.type] = Units[ast.type, paradigm.type](
@@ -252,6 +285,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    adtRegistry
   )
   
   val doubles: Arithmetic.WithBase[Double, paradigm.type] = Arithmetic[ast.type, paradigm.type, Double](
@@ -260,6 +294,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    adtRegistry,
     "Double"
   )
   
@@ -268,6 +303,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    adtRegistry
   )
   
   val realDoubles: RealArithmetic.WithBase[paradigm.type, Double] = RealArithmetic[ast.type, paradigm.type, Double](
@@ -276,6 +312,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    adtRegistry,
     "Double"
   )
 
@@ -285,14 +322,16 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    adtRegistry,
     "Int"
   )
 
   val equality: Equals.WithBase[paradigm.type] = Equals[ast.type, paradigm.type](
-      paradigm,
-      methodRegistry,
-      constructorRegistry,
-      classRegistry,
+    paradigm,
+    methodRegistry,
+    constructorRegistry,
+    classRegistry,
+    adtRegistry
   )
   
   val strings: Strings.WithBase[paradigm.type] = Strings[ast.type, paradigm.type](
@@ -300,25 +339,32 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    adtRegistry
   )
 
-  val lists: Lists.WithBase[paradigm.type, parametricPolymorphism.type, ooParadigm.type, generics.type] = Lists[ast.type, paradigm.type](
+  val lists: Lists.WithBase[paradigm.type, parametricPolymorphism.type, ooParadigm.type, generics.type, functional.type, parametricPolymorphismInADTContexts.type] = Lists[ast.type, paradigm.type](
     paradigm,
-    parametricPolymorphism,
     ooParadigm,
+    parametricPolymorphism,
     generics,
+    functional,
+    parametricPolymorphismInADTContexts,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    adtRegistry
   )
-  val maps: Maps.WithBase[paradigm.type, parametricPolymorphism.type, ooParadigm.type, generics.type] = Maps[ast.type, paradigm.type](
+  val maps: Maps.WithBase[paradigm.type, parametricPolymorphism.type, ooParadigm.type, generics.type, functional.type, parametricPolymorphismInADTContexts.type] = Maps[ast.type, paradigm.type](
     paradigm,
-    parametricPolymorphism,
     ooParadigm,
+    parametricPolymorphism,
     generics,
+    functional,
+    parametricPolymorphismInADTContexts,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    adtRegistry
   )
 
   val assertions: Assertions.WithBase[paradigm.type] = Assertions[ast.type, paradigm.type](
@@ -326,6 +372,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    adtRegistry
   )
   
   val exceptions: Exceptions.WithBase[paradigm.type] = Exceptions[ast.type, paradigm.type](
@@ -333,6 +380,7 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
     methodRegistry,
     constructorRegistry,
     classRegistry,
+    adtRegistry
   )
   
   def enableDefaultFFIs():Generator[paradigm.ProjectContext, Unit] = {
@@ -340,58 +388,72 @@ sealed class CodeGenerator[AST <: FullAST](val domainName: String, val ast: AST,
       _ <- functionalControl.arrowsInMethods.enable()
       _ <- functionalControl.arrowsInClasses.enable()
       _ <- functionalControl.arrowsInConstructors.enable()
+      _ <- functionalControl.arrowsInADTs.enable()
 
       _ <- units.unitsInClasses.enable()
       _ <- units.unitsInMethods.enable()
       _ <- units.unitsInConstructors.enable()
+      _ <- units.unitsInADTs.enable()
 
       _ <- doubles.arithmeticInMethods.enable()
       _ <- doubles.arithmeticInClasses.enable()
       _ <- doubles.arithmeticInConstructors.enable()
+      _ <- doubles.arithmeticInADTs.enable()
 
       _ <- realDoubles.realArithmeticInMethods.enable()
       _ <- realDoubles.realArithmeticInClasses.enable()
       _ <- realDoubles.realArithmeticInConstructors.enable()
+      _ <- realDoubles.realArithmeticInADTs.enable()
 
       _ <- ints.arithmeticInMethods.enable()
       _ <- ints.arithmeticInClasses.enable()
       _ <- ints.arithmeticInConstructors.enable()
+      _ <- ints.arithmeticInADTs.enable()
 
       _ <- strings.stringsInMethods.enable()
       _ <- strings.stringsInClasses.enable()
       _ <- strings.stringsInConstructors.enable()
+      _ <- strings.stringsInADTs.enable()
 
       _ <- lists.listsInMethods.enable()
       _ <- lists.listsInClasses.enable()
       _ <- lists.listsInConstructors.enable()
+      _ <- lists.listsInADTs.enable()
 
       _ <- console.consoleInMethods.enable()
       _ <- console.consoleInClasses.enable()
       _ <- console.consoleInConstructors.enable()
+      _ <- console.consoleInADTs.enable()
 
       _ <- arrays.arraysInMethods.enable()
       _ <- arrays.arraysInClasses.enable()
       _ <- arrays.arraysInConstructors.enable()
+      _ <- arrays.arraysInADTs.enable()
 
       _ <- equality.equalsInMethods.enable()
       _ <- equality.equalsInClasses.enable()
       _ <- equality.equalsInConstructors.enable()
+      _ <- equality.equalsInADTs.enable()
 
       _ <- assertions.assertionsInMethods.enable()
       _ <- assertions.assertionsInClasses.enable()
       _ <- assertions.assertionsInConstructors.enable()
+      _ <- assertions.assertionsInADTs.enable()
 
       _ <- booleans.booleansInMethods.enable()
       _ <- booleans.booleansInClasses.enable()
       _ <- booleans.booleansInConstructors.enable()
+      _ <- booleans.booleansInADTs.enable()
 
       _ <- exceptions.exceptionsInMethods.enable()
       _ <- exceptions.exceptionsInClasses.enable()
       _ <- exceptions.exceptionsInConstructors.enable()
+      _ <- exceptions.exceptionsInADTs.enable()
       
       _ <- maps.mapsInMethods.enable()
       _ <- maps.mapsInClasses.enable()
       _ <- maps.mapsInConstructors.enable()
+      _ <- maps.mapsInADTs.enable()
 
     } yield ()
   }

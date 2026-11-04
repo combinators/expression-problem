@@ -19,13 +19,6 @@ object OD3 {
     val od3_provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemO.OD3.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- od1Provider.initialize(forApproach)
-          _ <- od2Provider.initialize(forApproach)
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
        None
       }

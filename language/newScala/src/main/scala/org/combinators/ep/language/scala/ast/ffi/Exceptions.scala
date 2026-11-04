@@ -12,6 +12,7 @@ trait Exceptions extends Excpt {
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
+  val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
 
   trait ScalaExceptionsIn[Ctxt] extends super.ExceptionsIn[Ctxt] {
     override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] =
@@ -32,11 +33,16 @@ trait Exceptions extends Excpt {
     ) extends ScalaExceptionsIn[_base.ast.oo.Constructor]
     new ExIn() {}
   }
-
   val exceptionsInClasses: ScalaExceptionsIn[_base.ast.oo.Class] = {
     class ExIn(
       override val registry: ContextRegistry[_base.type, _base.ast.oo.Class] = classRegistry
     ) extends ScalaExceptionsIn[_base.ast.oo.Class]
+    new ExIn() {}
+  }
+  val exceptionsInADTs: ScalaExceptionsIn[_base.ast.functional.AlgebraicDataType] = {
+    class ExIn(
+      override val registry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType] = adtRegistry
+    ) extends ScalaExceptionsIn[_base.ast.functional.AlgebraicDataType]
     new ExIn() {}
   }
 }
@@ -48,13 +54,15 @@ object Exceptions {
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+    adtRegistry: ContextRegistry[base.type, base.ast.functional.AlgebraicDataType]
   ): Exceptions.WithBase[base.type] = {
     class Ex(
       override val _base: base.type,
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+      override val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
     ) extends Exceptions {}
-    new Ex(base, methodRegistry, constructorRegistry, classRegistry)
+    new Ex(base, methodRegistry, constructorRegistry, classRegistry, adtRegistry)
   }
 }

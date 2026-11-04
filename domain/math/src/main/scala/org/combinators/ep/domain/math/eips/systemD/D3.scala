@@ -20,13 +20,6 @@ object D3 {
     val d3Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemD.D3.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiArithmetic.enable()
-          _ <- ffiStrings.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if (Set(systemD.D3.PrettyP).contains(potentialRequest.op) && Set(math.M0.Lit, math.M0.Add, math.M1.Sub, math.systemD.D2.Mult).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)

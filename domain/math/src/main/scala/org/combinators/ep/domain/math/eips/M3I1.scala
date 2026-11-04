@@ -21,17 +21,6 @@ sealed class M3I1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
     val m3i1_provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.M3I1.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiStrings.enable()
-          _ <- ffiBoolean.enable()
-          _ <- ffiEquality.enable()
-
-          _ <- m3Provider.initialize(forApproach)
-          _ <- i1Provider.initialize(forApproach)
-        } yield ()
-      }
-
       // MultBy with Mult but must also handle DivD and Neg
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M3I1.getModel.flatten.typeCases

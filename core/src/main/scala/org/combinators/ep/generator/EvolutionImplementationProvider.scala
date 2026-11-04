@@ -17,8 +17,14 @@ trait EvolutionImplementationProvider[-AIP <: ApproachImplementationProvider] {
 
   /** Initializes the project context to support this evolution, e.g. by calling
     * [[FFI.enable()]] for all the required FFIs.
+    * 
+    * This default implementation satisfies nearly every case.
     */
-  def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit]
+  def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit] = {
+    for {
+      _ <- Command.skip
+    } yield ()
+  }
 
   def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = None
 
@@ -77,8 +83,7 @@ object EvolutionImplementationProvider {
         * with a runtime exception */
       def empty: EvolutionImplementationProvider[AIP] = new EvolutionImplementationProvider[AIP] {
         override val model:GenericModel = ???  // won't ever access
-        def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit] = Command.skip
-
+        
         override def genericLogic
            (forApproach: AIP)
            (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]) =
@@ -118,7 +123,7 @@ object EvolutionImplementationProvider {
           result
         }
 
-        def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit] = {
+        override def initialize(forApproach: AIP): Generator[forApproach.paradigm.ProjectContext, Unit] = {
           for {
             _ <- first.initialize(forApproach)
             _ <- second.initialize(forApproach)

@@ -19,13 +19,6 @@ object OA {
     val oaProvider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemO.OA.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- m2Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-        } yield ()
-      }
-
       /** Declares that this EIP is responsible for (Eval,Lit) as optimization. Note this is contrived since there is
        * no external difference. But the expectation is new logic could be generated. */
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {

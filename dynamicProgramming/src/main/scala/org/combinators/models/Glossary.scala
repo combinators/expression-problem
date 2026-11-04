@@ -18,7 +18,7 @@ import org.combinators.boilerplate.grid.{CountSquaresMainJava, MinPathSumMainJav
 import org.combinators.boilerplate.integer.{BellNumberMainJava, DiceThrowMainJava, FibonacciMainJava, PerfectSquaresMainJava, TribonacciMainJava}
 import org.combinators.boilerplate.oneSequence.{MatrixChainMultiplicationBottomUpMainJava, MatrixChainMultiplicationTopDownMainJava, MinCostClimbingStairMainJava}
 import org.combinators.boilerplate.strings.{InterleaveStringsMainJava, ThreeStringsLCSMainJava}
-import org.combinators.boilerplate.twoSequences.{LongestCommonSubsequenceMainJava, UncrossedLinesMainJava}
+import org.combinators.boilerplate.twoSequences.{DistinctSubsequencesMainJava, LongestCommonSubsequenceMainJava, UncrossedLinesMainJava}
 import org.combinators.dp.original.{BottomUp, GenerationOption, TopDown}
 
 import java.nio.file.{Path, Paths}
@@ -70,9 +70,11 @@ object GlossaryToDiskMain extends IOApp {
     (new ThreeStringsLCSMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
     (new UncrossedLinesMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
 //    (new NeedlemanWunschSequenceAlignmentMainJava(), NeedlemanWunschSequenceAlignmentToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-//    (new DistinctSubsequencesMainJava(), DistinctSubsequencesToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-//    (new WildcardPatternMatchingMainJava(), WildcardPatternMatchingToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
-//    (new ShortestCommonSupersequenceMainJava(), ShortestCommonSupersequenceToDiskMain.model, Seq(topDown, topDownWithMemo, bottomUp)),
+
+    // doesn't pass tests
+    //    (new WildcardPatternMatchingMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
+    //    (new ShortestCommonSupersequenceMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
+    //    (new DistinctSubsequencesMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
     (new TribonacciMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
     (new UniquePathsMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),
     (new MinPathSumMainJava(), Seq(topDown, topDownWithMemo, bottomUp)),

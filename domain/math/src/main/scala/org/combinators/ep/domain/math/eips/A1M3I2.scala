@@ -21,14 +21,6 @@ object A1M3I2 {
     val a1m3i2Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.A1M3I2.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiStrings.enable()
-          _ <- i2Provider.initialize(forApproach)
-          _ <- a1m3Provider.initialize(forApproach)
-        } yield ()
-      }
-
       // brings in Power but no new operations so there SHOULD be nothing to do
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         None

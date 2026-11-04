@@ -19,12 +19,6 @@ object M1 {
     val m1Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.M1.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiArithmetic.enable()
-        } yield ()
-      }
-      
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if ((potentialRequest.op == math.M0.Eval) && Set(math.M1.Sub).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)

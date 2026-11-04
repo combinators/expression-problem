@@ -25,13 +25,6 @@ sealed class D1D2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
     val d1d2_provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = systemD.D1D2.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- d1Provider.initialize(forApproach)
-          _ <- d2Provider.initialize(forApproach)
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if (Set(math.systemD.D1.MultBy).contains(potentialRequest.op) && Set(math.systemD.D2.Mult, math.M1.Sub, math.M0.Add, math.M0.Lit).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)

@@ -22,14 +22,6 @@ object J4 {
     val j4Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemJ.J4.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- j3Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiTrees.enable()
-        } yield ()
-      }
-
       // J4 adds ("j4", Seq.empty, Seq(Operation.asTree, Identifier))
       // simpler structure when no new type cases are added
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {

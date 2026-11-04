@@ -52,7 +52,6 @@ import org.combinators.ep.domain.math.systemO.*
 import org.combinators.ep.domain.math.systemX.*
 import org.combinators.ep.domain.shape.{S0, S1, S2, eips => shapeEips}
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, TestImplementationProvider}
-import org.combinators.ep.builder.java.paradigm.ffi.Trees
 import org.combinators.ep.language.java.{CodeGenerator => CG, JavaNameProvider, PartiallyBoxed, Syntax}
 
 import _root_.java.nio.file.{Path, Paths}
@@ -414,6 +413,11 @@ class Main(choice: String, select: String) {
       val impl =
         () => generator.paradigm.runGenerator {
           for {
+            _ <- generator.enableDefaultFFIs()   // be sure to prepare all FFIs for typeLookUp and reify
+
+            _ <- generator.treesInMethod.enable()
+            _ <- generator.treesInConstructor.enable()
+
             _ <- approach.implement(evolution.getModel, eip)
             _ <- approach.implement(
               evolution.allTests,
@@ -509,13 +513,13 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
-    val approach = if (args.isEmpty) "oo" else args.head // {coco, O1OA} fails
+    val approach = if (args.isEmpty) "coco" else args.head // {coco, O1OA} fails
     if (approach == "exit") {
       sys.exit(0)
     }
 
     // M4 exception for 'oo'
-    val selection = if (args.isEmpty || args.tail.isEmpty) "M5" else args.tail.head
+    val selection = if (args.isEmpty || args.tail.isEmpty) "M9" else args.tail.head
     println("Generating " + approach + " for " + selection)
     val main = new Main(approach, selection)
 

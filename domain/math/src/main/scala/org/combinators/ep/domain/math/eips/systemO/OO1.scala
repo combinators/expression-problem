@@ -20,14 +20,6 @@ object OO1 {
     val oo1Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemO.OO1.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- m2Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiRealArithmetic.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.systemO.OO1.getModel.flatten.typeCases
         if (cases.contains(potentialRequest.tpeCase)) {

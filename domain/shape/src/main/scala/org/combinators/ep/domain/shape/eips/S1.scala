@@ -20,14 +20,6 @@ object S1 {
     val s1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       val model:GenericModel = shape.S1.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- s0Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiBoolean.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if ((potentialRequest.op == shape.S0.ContainsPt) && Set(shape.S1.Union).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)

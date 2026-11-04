@@ -23,15 +23,6 @@ object Q1 {
     val q1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.Q1.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- m3w1Provider.initialize(forApproach)
-          _ <- ffiRealArithmetic.enable()
-          _ <- ffiIntArithmetic.enable()
-          _ <- ffiTrees.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.Q1.getModel.flatten.typeCases
         (potentialRequest.op, potentialRequest.tpeCase) match {

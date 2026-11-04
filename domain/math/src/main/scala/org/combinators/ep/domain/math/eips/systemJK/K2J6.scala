@@ -40,17 +40,6 @@ sealed class K2J6[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
     val k2j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = systemJK.K2J6.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiArithmetic.enable()
-          _ <- ffiBoolean.enable()
-          _ <- ffiEquality.enable()
-
-          _ <- j6Provider.initialize(forApproach)
-          _ <- k2Provider.initialize(forApproach)
-        } yield ()
-      }
-
       // k1 <- k2
       //   K1(Seq(Power), J2.isOps(Seq(Power)))), K2("k2", Seq.empty, Seq(Simplify, Collect)))
 

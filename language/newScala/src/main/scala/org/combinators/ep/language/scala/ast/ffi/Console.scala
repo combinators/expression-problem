@@ -12,6 +12,7 @@ trait Console extends Cons {
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
+  val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
 
   trait ScalaConsoleIn[Ctxt] extends super.ConsoleIn[Ctxt] {
     override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] =
@@ -32,12 +33,17 @@ trait Console extends Cons {
     ) extends ScalaConsoleIn[_base.ast.oo.Constructor]
     new ConsoleInConstructors() {}
   }
-
   val consoleInClasses: ScalaConsoleIn[_base.ast.oo.Class] = {
     class ConsoleInClasses(
       override val registry: ContextRegistry[_base.type, _base.ast.oo.Class] = classRegistry
     ) extends ScalaConsoleIn[_base.ast.oo.Class]
     new ConsoleInClasses() {}
+  }
+  val consoleInADTs: ScalaConsoleIn[_base.ast.functional.AlgebraicDataType] = {
+    class ConsoleInADTs(
+    override val registry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType] = adtRegistry
+  ) extends ScalaConsoleIn[_base.ast.functional.AlgebraicDataType]
+    new ConsoleInADTs() {}
   }
 }
 
@@ -48,13 +54,15 @@ object Console {
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+    adtRegistry: ContextRegistry[base.type, base.ast.functional.AlgebraicDataType]
   ): Console.WithBase[base.type] = {
     class Consl(
       override val _base: base.type,
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+      override val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
     ) extends Console {}
-    new Consl(base, methodRegistry, constructorRegistry, classRegistry)
+    new Consl(base, methodRegistry, constructorRegistry, classRegistry, adtRegistry)
   }
 }

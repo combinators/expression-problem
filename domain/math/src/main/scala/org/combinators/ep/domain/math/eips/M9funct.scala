@@ -22,13 +22,6 @@ object M9funct {
     val m9Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.M9.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- m8Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M9.getModel.flatten.typeCases
         if (cases.contains(potentialRequest.tpeCase)) {

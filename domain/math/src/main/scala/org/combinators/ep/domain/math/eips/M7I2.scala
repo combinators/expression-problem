@@ -38,17 +38,6 @@ sealed class M7I2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementat
     val m7i2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.M7I2.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiArithmetic.enable()
-          _ <- ffiBoolean.enable()
-          _ <- ffiEquality.enable()
-
-          _ <- m7Provider.initialize(forApproach)
-          _ <- i2Provider.initialize(forApproach)
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M7I2.getModel.flatten.typeCases
         (potentialRequest.op, potentialRequest.tpeCase) match {

@@ -20,14 +20,7 @@ object A1  {
   EvolutionImplementationProvider[AIP[paradigm.type]] = {
     val a1Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.A1.getModel
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiArithmetic.enable()
-          _ <- ffiStrings.enable()
-          _ <- i1Provider.initialize(forApproach)
-        } yield ()
-      }
-
+ 
       // A1 adds TIMES data type
 
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {

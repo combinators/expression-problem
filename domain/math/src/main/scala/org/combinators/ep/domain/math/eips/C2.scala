@@ -31,17 +31,6 @@ sealed class C2[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
     val c2Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.C2.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiArithmetic.enable()
-          _ <- ffiBoolean.enable()
-          _ <- ffiStrings.enable()
-          _ <- ffiLists.enable()
-          _ <- ffiEquality.enable()
-          _ <- q1Provider.initialize(forApproach)
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.Q1.getModel.flatten.typeCases
         (potentialRequest.op, potentialRequest.tpeCase) match {

@@ -8,7 +8,10 @@ import org.combinators.models.enhancedModels.twoSequences.WildcardPatternMatchin
 
 trait WildcardPatternMatchingApp {
   val tests = Seq(
+    
+    // This test case fails. Leaving it here as a breadcrumb so logic in WildCardPatternMatching can be fixed someday by someone
     new TestExample("wpm1", LiteralTuple(LiteralString("a*b*c"), LiteralString("afhuirbfhwnkc")), LiteralBoolean(true), new UnitExpression),
+    
     new TestExample("wpm2", LiteralTuple(LiteralString("a?b?c"), LiteralString("a")), LiteralBoolean(false), new UnitExpression),
     new TestExample("wpm4", LiteralTuple(LiteralString("adceb"), LiteralString("*a*b")), LiteralBoolean(true), new UnitExpression),
     new TestExample("wpm5", LiteralTuple(LiteralString(""), LiteralString("*")), LiteralBoolean(true), new UnitExpression),

@@ -37,16 +37,6 @@ sealed class J7[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
     val j7Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = systemJK.J7.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- k2j6Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiBoolean.enable()
-          _ <- ffiStrings.enable()
-          _ <- ffiEquality.enable()
-        } yield ()
-      }
-
       // extends K2J6 with ... Seq(Inv), J2.isOps(Seq(Inv))
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = systemJK.J7.getModel.flatten.typeCases

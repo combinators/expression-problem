@@ -20,15 +20,6 @@ object W1 {
     val w1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.W1.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- m1Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiRealArithmetic.enable()
-          _ <- ffiStrings.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val ops = math.W1.getModel.flatten.ops
         if (potentialRequest.tpeCase == math.W1.Power && ops.contains(potentialRequest.op)) {

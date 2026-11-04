@@ -50,18 +50,6 @@ sealed class M8[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         }
       }
 
-
-
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- m7i2Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiBoolean.enable()
-          _ <- ffiStrings.enable()
-          _ <- ffiEquality.enable()
-        } yield ()
-      }
-
       private def simplifyLogic(forApproach: AIP[paradigm.type])
                                (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):
       Generator[forApproach.paradigm.MethodBodyContext, Option[forApproach.paradigm.syntax.Expression]] = {

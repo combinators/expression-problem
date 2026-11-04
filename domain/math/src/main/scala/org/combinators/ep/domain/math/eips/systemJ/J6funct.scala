@@ -26,16 +26,6 @@ object J6funct {
     val j6Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemJ.J6.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- j5Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiRealArithmetic.enable()
-          _ <- ffiStrings.enable()
-          _ <- ffiEquals.enable()
-        } yield ()
-      }
-
       // J6 adds  Seq.empty, Seq(PowBy))
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
 

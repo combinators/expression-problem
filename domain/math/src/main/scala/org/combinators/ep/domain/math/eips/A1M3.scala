@@ -21,17 +21,6 @@ object A1M3 {
     val a1m3_provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.A1M3.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiStrings.enable()
-          _ <- m3Provider.initialize(forApproach)
-          _ <- a1Provider.initialize(forApproach)
-        } yield ()
-      }
-
-      // A1:
-      // M3:
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if (Set(math.systemI.I1.MultBy).contains(potentialRequest.op) && Set(math.M3.Mult, math.M3.Neg, math.M3.Divd).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)

@@ -1014,7 +1014,6 @@ trait ExtensibleVisitor extends SharedOO with OperationAsClass {
     import paradigm.projectCapabilities._
 
     for {
-      _ <- debug("Processing Extensible Visitor")
       _ <- domainSpecific.initialize(this)
       _ <- visitor.makeBase(gdomain.baseDataType)
       _ <- registerTypeMapping(gdomain)

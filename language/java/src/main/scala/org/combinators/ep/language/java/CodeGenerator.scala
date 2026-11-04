@@ -1,13 +1,14 @@
 package org.combinators.ep.language.java     /*DI:LD:AI*/
 
-import cats.{Apply => _}
+import cats.Apply as _
 import com.github.javaparser.ast.PackageDeclaration
 import com.github.javaparser.ast.`type`.PrimitiveType
 import com.github.javaparser.ast.expr.{DoubleLiteralExpr, IntegerLiteralExpr}
 import org.combinators.cogen.TypeRep
 import org.combinators.cogen.Command
-import org.combinators.ep.language.java.paradigm._
-import org.combinators.ep.language.java.paradigm.ffi._
+import org.combinators.cogen.Command.Generator
+import org.combinators.ep.language.java.paradigm.*
+import org.combinators.ep.language.java.paradigm.ffi.*
 
 /**
  * Java-specific.
@@ -117,7 +118,6 @@ class CodeGenerator(config: Config) { cc =>
     new Arrays[CtorCtxt, paradigm.type](
       paradigm
     )
-    
 
   val listsInMethod =
     Lists[MethodBodyCtxt, paradigm.type, Generics](
@@ -157,6 +157,49 @@ class CodeGenerator(config: Config) { cc =>
 
   val assertionsInMethod = new Assertions[paradigm.type](paradigm)(ooParadigm)
   val exceptionsInMethod = new Exceptions[paradigm.type](paradigm)
+
+
+  def enableDefaultFFIs():Generator[paradigm.ProjectContext, Unit] = {
+    for {
+      _ <- unitsInMethod.enable()
+      _ <- unitsInConstructor.enable()
+
+      _ <- doublesInMethod.enable()
+      _ <- doublesInConstructor.enable()
+
+      _ <- realDoublesInMethod.enable()
+      _ <- realDoublesInConstructor.enable()
+
+      _ <- intsInMethod.enable()
+      _ <- intsInConstructor.enable()
+
+      _ <- stringsInMethod.enable()
+      _ <- stringsInConstructor.enable()
+
+      _ <- listsInMethod.enable()
+      _ <- listsInConstructor.enable()
+
+      _ <- consoleInMethod.enable()
+      _ <- consoleInConstructor.enable()
+
+      _ <- arraysInMethod.enable()
+      _ <- arraysInConstructor.enable()
+
+      _ <- equalityInMethod.enable()
+      _ <- equalityInConstructor.enable()
+
+      _ <- assertionsInMethod.enable()
+
+      _ <- booleansInMethod.enable()
+      _ <- booleansInConstructor.enable()
+
+      _ <- exceptionsInMethod.enable()
+
+      _ <- mapsInMethod.enable()
+      _ <- mapsInConstructor.enable()
+
+    } yield ()
+  }
 }
 
 object CodeGenerator {

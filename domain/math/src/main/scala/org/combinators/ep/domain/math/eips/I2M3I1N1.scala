@@ -21,18 +21,6 @@ sealed class I2M3I1N1[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImpleme
     val i2m3i1n1_provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.I2M3I1N1.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiStrings.enable()
-          _ <- ffiBoolean.enable()
-          _ <- ffiEquality.enable()
-
-          _ <- i2Provider.initialize(forApproach)
-          _ <- m3i1Provider.initialize(forApproach)
-          _ <- n1Provider.initialize(forApproach)
-        } yield ()
-      }
-
       //ONLY have to handle PowBy, Power
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.I2M3I1N1.getModel.flatten.typeCases

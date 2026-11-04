@@ -22,13 +22,6 @@ object X2 {
     val x2Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemX.X2.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiArithmetic.enable()
-          _ <- ffiStrings.enable()
-        } yield ()
-      }
-
       // X2: "x2", Seq(Times), Seq.empty)
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if (Set(math.M0.Eval, math.systemX.X1.PrettyP, math.systemX.X1.MultBy).contains(potentialRequest.op) && Set(systemX.X2.Times).contains(potentialRequest.tpeCase)) {

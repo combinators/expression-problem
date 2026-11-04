@@ -14,6 +14,8 @@ trait Arithmetic[T] extends Arith[T] {
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
+  val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
+  
   val typeName:String 
   
   trait ScalaArithmeticIn[Ctxt] extends super.ArithmeticIn[Ctxt] {
@@ -47,6 +49,12 @@ trait Arithmetic[T] extends Arith[T] {
     ) extends ScalaArithmeticIn[_base.ast.oo.Class] {}
     new Arith()
   }
+  val arithmeticInADTs: ScalaArithmeticIn[_base.ast.functional.AlgebraicDataType] = {
+    class Arith(
+       override val registry: adtRegistry.type = adtRegistry
+     ) extends ScalaArithmeticIn[_base.ast.functional.AlgebraicDataType] {}
+    new Arith()
+  }
 }
 
 object Arithmetic {
@@ -58,6 +66,7 @@ object Arithmetic {
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+    adtRegistry: ContextRegistry[base.type, base.ast.functional.AlgebraicDataType],
     typeName: String
   ): Arithmetic.WithBase[T, base.type] = {
     class Arith(
@@ -66,8 +75,9 @@ object Arithmetic {
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+      override val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType],
       override val typeName:String
     ) extends Arithmetic[T]
-    new Arith(base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry, typeName) {}
+    new Arith(base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry, adtRegistry, typeName) {}
   }
 }

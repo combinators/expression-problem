@@ -29,15 +29,6 @@ object X1funct {
     val x1Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemX.X1.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- m0Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiStrings.enable()
-          _ <- ffiEquals.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if ((potentialRequest.op == math.M0.Eval) && Set(systemX.X1.Sub).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)

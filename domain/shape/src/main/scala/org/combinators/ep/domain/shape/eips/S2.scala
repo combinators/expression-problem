@@ -22,13 +22,6 @@ object S2 {
     val s2Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       val model:GenericModel = shape.S2.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- s1Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = shape.S2.getModel.flatten.typeCases
         if ((potentialRequest.op == shape.S2.Shrink) && cases.contains(potentialRequest.tpeCase)) {

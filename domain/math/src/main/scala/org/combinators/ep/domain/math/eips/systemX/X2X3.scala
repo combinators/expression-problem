@@ -18,13 +18,6 @@ object X2X3 {
     val x2x3_provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemX.X2X3.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- x2Provider.initialize(forApproach)
-          _ <- x3Provider.initialize(forApproach)
-        } yield ()
-      }
-
       // pure merge, where both X2 and X3 only have a new data type. Nothing to do?
       // X2:  Seq(Times), Seq.empty)
       // X3:  Seq(Divd), Seq.empty)

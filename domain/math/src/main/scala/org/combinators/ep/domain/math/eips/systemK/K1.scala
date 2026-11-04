@@ -22,15 +22,6 @@ object K1 {
     val k1Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemK.K1.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- j2Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiRealArithmetic.enable()
-          _ <- ffiStrings.enable()
-        } yield ()
-      }
-
       // K1 adds Seq(Power), J2.isOps(Seq(Power)))
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = systemK.K1.getModel.flatten.typeCases

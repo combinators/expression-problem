@@ -22,13 +22,6 @@ object J8funct {
     val j8Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemJK.J8.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- j7Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M9.getModel.flatten.typeCases
         if (cases.contains(potentialRequest.tpeCase)) {

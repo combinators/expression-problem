@@ -21,14 +21,6 @@ object OD2 {
     val od2Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemO.OD2.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiArithmetic.enable()
-          _ <- ffiStrings.enable()
-          _ <- m2Provider.initialize(forApproach)
-        } yield ()
-      }
-      
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val ops = math.systemO.OD2.getModel.flatten.ops
         if (Seq(math.systemO.OD2.Divd).contains(potentialRequest.tpeCase) && ops.contains(potentialRequest.op)) {

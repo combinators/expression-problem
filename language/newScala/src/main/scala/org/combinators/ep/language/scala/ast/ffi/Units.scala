@@ -12,6 +12,7 @@ trait Units extends Uns {
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
+  val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
 
   val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
   
@@ -49,6 +50,12 @@ trait Units extends Uns {
     ) extends ScalaUnitsIn[_base.ast.oo.Class] {}
     new Uns()
   }
+  val unitsInADTs: ScalaUnitsIn[_base.ast.functional.AlgebraicDataType] = {
+    class Uns(
+       override val registry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType] = adtRegistry
+     ) extends ScalaUnitsIn[_base.ast.functional.AlgebraicDataType] {}
+    new Uns()
+  }
 }
 
 object Units {
@@ -58,13 +65,15 @@ object Units {
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+    adtRegistry: ContextRegistry[base.type, base.ast.functional.AlgebraicDataType]
   ): Units.WithBase[base.type] = {
     class Uns(
       override val _base: base.type,
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+      override val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType],
     ) extends Units
-    new Uns(base, methodRegistry, constructorRegistry, classRegistry) {}
+    new Uns(base, methodRegistry, constructorRegistry, classRegistry, adtRegistry) {}
   }
 }

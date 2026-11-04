@@ -27,16 +27,6 @@ object N1funct {
     val n1Provider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.N1.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- m3Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiRealArithmetic.enable()
-          _ <- ffiStrings.enable()
-          _ <- ffiEquality.enable()
-        } yield ()
-      }
-
       /** PowBy depends on Eval. */
 
         override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {

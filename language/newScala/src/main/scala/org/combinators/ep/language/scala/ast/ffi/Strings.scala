@@ -12,6 +12,8 @@ trait Strings extends Str {
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
+  val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
+
   val nameProvider: _base.ast.nameProvider.ScalaNameProvider = _base.ast.nameProviderFactory.scalaNameProvider
 
   trait ScalaStringsIn[Ctxt] extends super.StringsIn[Ctxt] {
@@ -46,6 +48,12 @@ trait Strings extends Str {
     ) extends ScalaStringsIn[_base.ast.oo.Class] {}
     new Strs()
   }
+  val stringsInADTs: ScalaStringsIn[_base.ast.functional.AlgebraicDataType] = {
+    class Strs(
+      override val registry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType] = adtRegistry
+    ) extends ScalaStringsIn[_base.ast.functional.AlgebraicDataType] {}
+    new Strs()
+  }
 }
 
 object Strings {
@@ -55,13 +63,15 @@ object Strings {
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+    adtRegistry: ContextRegistry[base.type, base.ast.functional.AlgebraicDataType]
   ): Strings.WithBase[base.type] = {
     class Strs(
       override val _base: base.type,
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+      override val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
     ) extends Strings
-    new Strs(base, methodRegistry, constructorRegistry, classRegistry) {}
+    new Strs(base, methodRegistry, constructorRegistry, classRegistry, adtRegistry) {}
   }
 }

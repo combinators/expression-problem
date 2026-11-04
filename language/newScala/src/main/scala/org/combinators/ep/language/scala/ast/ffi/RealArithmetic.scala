@@ -7,14 +7,14 @@ import org.combinators.ep.language.inbetween.any.AnyParadigm
 import org.combinators.ep.language.scala.ast.BaseAST
 import org.combinators.ep.language.inbetween.ffi.RealArithmetic as RealArith
 
-import scala.reflect.{ClassTag, classTag}
-
 trait RealArithmetic[T] extends RealArith[T] {
   override val _base: AnyParadigm {val ast: RealArithmeticAST & BaseAST }
   val matchingTpeRep: TypeRep.OfHostType[T]
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
+  val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
+
   val typeName:String
 
   trait ScalaRealArithmeticIn[Ctxt] extends super.RealArithmeticIn[Ctxt] {
@@ -48,6 +48,12 @@ trait RealArithmetic[T] extends RealArith[T] {
     ) extends ScalaRealArithmeticIn[_base.ast.oo.Class] {}
     new Arith()
   }
+  val realArithmeticInADTs: ScalaRealArithmeticIn[_base.ast.functional.AlgebraicDataType] = {
+    class Arith(
+     override val registry: adtRegistry.type = adtRegistry
+   ) extends ScalaRealArithmeticIn[_base.ast.functional.AlgebraicDataType] {}
+    new Arith()
+  }
 }
 
 object RealArithmetic {
@@ -58,6 +64,7 @@ object RealArithmetic {
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+    adtRegistry: ContextRegistry[base.type, base.ast.functional.AlgebraicDataType],
     typeName: String
   ): RealArithmetic.WithBase[base.type, T] = {
     class Arith(
@@ -66,8 +73,9 @@ object RealArithmetic {
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+      override val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType],
       override val typeName:String
     ) extends RealArithmetic[T]
-    new Arith(base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry, typeName) {}
+    new Arith(base, matchingTpeRep, methodRegistry, constructorRegistry, classRegistry, adtRegistry, typeName) {}
   }
 }

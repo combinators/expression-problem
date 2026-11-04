@@ -12,6 +12,7 @@ trait Assertions extends Assrt {
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
+  val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
 
   trait ScalaAssertionsIn[Ctxt] extends super.AssertionsIn[Ctxt] {
     override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] =
@@ -32,12 +33,17 @@ trait Assertions extends Assrt {
     ) extends ScalaAssertionsIn[_base.ast.oo.Constructor]
     new AssertionsInConstructors() {}
   }
-
   val assertionsInClasses: ScalaAssertionsIn[_base.ast.oo.Class] = {
     class AssertionsInClasses(
       override val registry: ContextRegistry[_base.type, _base.ast.oo.Class] = classRegistry
     ) extends ScalaAssertionsIn[_base.ast.oo.Class]
     new AssertionsInClasses() {}
+  }
+  val assertionsInADTs: ScalaAssertionsIn[_base.ast.functional.AlgebraicDataType] = {
+    class AssertionsInADTs(
+     override val registry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType] = adtRegistry
+   ) extends ScalaAssertionsIn[_base.ast.functional.AlgebraicDataType]
+    new AssertionsInADTs() {}
   }
 }
 
@@ -48,13 +54,15 @@ object Assertions {
     methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+    adtRegistry: ContextRegistry[base.type, base.ast.functional.AlgebraicDataType]
   ): Assertions.WithBase[base.type] = {
     class Asrts(
       override val _base: base.type,
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method],
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor],
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class],
+      override val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
     ) extends Assertions {}
-    new Asrts(base, methodRegistry, constructorRegistry, classRegistry)
+    new Asrts(base, methodRegistry, constructorRegistry, classRegistry, adtRegistry)
   }
 }

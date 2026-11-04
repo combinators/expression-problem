@@ -21,15 +21,6 @@ object M5 {
     val treeIdProvider = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.M5.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- m4Provider.initialize(forApproach)
-          _ <- ffiArithmetic.enable()
-          _ <- ffiTrees.enable()
-        } yield ()
-      }
-
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.M5.getModel.flatten.typeCases
         if (cases.contains(potentialRequest.tpeCase)) {

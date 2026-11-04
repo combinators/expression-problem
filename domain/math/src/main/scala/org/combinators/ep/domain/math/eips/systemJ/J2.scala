@@ -24,17 +24,7 @@ object J2 {
     val j2Provider: EvolutionImplementationProvider[AIP[paradigm.type]] = new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.systemJ.J2.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- j1Provider.initialize(forApproach)
-          _ <- ffiEquality.enable()
-          _ <- ffiBoolean.enable()
-          _ <- ffiArithmetic.enable()
-        } yield ()
-      }
-
       //  Seq(Mult), Seq(Eql)  ++ isOps(allTypes))
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         val cases = math.systemJ.J2.getModel.flatten.typeCases
         val ops = math.systemJ.J2.getModel.flatten.ops

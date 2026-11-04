@@ -33,13 +33,6 @@ object M0 {
     new EvolutionImplementationProvider[AIP[paradigm.type]] {
       override val model: GenericModel = math.M0.getModel
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiArithmetic.enable()
-          _ <- ffiStrings.enable()      // need strings BECAUSE test cases require empty string for messages.
-        } yield ()
-      }
-
       override def dependencies(potentialRequest: PotentialRequest): Option[Set[Operation]] = {
         if ((potentialRequest.op == math.M0.Eval) && Set(math.M0.Add, math.M0.Lit).contains(potentialRequest.tpeCase)) {
           Some(Set.empty)

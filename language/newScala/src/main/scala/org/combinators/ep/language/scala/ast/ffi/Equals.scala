@@ -12,6 +12,7 @@ trait Equals extends Eql {
   val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method]
   val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor]
   val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class]
+  val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType]
 
   trait ScalaEqualsIn[Ctxt] extends super.EqualsIn[Ctxt] {
     override val tpeLookup: TypeRep => Option[Generator[Ctxt, _base.syntax.Type]] = {
@@ -33,11 +34,16 @@ trait Equals extends Eql {
     ) extends ScalaEqualsIn[_base.ast.oo.Constructor]
     new EqIn() {}
   }
-
   val equalsInClasses: ScalaEqualsIn[_base.ast.oo.Class] = {
     class EqIn(
       override val registry: ContextRegistry[_base.type, _base.ast.oo.Class] = classRegistry
     ) extends ScalaEqualsIn[_base.ast.oo.Class]
+    new EqIn() {}
+  }
+  val equalsInADTs: ScalaEqualsIn[_base.ast.functional.AlgebraicDataType] = {
+    class EqIn(
+      override val registry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType] = adtRegistry
+    ) extends ScalaEqualsIn[_base.ast.functional.AlgebraicDataType]
     new EqIn() {}
   }
 }
@@ -49,12 +55,14 @@ object Equals {
     _methodRegistry: ContextRegistry[base.type, base.ast.any.Method],
     _constructorRegistry: ContextRegistry[base.type, base.ast.oo.Constructor],
     _classRegistry: ContextRegistry[base.type, base.ast.oo.Class],
+    _adtRegistry: ContextRegistry[base.type, base.ast.functional.AlgebraicDataType]
   ): Equals.WithBase[base.type] = {
     class Eqls(
       override val _base: base.type = base,
       override val methodRegistry: ContextRegistry[_base.type, _base.ast.any.Method] = _methodRegistry,
       override val constructorRegistry: ContextRegistry[_base.type, _base.ast.oo.Constructor] = _constructorRegistry,
       override val classRegistry: ContextRegistry[_base.type, _base.ast.oo.Class] = _classRegistry,
+      override val adtRegistry: ContextRegistry[_base.type, _base.ast.functional.AlgebraicDataType] = _adtRegistry
     ) extends Equals {}
     new Eqls()
   }

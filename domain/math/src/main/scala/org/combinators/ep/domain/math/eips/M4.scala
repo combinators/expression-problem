@@ -48,16 +48,6 @@ sealed class M4[P <: AnyParadigm, AIP[P <: AnyParadigm] <: ApproachImplementatio
         }
       }
 
-      def initialize(forApproach: AIP[paradigm.type]): Generator[forApproach.paradigm.ProjectContext, Unit] = {
-        for {
-          _ <- ffiArithmetic.enable()
-          _ <- ffiBoolean.enable()
-          _ <- ffiStrings.enable()
-          _ <- ffiLists.enable()
-          _ <- ffiEquality.enable()
-        } yield ()
-      }
-
       private def collectLogic
       (forApproach: AIP[paradigm.type])
       (onRequest: ReceivedRequest[forApproach.paradigm.syntax.Expression]):

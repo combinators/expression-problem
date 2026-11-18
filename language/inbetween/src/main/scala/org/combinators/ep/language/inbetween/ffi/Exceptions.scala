@@ -17,10 +17,9 @@ trait Exceptions{
       implicit val canRaise: Understands[Ctxt, Exception[any.Expression, any.Statement]] =
         new Understands[Ctxt,Exception[any.Expression, any.Statement]] {
           def perform(context: Ctxt, command: Exception[any.Expression, any.Statement]): (Ctxt, any.Statement) = {
-            val expr = exceptionsOpsFactory.raiseOp(command.exp)
+            val stmt = exceptionsOpsFactory.raise(exceptionsOpsFactory.exception(command.exp))
 
-            // Need to convert this EXPR into a STATEMENT
-            (context, ???)
+            (context, stmt)
           }
         }
     }

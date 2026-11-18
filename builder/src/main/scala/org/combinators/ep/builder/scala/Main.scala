@@ -53,10 +53,10 @@ import org.combinators.ep.domain.math.systemX.{X1, X2, X2X3, X3, X4}
 import org.combinators.ep.generator.ApproachImplementationProvider.WithParadigm
 import org.combinators.ep.generator.{ApproachImplementationProvider, EvolutionImplementationProvider, TestImplementationProvider}
 import org.combinators.ep.language.scala.codegen.{CodeGenerator, FullAST}
-
 import org.combinators.ep.language.scala.ast.{FinalBaseAST, FinalNameProviderAST}
 import org.combinators.ep.language.scala.ast.ffi.*
 import org.combinators.ep.builder.scala.paradigm.ffi.*
+import org.combinators.ep.domain.shape.{S0, S1, S2, eips => shapeEips}
 
 import java.nio.file.{Path, Paths}
 
@@ -200,6 +200,9 @@ class Main(choice:String, select:String) {
     case "D1D2" => Seq(M0, M1, D1, D2, D1D2)
     case "D3" => Seq(M0, M1, D1, D2, D1D2, D3)
 
+    case "S0" => Seq(S0)
+    case "S1" => Seq(S0, S1)
+    case "S2" => Seq(S0, S1, S2)
     case _ => ???
   }
 
@@ -556,6 +559,16 @@ class Main(choice:String, select:String) {
   val d3_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
     eips.systemD.D3(approach.paradigm)(d1d2_eip)(generator.doubles.arithmeticInMethods, generator.strings.stringsInMethods)
 
+  val s0_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    shapeEips.S0(approach.paradigm)(generator.doubles.arithmeticInMethods, generator.realDoubles.realArithmeticInMethods,
+      generator.booleans.booleansInMethods, generator.strings.stringsInMethods)
+
+  val s1_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    shapeEips.S1(approach.paradigm)(s0_eip)(generator.doubles.arithmeticInMethods, generator.booleans.booleansInMethods)
+
+  val s2_eip: EvolutionImplementationProvider[WithParadigm[approach.paradigm.type]] =
+    shapeEips.S2(approach.paradigm)(s1_eip)(generator.doubles.arithmeticInMethods, generator.imperative.imperativeInMethods)
+
   val eip: EvolutionImplementationProvider[ApproachImplementationProvider.WithParadigm[approach.paradigm.type]] = select match {
 
     case "M0" => m0_eip
@@ -623,6 +636,10 @@ class Main(choice:String, select:String) {
     case "D2" => d2_eip
     case "D1D2" => d1d2_eip
     case "D3" => d3_eip
+
+    case "S0" => s0_eip
+    case "S1" => s1_eip
+    case "S2" => s2_eip
 
     case _ => ???
   }
@@ -731,7 +748,7 @@ object DirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     // "M9", "J8", "A3", "O1OA", "OD3", "OO3", "V1", "D3", "I2M3I1N1", "O2"
-    val approach = if (args.isEmpty) "oo" else args.head // {coco, O1OA} fails
+    val approach = if (args.isEmpty) "dispatch" else args.head // {coco, O1OA} fails
     if (approach == "exit") {
       sys.exit(0)
     }

@@ -196,6 +196,7 @@ object FibonacciIndependentProvider {
           res <- obj.methodBodyCapabilities.getMember(fib, name)
         } yield res
       }
+      
       override def add_method(name: paradigm.syntax.Name, spec: Generator[paradigm.MethodBodyContext, Option[paradigm.syntax.Expression]]): Generator[paradigm.CompilationUnitContext, Unit] = {
         obj.compilationUnitCapabilities.addClass(fibClass, obj.classCapabilities.addMethod(name, spec))
       }
@@ -205,7 +206,7 @@ object FibonacciIndependentProvider {
           resultExp <- toReturn
           resultStmt <- c1.imperativeCapabilities.returnStmt(resultExp)
           _ <- paradigm.methodBodyCapabilities.addBlockDefinitions(Seq(resultStmt))
-        } yield None
+        } yield ()
       }
     }
 }

@@ -1,7 +1,7 @@
 package org.combinators.fibonacci
 
 /**
- * sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciWithLucasScalaDirectToDiskMain"
+ * sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciMainWithLucasScalaDirectToDiskMain"
  *
  * will generate the directory target/fib in which you can find a mutual-recursive implementation
  * that avoids the standard issues that a recursive fib(n) implementation would have by taking
@@ -135,7 +135,7 @@ class FibonacciMainWithLucasScala {
 object FibonacciMainWithLucasScalaDirectToDiskMain extends IOApp {
   private val targetDirectory:Path = Paths.get("target", "fib", "scala")
 
-  // generated!
+  // generated code is pasted in below to show what it really looks like (in minimal form)
   def fib(n: Int): Int = {
     if (n <= 0) 0 else if (n <= 1) 1 else if (n <= 2) 1 else if (n <= 3) 2 else (fib(n / 2) * lucas(n - n / 2) + lucas(n / 2) * fib(n - n / 2)) / 2
   }

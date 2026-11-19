@@ -1,7 +1,7 @@
 package org.combinators.fibonacci
 
 /**
- * sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciRecursiveVariableScalaDirectToDiskMain"
+ * sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciRecursiveVariableMainScalaDirectToDiskMain"
  *
  * will generate the directory target/fib in which you can find a recursive functional implementation:
 
@@ -20,6 +20,22 @@ package org.combinators.fibonacci
             }
           }
         }
+ *
+ *  sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciRecursiveVariableMainScalaDirectToDiskMain imperative"
+ *
+ *  will generate the directory target/fib in which you can find a recursive functional implementation:
+
+    package fibonacci
+    class Fib {
+      def fib(n: Int): Int = {
+        if ((n <= 1)) {
+          return { n }
+        } else {
+          return { (this.fib((n - 1)) + this.fib((n - 2))) }
+        }
+      }
+    }
+
  */
 
 import cats.effect.{ExitCode, IO, IOApp}
@@ -32,6 +48,10 @@ import org.combinators.ep.language.scala.codegen.{CodeGenerator, FullAST}
 import org.combinators.fibonacci.FibonacciRecursiveVariableProvider
 
 import java.nio.file.{Path, Paths}
+
+// different approaches
+val FUNCTIONAL = "functional"
+val IMPERATIVE = "imperative"
 
 /**
  * Takes paradigm-independent specification for Fibonacci and generates Scala code
@@ -59,23 +79,24 @@ class FibonacciRecursiveVariableMainScala {
   val generator: CodeGenerator[ast.type] = CodeGenerator("fibonacci", ast, emptyset)
 
   // functional
-  val fibonacciApproach = FibonacciRecursiveVariableProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl.functionalControlInMethods, generator.ints.arithmeticInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods)
-
-  //[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl, generator.ints, generator.assertionsInMethod, generator.equality)
+  val fibonacciApproachFunctional = FibonacciRecursiveVariableProvider[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.functional, generator.functionalControl.functionalControlInMethods, generator.ints.arithmeticInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods)
 
   // imperative
-  // val fibonacciApproach = FibonacciIndependentProvider.imperative[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.imperative, generator.ints, generator.assertionsInMethod, generator.equality)
+  val fibonacciApproachImperative = FibonacciIndependentProvider.imperative[generator.syntax.type, generator.paradigm.type](generator.paradigm)(generator.nameProvider, generator.ooParadigm, generator.imperative.imperativeInMethods, generator.ints.arithmeticInMethods, generator.assertions.assertionsInMethods, generator.equality.equalsInMethods)
 
   val persistable: Aux[FileWithPath] = FileWithPathPersistable[FileWithPath]
 
-  def directToDiskTransaction(targetDirectory: Path): IO[Unit] = {
+  def directToDiskTransaction(which:String, targetDirectory: Path): IO[Unit] = {
 
     val files =
       () => generator.paradigm.runGenerator {
         for {
           _ <- generator.enableDefaultFFIs()
-
-          _ <- fibonacciApproach.make_project()
+          _ <- if (which.equals(FUNCTIONAL)) {
+            fibonacciApproachFunctional.make_project()
+          } else {
+            fibonacciApproachImperative.make_project()
+          }
         } yield ()
       }
 
@@ -94,9 +115,9 @@ class FibonacciRecursiveVariableMainScala {
     }
   }
 
-  def runDirectToDisc(targetDirectory: Path): IO[ExitCode] = {
+  def runDirectToDisc(which:String, targetDirectory: Path): IO[ExitCode] = {
     for {
-      _ <- directToDiskTransaction(targetDirectory)
+      _ <- directToDiskTransaction(which, targetDirectory)
     } yield ExitCode.Success
   }
 }
@@ -106,11 +127,24 @@ object FibonacciRecursiveVariableMainScalaDirectToDiskMain extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
 
+    // default to functional
+    val which = if (args.length > 0) {
+      if (args.head.toLowerCase() == FUNCTIONAL.toLowerCase()) {
+        FUNCTIONAL
+      } else if (args.head.toLowerCase() == IMPERATIVE.toLowerCase()) {
+        IMPERATIVE
+      } else {
+        throw new IllegalArgumentException(s"Argument must be either ${FUNCTIONAL} or ${IMPERATIVE}")
+      }
+    } else {
+      FUNCTIONAL
+    }
+
     for {
       _ <- IO { print("Initializing Generator...") }
       main <- IO { new FibonacciRecursiveVariableMainScala() }
       _ <- IO { println("[OK]") }
-      result <- main.runDirectToDisc(targetDirectory)
+      result <- main.runDirectToDisc(which, targetDirectory)
     } yield result
   }
 }

@@ -10,7 +10,7 @@ package org.combinators.fibonacci
  *   Lucas(n) = Fib(n-1) + F(n+1) for n > 1
  *   Fib(x+y) = [Fib(x)*Lucas(y) + Fib(y)*Locas(x)] / 2
 
-    ackage fibonacci;
+    package fibonacci;
 
     public class Fib {
 

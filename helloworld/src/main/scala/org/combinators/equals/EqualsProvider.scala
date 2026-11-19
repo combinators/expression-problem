@@ -12,7 +12,6 @@ trait EqualsProvider {
   import paradigm.*
   import syntax.*
 
-
   /** Available in any Context that can ResolveImport and AddImport. */
   def resolveAndAddImport[Context, Elem](elem: Elem)
     (implicit
@@ -32,7 +31,8 @@ trait EqualsProvider {
           _ <- resolveAndAddImport(resTy)
           res <- methodBodyCapabilities.reify[tpe.HostType](tpe, inst.asInstanceOf[tpe.HostType])
         } yield res
-      case _ => throw new scala.NotImplementedError(s"No rule to compile instantiations of ${inst.tpe}.")
+        
+      case null => throw new scala.NotImplementedError(s"No rule to compile instantiations of ${inst.tpe}.")
     }
   }
 
@@ -44,6 +44,5 @@ trait EqualsProvider {
   def testCaseName:Name = {
     names.mangle("Test")
   }
-
 }
 

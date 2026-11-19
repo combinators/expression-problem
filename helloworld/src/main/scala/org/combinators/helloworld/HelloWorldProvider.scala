@@ -33,7 +33,8 @@ trait HelloWorldProvider {
           _ <- resolveAndAddImport(resTy)
           res <- methodBodyCapabilities.reify[tpe.HostType](tpe, inst.asInstanceOf[tpe.HostType])
         } yield res
-      case _ => throw new scala.NotImplementedError(s"No rule to compile instantiations of ${inst.tpe}.")
+
+      case null => throw new scala.NotImplementedError(s"No rule to compile instantiations of ${inst.tpe}.")
     }
   }
 

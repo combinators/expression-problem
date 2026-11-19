@@ -34,7 +34,7 @@ trait EqualsObjectOrientedProvider extends EqualsProvider {
   }
 
   def makeTestCase(testCases:Seq[EqualsTestCase]): Generator[MethodBodyContext, Seq[Expression]] = {
-    import paradigm.methodBodyCapabilities.{reify => _, _}
+    import paradigm.methodBodyCapabilities.{reify => _, _}   // Don't remove this line
     import eqls.equalityCapabilities._
     import AnyParadigm.syntax._
     import booleans.booleanCapabilities.canNot

@@ -1,6 +1,9 @@
 package org.combinators.fibonacci
 
 /**
+ * sbt "helloWorld/runMain org.combinators.fibonacci.FibonacciMainScalaDirectToDiskMain"
+ *
+ * will generate the directory target/fib in which you can find following recursive implementation
 
     package fibonacci
     def fib(n: Int): Int = {

@@ -20,7 +20,6 @@ trait EqualsGenerator[AP <: AnyParadigm] {
 
   import paradigm.syntax._
   import paradigm.MethodBodyContext
-
   
   def addFields(domain:CompositeDataType): Generator[ooParadigm.ClassContext, Unit] = {
     import ooParadigm.classCapabilities._
@@ -111,8 +110,6 @@ trait EqualsGenerator[AP <: AnyParadigm] {
           otherFieldExpr <- ooParadigm.methodBodyCapabilities.getMember(declVar, names.mangle(name))
           domainType <- paradigm.methodBodyCapabilities.toTargetLanguageType(tpe)
 
-          // must handle arrays specially, not with == but with arrays capability
-
           eqlExpr <- eqls.equalityCapabilities.areEqual(domainType, selfFieldExpr, otherFieldExpr)
           notExpr <- booleans.booleanCapabilities.not(eqlExpr)
 
@@ -129,8 +126,6 @@ trait EqualsGenerator[AP <: AnyParadigm] {
   }
 
   def generateEquals(domain:CompositeDataType) : Generator[MethodBodyContext, Option[Expression]] = {
-    import ooParadigm.methodBodyCapabilities.canFindClassInMethod
-    import paradigm.methodBodyCapabilities.canTransformTypeInMethodBody
     for {
       _ <- ooParadigm.methodBodyCapabilities.setOverride()   // since this is default behavior in OO languages
       boolType <- paradigm.methodBodyCapabilities.toTargetLanguageType(TypeRep.Boolean)

@@ -311,7 +311,7 @@ object FibonacciIndependentWithLucasProvider {
           resultExp <- toReturn
           resultStmt <- c1.imperativeCapabilities.returnStmt(resultExp)
           _ <- paradigm.methodBodyCapabilities.addBlockDefinitions(Seq(resultStmt))
-        } yield None
+        } yield ()
       }
     }
 }

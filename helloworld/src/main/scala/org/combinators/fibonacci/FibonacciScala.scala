@@ -16,8 +16,6 @@ def fib(n: Int): Int = {
   }
 }
 
-
-
  */
 
 import cats.effect.{ExitCode, IO, IOApp}
